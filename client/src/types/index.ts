@@ -7,6 +7,7 @@ export interface Resource {
   dateCreated: string;
   dateUpdated: string;
   title: string;
+  author: string;
   content: string;
   // todo: update to support audio content
 }
