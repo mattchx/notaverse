@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { NavLink } from "react-router";
+import { Link } from "react-router";
 
 function Home() {
   return (
@@ -10,7 +10,10 @@ function Home() {
       <p className="text-lg text-muted-foreground mb-8">
         Your personal space for notes and thoughts
       </p>
-      <Button size='lg' className='hover:cursor-pointer text-xl'>Enter</Button>
+      <div>
+        <Link to="/login"><Button variant="secondary" className="hover:cursor-pointer mr-8">Login</Button></Link>
+        <Link to="/register"><Button className="hover:cursor-pointer">Register</Button></Link>
+      </div>
     </div>
   )
 }

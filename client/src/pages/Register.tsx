@@ -27,7 +27,7 @@ export default function Register() {
       }
 
       // Successful registration
-      navigate('/login');
+      navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     }

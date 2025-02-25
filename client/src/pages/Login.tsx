@@ -23,7 +23,7 @@ export default function Login() {
       }
 
       // Successful login
-      navigate('/home');
+      navigate('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     }
