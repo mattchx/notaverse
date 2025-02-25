@@ -1,0 +1,11 @@
+{
+  "name": "notaverse",
+  "version": "1.0.0",
+  "description": "Full stack application with concurrent client and server development",
+  "scripts": {
+    "install:all": "cd client && npm install && cd ../server && npm install",
+    "dev": "concurrently \"cd client && npm run dev\" \"cd server && npm run dev\"",
+    "client": "cd client && npm run dev",
+    "server": "cd server && npm run dev"
+  }
+}
