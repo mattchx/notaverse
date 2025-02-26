@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { LoginForm } from '../components/auth/LoginForm';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setIsAuthenticated, setUser } = useAuth();
 
   const handleSubmit = async (credentials: { email: string; password: string }) => {
     try {
@@ -13,7 +16,7 @@ export default function Login() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Important for cookies
+        credentials: 'include',
         body: JSON.stringify(credentials),
       });
 
@@ -22,8 +25,14 @@ export default function Login() {
         throw new Error(data.error || 'Login failed');
       }
 
-      // Successful login
-      navigate('/dashboard');
+      const data = await response.json();
+      setIsAuthenticated(true);
+      setUser(data.user);
+
+      // Get the redirect path from URL or default to dashboard
+      const params = new URLSearchParams(location.search);
+      const from = params.get('from') || '/dashboard';
+      navigate(from);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     }

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { RegisterForm } from '../components/auth/RegisterForm';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Register() {
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
+  const { setIsAuthenticated, setUser } = useAuth();
 
-  const handleSubmit = async (credentials: { 
+  const handleSubmit = async (credentials: {
     email: string;
     password: string;
     confirmPassword: string;
@@ -17,7 +19,7 @@ export default function Register() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Important for cookies
+        credentials: 'include',
         body: JSON.stringify(credentials),
       });
 
@@ -25,6 +27,10 @@ export default function Register() {
         const data = await response.json();
         throw new Error(data.error || 'Registration failed');
       }
+
+      const data = await response.json();
+      setIsAuthenticated(true);
+      setUser(data.user);
 
       // Successful registration
       navigate('/dashboard');

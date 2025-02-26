@@ -1,27 +1,21 @@
-import { Navigate, LoaderFunction, LoaderFunctionArgs } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { useAuth } from '../../contexts/AuthContext';
+import { ReactNode } from 'react';
 
-// Loader function to check auth before route renders
-export const createProtectedLoader = (getAuth: () => { isAuthenticated: boolean }): LoaderFunction =>
-  async ({ request }: LoaderFunctionArgs) => {
-    const { isAuthenticated } = getAuth();
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
 
-    if (!isAuthenticated) {
-      // Save attempted URL to redirect back after login
-      const params = new URLSearchParams();
-      params.set('from', new URL(request.url).pathname);
-      
-      return Navigate({
-        to: `/login?${params.toString()}`,
-        replace: true
-      });
-    }
-    
-    return null; // Allow route to render
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    // Redirect to login with return URL
+    return <Navigate to={`/login?from=${location.pathname}`} replace />;
   }
 
-// Helper hook to create protected loader with current auth context
-export const useProtectedLoader = (): LoaderFunction => {
-  const auth = useAuth();
-  return createProtectedLoader(() => auth);
-}
+  return <>{children}</>;
+};
+
+export default ProtectedRoute;

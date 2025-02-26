@@ -1,8 +1,16 @@
-import React, { createContext, useContext, ReactNode, useState } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+
+interface User {
+  id: string;
+  email: string;
+}
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  user: User | null;
   setIsAuthenticated: (value: boolean) => void;
+  setUser: (user: User | null) => void;
+  checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,16 +23,46 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
+type AuthProviderProps = {
   children: ReactNode;
-}
+};
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('http://localhost:3002/api/auth/me', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        setIsAuthenticated(false);
+        setUser(null);
+        return;
+      }
+
+      const data = await response.json();
+      setIsAuthenticated(true);
+      setUser(data.user);
+    } catch {
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+
+  // Check auth status when the app loads
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   const value = {
     isAuthenticated,
-    setIsAuthenticated
+    user,
+    setIsAuthenticated,
+    setUser,
+    checkAuth
   };
 
   return (
