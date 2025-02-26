@@ -1,7 +1,9 @@
 import session from 'express-session';
 import { env } from './env.js';
+import { TursoSessionStore } from './sessionStore.js';
 
 export const sessionConfig = session({
+  store: new TursoSessionStore(),
   secret: env.SESSION_SECRET,
   name: '__Host-sess', // Cookie name
   cookie: {
