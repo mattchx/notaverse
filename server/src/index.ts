@@ -7,6 +7,7 @@ import { router as clipRouter } from './routes/clips.js';
 import { router as noteRouter } from './routes/notes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { env } from './config/env.js';
+import { initDb } from './db.js';
 
 const app = express();
 
@@ -24,7 +25,19 @@ app.use('/api/notes', noteRouter);
 // Error handling
 app.use(errorHandler);
 
-// Start server
-app.listen(env.PORT, () => {
-  console.log(`Server running at http://localhost:${env.PORT}`);
-});
+// Initialize database and start server
+async function start() {
+  try {
+    await initDb();
+    console.log('Database initialized successfully');
+
+    app.listen(env.PORT, () => {
+      console.log(`Server running at http://localhost:${env.PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    process.exit(1);
+  }
+}
+
+start().catch(console.error);
