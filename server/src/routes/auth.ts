@@ -54,9 +54,15 @@ router.post('/register', async (req, res) => {
 
   users.push(user);
 
-  // Set session
+  // Set session and save
   req.session.userId = user.id;
   req.session.email = user.email;
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
 
   res.status(201).json({
     message: 'User created successfully',
@@ -87,9 +93,15 @@ router.post('/login', async (req, res) => {
     });
   }
 
-  // Set session data
+  // Set session data and save
   req.session.userId = user.id;
   req.session.email = user.email;
+  await new Promise<void>((resolve, reject) => {
+    req.session.save((err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
 
   res.json({
     message: 'Logged in successfully',
@@ -108,7 +120,7 @@ router.post('/logout', (req, res) => {
         message: err.message
       });
     }
-    res.clearCookie('__Host-sess');
+    res.clearCookie('sess');
     res.json({ message: 'Logged out successfully' });
   });
 });

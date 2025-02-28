@@ -13,31 +13,10 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route 
-              path="/register" 
-              element={
-                <AuthRoute>
-                  <Register />
-                </AuthRoute>
-              } 
-            />
-            <Route 
-              path="/login" 
-              element={
-                <AuthRoute>
-                  <Login />
-                </AuthRoute>
-              } 
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/" element={<AuthRoute><Home /></AuthRoute>} />
+            <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
+            <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

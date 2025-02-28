@@ -7,7 +7,12 @@ interface AuthRouteProps {
 }
 
 const AuthRoute = ({ children }: AuthRouteProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Show nothing while checking auth
+  if (isLoading) {
+    return null;
+  }
 
   if (isAuthenticated) {
     // Redirect authenticated users to dashboard

@@ -11,6 +11,7 @@ interface AuthContextType {
   setIsAuthenticated: (value: boolean) => void;
   setUser: (user: User | null) => void;
   checkAuth: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,8 +31,10 @@ type AuthProviderProps = {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const checkAuth = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch('http://localhost:3002/api/auth/me', {
         credentials: 'include',
@@ -49,6 +52,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch {
       setIsAuthenticated(false);
       setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,7 +67,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     setIsAuthenticated,
     setUser,
-    checkAuth
+    checkAuth,
+    isLoading
   };
 
   return (

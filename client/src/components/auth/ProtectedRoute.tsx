@@ -7,8 +7,13 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+
+  // Show nothing while checking auth
+  if (isLoading) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     // Redirect to login with return URL

@@ -28,9 +28,10 @@ export class TursoSessionStore extends Store {
   async get(sid: string, callback: (err: any, session?: SessionData | null) => void) {
     try {
       const now = Date.now();
-      const result = await client.execute(
-        `SELECT * FROM ${this.tableName} WHERE id = '${sid}' AND (expires IS NULL OR expires > ${now})`
-      );
+      const result = await client.execute({
+        sql: `SELECT * FROM ${this.tableName} WHERE id = ? AND (expires IS NULL OR expires > ?)`,
+        args: [sid, now]
+      });
 
       if (!result.rows.length) {
         return callback(null, null);

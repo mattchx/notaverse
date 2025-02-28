@@ -5,11 +5,11 @@ import { TursoSessionStore } from './sessionStore.js';
 export const sessionConfig = session({
   store: new TursoSessionStore(),
   secret: env.SESSION_SECRET,
-  name: '__Host-sess', // Cookie name
+  name: 'sess', // Cookie name (removed __Host- prefix for dev compatibility)
   cookie: {
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
     httpOnly: true,
-    secure: env.NODE_ENV === 'production',
+    secure: false, // Allow non-HTTPS in development
     sameSite: 'lax',
     path: '/'
   },
