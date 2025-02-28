@@ -11,6 +11,7 @@ interface AuthContextType {
   setIsAuthenticated: (value: boolean) => void;
   setUser: (user: User | null) => void;
   checkAuth: () => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -57,6 +58,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const logout = async () => {
+    try {
+      const response = await fetch('http://localhost:3002/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+
+      setIsAuthenticated(false);
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   // Check auth status when the app loads
   useEffect(() => {
     checkAuth();
@@ -68,6 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsAuthenticated,
     setUser,
     checkAuth,
+    logout,
     isLoading
   };
 
@@ -76,4 +96,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
-};
+}
