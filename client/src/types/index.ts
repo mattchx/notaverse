@@ -1,31 +1,16 @@
-export type ResourceType = 'book' | 'podcast' | 'article' | 'audiobook';
-export type ClipType = 'quote' | 'highlight' | 'note';
-
-export interface Resource {
-  id: string;
-  type: ResourceType;
-  dateCreated: string;
-  dateUpdated: string;
+export interface ContentSection {
+  id: number;
   title: string;
-  author: string;
-  content: string;
-  // todo: update to support audio content
-}
-
-export interface Clip {
-  id: string;
-  resourceId: string;
-  type: ClipType;
-  dateCreated: string;
-  dateUpdated: string;
-  content: string;
+  type: 'podcast' | 'book';
+  description?: string;
 }
 
 export interface Note {
-  id: string;
-  resourceId: string;
-  clipId: string | null;
-  dateCreated: string;
-  dateUpdated: string;
-  content: string;
+  id: number;
+  contentId: number;
+  text: string;
+  timestamp?: number;  // For podcasts
+  pageNumber?: number; // For books
+  quote?: string;     // Optional quote
+  createdAt: number;
 }

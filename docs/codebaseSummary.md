@@ -1,151 +1,90 @@
-# Codebase Summary
+# Codebase Summary (MVP)
 
 ## Key Components and Their Interactions
 
 ### Content Management
 ```
-ContentViewer/
-├── AudioPlayer/       # Handles podcasts and audiobooks
-├── ArticleViewer/    # Renders article content with quote extraction
-├── PDFViewer/        # Manages PDF display (in progress)
-└── SectionNavigator/ # Common section navigation
+src/components/content/
+├── ContentList/     # Simple list of content sections
+└── ContentSection/  # Display individual content section
 ```
 
-### Quote System
+### Note System
 ```
-QuoteManager/
-├── ArticleQuoteExtractor/ # Implemented - text selection quotes
-├── AudioQuoteExtractor/   # Planned - timestamp quotes
-├── QuoteList/            # Planned - quote display
-└── QuoteEditor/          # Planned - edit/delete functionality
-```
-
-### Note Taking
-```
-NoteSystem/
-├── NoteEditor/       # Planned - create/edit notes
-├── NoteList/        # Planned - display notes by section
-└── NoteSummary/     # Planned - generate summaries
+src/components/notes/
+├── NoteList/     # Display notes for a content section
+└── NoteEditor/   # Create/edit notes with metadata
 ```
 
 ## Data Flow
 
-### Content Loading Flow
-1. User selects content in ContentLibrary
-2. ContentViewer loads content data
-3. Format-specific viewer renders
-4. Quote extraction system activates
+### Content Management Flow
+1. User creates new content section
+2. Content appears in ContentList
+3. User can select content to view/add notes
 
-### Quote Creation Flow
-1. User selects content (text/timestamp)
-2. QuoteExtractor processes selection
-3. Quote saves to QuoteContext
-4. UI updates to reflect new quote
-
-## External Dependencies
-
-### Core Dependencies
-- react: UI framework
-- typescript: Type checking
-- tailwindcss: Styling
-
-### Development Dependencies
-- vite: Build tool
-- jest: Testing (planned)
-
-## Recent Significant Changes
-1. Implemented Context API state management
-2. Created base content viewer components
-3. Added article quote extraction system
-4. Set up project documentation structure
+### Note Creation Flow
+1. User selects content section
+2. Creates note with optional metadata (timestamp/page number)
+3. Note saves to NoteContext
+4. UI updates to display new note
 
 ## Component Structure
 ```
 src/
 ├── components/
-│   └── content/
-│       ├── ContentViewer.tsx
-│       ├── ContentLibrary.tsx
-│       └── quotes/
-│           └── ArticleQuoteExtractor.tsx
+│   ├── content/
+│   │   ├── ContentList.tsx
+│   │   └── ContentSection.tsx
+│   └── notes/
+│       ├── NoteList.tsx
+│       └── NoteEditor.tsx
 ├── contexts/
 │   ├── AppProviders.tsx
 │   ├── ContentContext.tsx
-│   ├── QuoteContext.tsx
-│   └── NoteContext
-├── types/
-│   └── content.ts
-└── utils/           # Planned helper functions
+│   └── NoteContext.tsx
+└── types/
+    └── index.ts
 ```
+
+## State Management
+Using Context API with two main contexts:
+- ContentContext: Manages content sections
+- NoteContext: Manages notes and metadata
+
+## Next Implementation Steps
+1. Simplify ContentList component
+2. Create basic NoteEditor
+3. Implement metadata tracking
+4. Add local storage persistence
 
 ## Data Models
 
-### Content Interface
+### Content Section
 ```typescript
-interface Content {
+interface ContentSection {
   id: number;
-  type: 'podcast' | 'audiobook' | 'article' | 'pdf';
   title: string;
-  url?: string;
-  content?: string;
-  sections: Section[];
+  type: 'podcast' | 'book';
+  description?: string;
 }
 ```
 
-### Quote Interface
-```typescript
-interface Quote {
-  id: number;
-  contentId: number;
-  text: string;
-  timestamp?: number;  // For audio content
-  page?: number;       // For PDF content
-  sectionId: number;
-  createdAt: number;   // Unix timestamp
-}
-```
-
-### Note Interface
+### Note
 ```typescript
 interface Note {
   id: number;
   contentId: number;
-  sectionId: number;
   text: string;
-  createdAt: number;  // Unix timestamp
+  timestamp?: number;  // For podcasts
+  pageNumber?: number; // For books
+  quote?: string;     // Optional quote
+  createdAt: number;
 }
 ```
 
-## State Management
-Using Context API with specific contexts:
-- ContentContext: Manages active content
-- QuoteContext: Handles quotes
-- NoteContext: Manages notes
-- AppProviders: Combines all contexts
-
-## Next Implementation Steps
-1. Audio timestamp-based quote extraction
-2. PDF viewer integration
-3. Quote display and management UI
-4. Note creation interface
-5. Local storage persistence
-
-## Performance Considerations
-- Lazy loading for PDF viewer
-- Memoization for content rendering
-- Efficient state updates
-
-## Testing Strategy (Planned)
-- Unit tests for utilities
-- Component tests for core features
-- Integration tests for workflows
-
-## Accessibility Features (Planned)
-- ARIA labels
-- Keyboard navigation
-- Screen reader support
-
 ## Current Focus
-- Implementing timestamp-based quote extraction for audio content
-- Setting up quote management interface
-- Adding persistent storage
+- Implementing basic content section management
+- Setting up simple note-taking interface
+- Adding metadata tracking for timestamps/page numbers
+- Ensuring data persistence in localStorage

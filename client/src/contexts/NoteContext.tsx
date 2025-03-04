@@ -1,25 +1,30 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import { Note } from '../types/content';
+
+interface Note {
+  id: number;
+  contentId: number;
+  text: string;
+  timestamp?: number;  // For podcasts
+  pageNumber?: number; // For books
+  quote?: string;     // Optional quote
+  createdAt: number;
+}
 
 interface NoteState {
   notes: Note[];
-  activeNote: Note | null;
   isLoading: boolean;
   error: string | null;
 }
 
 type NoteAction =
   | { type: 'ADD_NOTE'; payload: Note }
-  | { type: 'UPDATE_NOTE'; payload: Note }
-  | { type: 'DELETE_NOTE'; payload: number }
-  | { type: 'SET_ACTIVE_NOTE'; payload: Note | null }
   | { type: 'SET_NOTES'; payload: Note[] }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string };
+  | { type: 'SET_ERROR'; payload: string }
+  | { type: 'CLEAR_NOTES' };
 
 const initialState: NoteState = {
   notes: [],
-  activeNote: null,
   isLoading: false,
   error: null,
 };
@@ -37,31 +42,6 @@ function noteReducer(state: NoteState, action: NoteAction): NoteState {
         notes: [...state.notes, action.payload],
         error: null,
       };
-    case 'UPDATE_NOTE':
-      return {
-        ...state,
-        notes: state.notes.map((note) =>
-          note.id === action.payload.id ? action.payload : note
-        ),
-        activeNote:
-          state.activeNote?.id === action.payload.id
-            ? action.payload
-            : state.activeNote,
-        error: null,
-      };
-    case 'DELETE_NOTE':
-      return {
-        ...state,
-        notes: state.notes.filter((note) => note.id !== action.payload),
-        activeNote:
-          state.activeNote?.id === action.payload ? null : state.activeNote,
-        error: null,
-      };
-    case 'SET_ACTIVE_NOTE':
-      return {
-        ...state,
-        activeNote: action.payload,
-      };
     case 'SET_NOTES':
       return {
         ...state,
@@ -78,6 +58,10 @@ function noteReducer(state: NoteState, action: NoteAction): NoteState {
         ...state,
         error: action.payload,
         isLoading: false,
+      };
+    case 'CLEAR_NOTES':
+      return {
+        ...initialState,
       };
     default:
       return state;
@@ -102,25 +86,23 @@ export function useNotes() {
   return context;
 }
 
-// Helper hooks and functions
 export function useNoteOperations() {
   const { dispatch } = useNotes();
 
   return {
-    addNote: (note: Note) => {
-      dispatch({ type: 'ADD_NOTE', payload: note });
-    },
-    updateNote: (note: Note) => {
-      dispatch({ type: 'UPDATE_NOTE', payload: note });
-    },
-    deleteNote: (noteId: number) => {
-      dispatch({ type: 'DELETE_NOTE', payload: noteId });
-    },
-    setActiveNote: (note: Note | null) => {
-      dispatch({ type: 'SET_ACTIVE_NOTE', payload: note });
+    addNote: (note: Omit<Note, 'id'>) => {
+      // In a real app, the ID would come from the backend
+      const newNote: Note = {
+        ...note,
+        id: Date.now(),
+      };
+      dispatch({ type: 'ADD_NOTE', payload: newNote });
     },
     setNotes: (notes: Note[]) => {
       dispatch({ type: 'SET_NOTES', payload: notes });
+    },
+    clearNotes: () => {
+      dispatch({ type: 'CLEAR_NOTES' });
     },
     setLoading: (loading: boolean) => {
       dispatch({ type: 'SET_LOADING', payload: loading });
@@ -131,27 +113,8 @@ export function useNoteOperations() {
   };
 }
 
-// Utility hooks for common note operations
-export function useNotesByContent(contentId: number) {
+// Helper hook to get notes for a specific content
+export function useContentNotes(contentId: number) {
   const { state } = useNotes();
-  return state.notes.filter((note) => note.contentId === contentId);
-}
-
-export function useNotesBySection(sectionId: number) {
-  const { state } = useNotes();
-  return state.notes.filter((note) => note.sectionId === sectionId);
-}
-
-export function useSectionNoteSummary(sectionId: number) {
-  const notes = useNotesBySection(sectionId);
-  return notes.map(note => ({
-    id: note.id,
-    text: note.text,
-    createdAt: note.createdAt,
-  }));
-}
-
-export function useActiveNote() {
-  const { state } = useNotes();
-  return state.activeNote;
+  return state.notes.filter(note => note.contentId === contentId);
 }

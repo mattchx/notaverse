@@ -1,7 +1,6 @@
 import React from 'react';
-import { ContentProvider } from './ContentContext';
-import { QuoteProvider } from './QuoteContext';
-import { NoteProvider } from './NoteContext';
+import { ContentProvider, useContent, useContentOperations } from './ContentContext';
+import { NoteProvider, useNotes, useNoteOperations } from './NoteContext';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -10,24 +9,28 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <ContentProvider>
-      <QuoteProvider>
-        <NoteProvider>
-          {children}
-        </NoteProvider>
-      </QuoteProvider>
+      <NoteProvider>
+        {children}
+      </NoteProvider>
     </ContentProvider>
   );
 }
 
 // Export a combined hook for accessing all contexts
 export function useAppState() {
-  const content = ContentProvider;
-  const quote = QuoteProvider;
-  const note = NoteProvider;
+  const { state: contentState } = useContent();
+  const { state: noteState } = useNotes();
+  const contentOps = useContentOperations();
+  const noteOps = useNoteOperations();
 
   return {
-    content,
-    quote,
-    note,
+    state: {
+      content: contentState,
+      notes: noteState,
+    },
+    operations: {
+      content: contentOps,
+      notes: noteOps,
+    }
   };
 }

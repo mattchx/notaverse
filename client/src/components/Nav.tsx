@@ -13,7 +13,14 @@ export default function Nav() {
 
   return (
     <nav className="py-4 mb-8 flex justify-between items-center">
-      <div className="text-2xl font-bold">Notaverse</div>
+      <div className="flex items-center gap-6">
+        <div className="text-2xl font-bold">Notaverse</div>
+        {isAuthenticated && (
+          <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+            Dashboard
+          </Button>
+        )}
+      </div>
       {isAuthenticated && (
         <Button variant="outline" onClick={handleLogout}>
           Logout

@@ -1,10 +1,21 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import { Content, ContentState, ContentAction, Section } from '../types/content';
+import { ContentSection } from '../types';
+
+interface ContentState {
+  activeContent: ContentSection | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+type ContentAction =
+  | { type: 'SET_CONTENT'; payload: ContentSection }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string }
+  | { type: 'CLEAR_CONTENT' };
 
 // Initial state
 const initialState: ContentState = {
   activeContent: null,
-  activeSection: null,
   isLoading: false,
   error: null,
 };
@@ -23,11 +34,6 @@ function contentReducer(state: ContentState, action: ContentAction): ContentStat
         ...state,
         activeContent: action.payload,
         error: null,
-      };
-    case 'SET_SECTION':
-      return {
-        ...state,
-        activeSection: action.payload,
       };
     case 'SET_LOADING':
       return {
@@ -75,21 +81,13 @@ export function useActiveContent() {
   return state.activeContent;
 }
 
-export function useActiveSection() {
-  const { state } = useContent();
-  return state.activeSection;
-}
-
 // Helper functions for common operations
 export function useContentOperations() {
   const { dispatch } = useContent();
 
   return {
-    setContent: (content: Content) => {
+    setContent: (content: ContentSection) => {
       dispatch({ type: 'SET_CONTENT', payload: content });
-    },
-    setSection: (section: Section) => {
-      dispatch({ type: 'SET_SECTION', payload: section });
     },
     clearContent: () => {
       dispatch({ type: 'CLEAR_CONTENT' });
