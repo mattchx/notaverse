@@ -148,7 +148,8 @@ export default function ContentViewer() {
     };
 
     loadContent();
-  }, [id, setContent, setLoading, setError]);
+    // State setter functions from context are stable and don't need to be dependencies
+  }, [id]);
 
   if (isLoading) {
     return <div className="text-center py-8">Loading content...</div>;
