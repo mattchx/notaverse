@@ -1,11 +1,11 @@
-
+import ContentLibrary from '../components/content/ContentLibrary';
 
 function Dashboard() {
   return (
-    <>
-    This is the dashboard
-    </>
+    <div className="min-h-screen bg-gray-50">
+      <ContentLibrary />
+    </div>
   );
-};
+}
 
-export default Dashboard
+export default Dashboard;
