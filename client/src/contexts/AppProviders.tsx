@@ -1,5 +1,5 @@
 import React from 'react';
-import { ContentProvider, useContent, useContentOperations } from './ContentContext';
+import { MediaProvider, useMedia, useMediaOperations } from './MediaContext';
 import { NoteProvider, useNotes, useNoteOperations } from './NoteContext';
 
 interface AppProvidersProps {
@@ -8,28 +8,28 @@ interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <ContentProvider>
+    <MediaProvider>
       <NoteProvider>
         {children}
       </NoteProvider>
-    </ContentProvider>
+    </MediaProvider>
   );
 }
 
 // Export a combined hook for accessing all contexts
 export function useAppState() {
-  const { state: contentState } = useContent();
+  const { state: mediaState } = useMedia();
   const { state: noteState } = useNotes();
-  const contentOps = useContentOperations();
+  const mediaOps = useMediaOperations();
   const noteOps = useNoteOperations();
 
   return {
     state: {
-      content: contentState,
+      media: mediaState,
       notes: noteState,
     },
     operations: {
-      content: contentOps,
+      media: mediaOps,
       notes: noteOps,
     }
   };
