@@ -2,7 +2,7 @@ export type MediaType = 'podcast' | 'book'
 
 export interface MediaItem {
   id: string
-  title: string
+  name: string
   author?: string
   sections: Section[]
   type: MediaType
@@ -11,7 +11,7 @@ export interface MediaItem {
 // chapter or hours
 export interface Section {
   id: string
-  title: string
+  name: string
   order: number // Position in the sequence of sections
   start?: string // page number or timestamp
   markers: Marker[]
@@ -24,8 +24,8 @@ export interface Marker {
   order: number // Position in the sequence of markers within a section
   quote?: string // (optional) lines from a book or snippet of audio
   note: string // thought or comment
-  dateCreated: string
-  dateUpdated: string
+  dateCreated?: string
+  dateUpdated?: string
 }
 
 // remove or update below as needed

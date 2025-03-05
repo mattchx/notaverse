@@ -1,38 +1,51 @@
 import { useNavigate } from 'react-router';
-import { ContentSection } from '../../types';
+import { MediaItem } from '../../types';
 import { useContent, useContentOperations } from '../../contexts/ContentContext';
 
 // Mock data - In a real app, this would come from an API
-const mockContent: ContentSection[] = [
+const mockData: MediaItem[] = [
   {
-    id: 1,
+    id: '1',
     type: 'podcast',
-    title: 'Tech Talk Episode 1',
-    description: 'A discussion about modern web development practices'
-  },
-  {
-    id: 2,
-    type: 'book',
-    title: 'Understanding TypeScript',
-    description: 'Comprehensive guide to TypeScript fundamentals'
+    name: 'Tech Talk Episode 1', // This should match what's used in ContentCard
+    sections: [
+      {
+        id: '1',
+        name: 'Introduction',
+        order: 0,
+        markers: [
+          {
+            id: '1',
+            position: '1:12',
+            order: 1,
+            quote: 'This is a test quote',
+            note: 'This is a test note'
+          },
+          {
+            id: '2',
+            position: '1:45',
+            order: 2,
+            quote: 'This is a test quote',
+            note: 'This is a test note'
+          },
+        ]
+      },
+      // { id: '2', name: 'Main Discussion', order: 1 },
+    ]
   }
 ];
 
-interface ContentCardProps {
-  content: ContentSection;
-}
-
-function ContentCard({ content }: ContentCardProps) {
+function MediaItemCard({ item }: { item: MediaItem }) {
   const navigate = useNavigate();
   const { setContent } = useContentOperations();
 
   const handleClick = () => {
-    setContent(content);
-    navigate(`/content/${content.id}`);
+    setContent(item);
+    navigate(`/content/${item.id}`);
   };
 
   // Helper function to get content type icon
-  const getContentTypeIcon = (type: ContentSection['type']) => {
+  const getContentTypeIcon = (type: MediaItem['type']) => {
     switch (type) {
       case 'podcast':
         return '🎙️';
@@ -44,27 +57,25 @@ function ContentCard({ content }: ContentCardProps) {
   };
 
   return (
-    <div 
+    <div
       onClick={handleClick}
       className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white"
     >
       <div className="flex items-center gap-3">
-        <span className="text-xl">{getContentTypeIcon(content.type)}</span>
+        <span className="text-xl">{getContentTypeIcon(item.type)}</span>
         <div>
-          <div className="text-lg font-semibold">{content.title}</div>
-          <div className="text-sm text-gray-500 capitalize">{content.type}</div>
+          <div className="text-lg font-semibold">{item.name}</div>
+          <div className="text-sm text-gray-500 capitalize">{item.type}</div>
         </div>
       </div>
-      {content.description && (
-        <div className="mt-2 text-sm text-gray-600">
-          {content.description}
-        </div>
-      )}
+      <div className="mt-2 text-xs text-gray-400">
+        {item.sections.length} sections
+      </div>
     </div>
   );
 }
 
-export default function ContentLibrary() {
+export default function MediaLibrary() {
   const { state } = useContent();
 
   return (
@@ -72,10 +83,10 @@ export default function ContentLibrary() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Content Library</h1>
         <div className="text-sm text-gray-500">
-          {mockContent.length} items
+          {mockData.length} items
         </div>
       </div>
-      
+
       {state.error && (
         <div className="text-red-500 mb-4 p-4 bg-red-50 rounded-md">
           {state.error}
@@ -83,12 +94,12 @@ export default function ContentLibrary() {
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {mockContent.map((content) => (
-          <ContentCard key={content.id} content={content} />
+        {mockData.map((item) => (
+          <MediaItemCard key={item.id} item={item} />
         ))}
       </div>
 
-      {mockContent.length === 0 && (
+      {mockData.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           No content available
         </div>
