@@ -8,8 +8,8 @@ import { AppProviders } from "./contexts/AppProviders";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AuthRoute from "./components/auth/AuthRoute";
 import Nav from "./components/Nav";
-import ContentLibrary from "./components/content/ContentLibrary";
-import ContentViewer from "./components/content/ContentViewer";
+import MediaLibrary from "./components/media/MediaLibrary";
+import MediaViewer from "./components/media/MediaViewer";
 
 function App() {
   return (
@@ -24,9 +24,9 @@ function App() {
                 <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
                 <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                {/* Content management routes */}
-                <Route path="/content" element={<ProtectedRoute><ContentLibrary /></ProtectedRoute>} />
-                <Route path="/content/:id" element={<ProtectedRoute><ContentViewer /></ProtectedRoute>} />
+                {/* Media liobrary management routes */}
+                <Route path="/library" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
+                <Route path="/library/book/:id" element={<ProtectedRoute><MediaViewer /></ProtectedRoute>} />
               </Routes>
             </div>
           </BrowserRouter>

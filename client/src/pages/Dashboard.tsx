@@ -1,9 +1,9 @@
-import ContentLibrary from '../components/content/ContentLibrary';
+import MediaLibrary from '../components/media/MediaLibrary';
 
 function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <ContentLibrary />
+      <MediaLibrary />
     </div>
   );
 }

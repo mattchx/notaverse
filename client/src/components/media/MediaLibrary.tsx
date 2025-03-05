@@ -42,11 +42,11 @@ function MediaItemCard({ item }: { item: MediaItem }) {
 
   const handleClick = () => {
     setContent(item);
-    navigate(`/content/${item.id}`);
+    navigate(`/library/book/${item.id}`);
   };
 
   // Helper function to get content type icon
-  const getContentTypeIcon = (type: MediaItem['type']) => {
+  const getMediaTypeIcon = (type: MediaItem['type']) => {
     switch (type) {
       case 'podcast':
         return '🎙️';
@@ -63,7 +63,7 @@ function MediaItemCard({ item }: { item: MediaItem }) {
       className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer bg-white"
     >
       <div className="flex items-center gap-3">
-        <span className="text-xl">{getContentTypeIcon(item.type)}</span>
+        <span className="text-xl">{getMediaTypeIcon(item.type)}</span>
         <div>
           <div className="text-lg font-semibold">{item.name}</div>
           <div className="text-sm text-gray-500 capitalize">{item.type}</div>
@@ -103,7 +103,7 @@ export default function MediaLibrary() {
 
       {mockData.length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          No content available
+          No media items available
         </div>
       )}
     </div>

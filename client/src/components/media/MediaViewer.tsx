@@ -2,11 +2,11 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useContent, useContentOperations } from '../../contexts/ContentContext';
 import { useNoteOperations, useContentNotes } from '../../contexts/NoteContext';
-import { ContentSection } from '../../types';
+import { Section } from '../../types';
 import { Button } from '../ui/button';
 
 // Simple note input component
-function NoteInput({ contentId }: { contentId: number }) {
+function NoteInput({ mediaItemId }: { mediaItemId: string }) {
   const [note, setNote] = React.useState('');
   const [metadata, setMetadata] = React.useState('');
   const { addNote } = useNoteOperations();
@@ -18,7 +18,7 @@ function NoteInput({ contentId }: { contentId: number }) {
     if (!content) return;
 
     const newNote = {
-      contentId,
+      mediaItemId,
       text: note,
       ...(content.type === 'podcast' 
         ? { timestamp: Number(metadata) || undefined }
@@ -58,8 +58,8 @@ function NoteInput({ contentId }: { contentId: number }) {
 }
 
 // Note list component
-function NoteList({ contentId }: { contentId: number }) {
-  const notes = useContentNotes(contentId);
+function NoteList({ mediaItemId }: { mediaItemId: string }) {
+  const notes = useContentNotes(mediaItemId);
 
   if (notes.length === 0) {
     return <p className="text-gray-500">No notes yet</p>;
@@ -121,7 +121,7 @@ export default function ContentViewer() {
         await new Promise(resolve => setTimeout(resolve, 500));
         
         // Mock content
-        const content: ContentSection = {
+        const content: Section = {
           id: parseInt(id),
           type: 'book',
           title: 'Sample Book',
@@ -137,8 +137,9 @@ export default function ContentViewer() {
     };
 
     fetchContent();
-  }, [id ]);
+  }, [id]);
   // setContent, setError, setLoading
+  
   if (isLoading) {
     return <div className="text-center py-8">Loading content...</div>;
   }
@@ -176,12 +177,12 @@ export default function ContentViewer() {
           <p className="text-gray-600 mb-4">
             Add notes with {activeContent.type === 'podcast' ? 'timestamps' : 'page numbers'}
           </p>
-          <NoteInput contentId={activeContent.id} />
+          <NoteInput mediaItemId={activeContent.id} />
         </div>
 
         <div className="p-4 border rounded-lg">
           <h2 className="text-xl font-semibold mb-4">Notes</h2>
-          <NoteList contentId={activeContent.id} />
+          <NoteList mediaItemId={activeContent.id} />
         </div>
       </div>
     </div>
