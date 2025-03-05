@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router';
 import { MediaItem } from '../../types';
 import { useContent, useContentOperations } from '../../contexts/ContentContext';
+import { Button } from '@/components/ui/button';
 
 // Mock data - In a real app, this would come from an API
 const mockData: MediaItem[] = [
@@ -79,12 +80,13 @@ export default function MediaLibrary() {
   const { state } = useContent();
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Content Library</h1>
+    <div className="container mx-auto p-8">
+      <div className="flex justify-between items-center mb-6 mx-6">
+        <h1 className="text-3xl font-bold">Library</h1>
         <div className="text-sm text-gray-500">
           {mockData.length} items
         </div>
+        <Button variant='outline'>+ Add Media Item</Button>
       </div>
 
       {state.error && (
