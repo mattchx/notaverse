@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router';
 import { MediaItem } from '../../types';
-import { useContent, useContentOperations } from '../../contexts/MediaContext';
+import { useMedia, useMediaOperations } from '../../contexts/MediaContext';
 import { Button } from '@/components/ui/button';
 
 // Mock data - In a real app, this would come from an API
@@ -8,7 +8,7 @@ const mockData: MediaItem[] = [
   {
     id: '1',
     type: 'podcast',
-    name: 'Tech Talk Episode 1', // This should match what's used in ContentCard
+    name: 'Tech Talk Episode 1', // This should match what's used in MediaCard
     sections: [
       {
         id: '1',
@@ -38,14 +38,14 @@ const mockData: MediaItem[] = [
 
 function MediaItemCard({ item }: { item: MediaItem }) {
   const navigate = useNavigate();
-  const { setContent } = useContentOperations();
+  const { setMedia } = useMediaOperations();
 
   const handleClick = () => {
-    setContent(item);
+    setMedia(item);
     navigate(`/library/book/${item.id}`);
   };
 
-  // Helper function to get content type icon
+  // Helper function to get media item type icon
   const getMediaTypeIcon = (type: MediaItem['type']) => {
     switch (type) {
       case 'podcast':
@@ -77,7 +77,7 @@ function MediaItemCard({ item }: { item: MediaItem }) {
 }
 
 export default function MediaLibrary() {
-  const { state } = useContent();
+  const { state } = useMedia();
 
   return (
     <div className="container mx-auto p-8">
