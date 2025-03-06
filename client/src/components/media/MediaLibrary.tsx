@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router';
 import { MediaItem } from '../../types';
-import { useContent, useContentOperations } from '../../contexts/ContentContext';
+import { useContent, useContentOperations } from '../../contexts/MediaContext';
 import { Button } from '@/components/ui/button';
 
 // Mock data - In a real app, this would come from an API
