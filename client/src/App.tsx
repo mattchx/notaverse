@@ -7,7 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AppProviders } from "./contexts/AppProviders";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AuthRoute from "./components/auth/AuthRoute";
-import Nav from "./components/Nav";
+import Nav from "./components/custom/Nav";
 import MediaLibrary from "./components/media/MediaLibrary";
 import MediaViewer from "./components/media/MediaViewer";
 

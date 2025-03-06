@@ -1,6 +1,6 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
-import { Button } from './ui/button';
+import { Button } from '../ui/button';
 
 export default function Nav() {
   const { isAuthenticated, logout } = useAuth();
