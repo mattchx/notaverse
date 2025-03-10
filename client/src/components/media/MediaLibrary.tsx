@@ -4,7 +4,7 @@ import { useMedia, useMediaOperations } from '../../contexts/MediaContext';
 import { Button } from '@/components/ui/button';
 
 // Mock data - In a real app, this would come from an API
-const mockData: MediaItem[] = [
+export const mockData: MediaItem[] = [
   {
     id: '1',
     type: 'podcast',
