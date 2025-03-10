@@ -13,7 +13,28 @@ export const mockData: MediaItem[] = [
       {
         id: '1',
         name: 'Introduction',
-        order: 0,
+        order: 1,
+        markers: [
+          {
+            id: '1',
+            position: '1:12',
+            order: 1,
+            quote: 'This is a test quote',
+            note: 'This is a test note'
+          },
+          {
+            id: '2',
+            position: '1:45',
+            order: 2,
+            quote: 'This is a test quote',
+            note: 'This is a test note'
+          },
+        ]
+      },
+      {
+        id: '2',
+        name: 'Chapter 2',
+        order: 2,
         markers: [
           {
             id: '1',
