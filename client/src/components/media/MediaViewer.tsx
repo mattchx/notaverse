@@ -38,7 +38,7 @@ export default function MediaViewer() {
     }
 
     fetchMediaItem();
-  }, [id, navigate, setError, setLoading, setMedia]);
+  }, [id]);
 
   const handleAddSection = async () => {
     if (!activeMedia) return;
