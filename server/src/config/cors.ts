@@ -5,5 +5,5 @@ export const corsConfig = cors({
   origin: env.CORS_ORIGIN,
   credentials: true, // Important for cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 });

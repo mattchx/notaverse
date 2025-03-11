@@ -5,6 +5,7 @@ import { authRouter } from './routes/auth.js';
 import { router as resourceRouter } from './routes/resources.js';
 import { router as clipRouter } from './routes/clips.js';
 import { router as noteRouter } from './routes/notes.js';
+import mediaRouter from './routes/media.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { env } from './config/env.js';
 import { initDb } from './db.js';
@@ -21,6 +22,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/resources', resourceRouter);
 app.use('/api/clips', clipRouter);
 app.use('/api/notes', noteRouter);
+app.use('/api/media', mediaRouter);
 
 // Error handling
 app.use(errorHandler);

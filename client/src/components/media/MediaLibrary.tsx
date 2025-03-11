@@ -1,61 +1,9 @@
 import { useNavigate } from 'react-router';
+import { useState, useEffect } from 'react';
 import { MediaItem } from '../../types';
 import { useMedia, useMediaOperations } from '../../contexts/MediaContext';
 import { Button } from '@/components/ui/button';
-
-// Mock data - In a real app, this would come from an API
-export const mockData: MediaItem[] = [
-  {
-    id: '1',
-    type: 'podcast',
-    name: 'Tech Talk Episode 1', // This should match what's used in MediaCard
-    sections: [
-      {
-        id: '1',
-        name: 'Introduction',
-        order: 1,
-        markers: [
-          {
-            id: '1',
-            position: '1:12',
-            order: 1,
-            quote: 'This is a test quote',
-            note: 'This is a test note'
-          },
-          {
-            id: '2',
-            position: '1:45',
-            order: 2,
-            quote: 'This is a test quote',
-            note: 'This is a test note'
-          },
-        ]
-      },
-      {
-        id: '2',
-        name: 'Chapter 2',
-        order: 2,
-        markers: [
-          {
-            id: '1',
-            position: '1:12',
-            order: 1,
-            quote: 'This is a test quote',
-            note: 'This is a test note'
-          },
-          {
-            id: '2',
-            position: '1:45',
-            order: 2,
-            quote: 'This is a test quote',
-            note: 'This is a test note'
-          },
-        ]
-      },
-      // { id: '2', name: 'Main Discussion', order: 1 },
-    ]
-  }
-];
+import { AddMediaModal } from './AddMediaModal';
 
 function MediaItemCard({ item }: { item: MediaItem }) {
   const navigate = useNavigate();
@@ -90,24 +38,79 @@ function MediaItemCard({ item }: { item: MediaItem }) {
           <div className="text-sm text-gray-500 capitalize">{item.type}</div>
         </div>
       </div>
-      <div className="mt-2 text-xs text-gray-400">
+      {/* <div className="mt-2 text-xs text-gray-400">
         {item.sections.length} sections
-      </div>
+      </div> */}
     </div>
   );
 }
 
 export default function MediaLibrary() {
   const { state } = useMedia();
+  const { setError, setLoading } = useMediaOperations();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchMediaItems() {
+      if (!mounted) return;
+      
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:3002/api/media', {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to fetch media items');
+        }
+
+        const text = await response.text();
+        console.log('Raw response:', text);
+        
+        if (!mounted) return;
+
+        try {
+          const data = JSON.parse(text);
+          setMediaItems(data);
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError);
+          throw new Error('Invalid JSON response from server');
+        }
+      } catch (error) {
+        if (mounted) {
+          setError(error instanceof Error ? error.message : 'Failed to fetch media items');
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchMediaItems();
+
+    return () => {
+      mounted = false;
+    };
+  }, []); // Remove dependencies to prevent re-fetching
 
   return (
     <div className="container mx-auto p-8">
       <div className="flex justify-between items-center mb-6 mx-6">
         <h1 className="text-3xl font-bold">Library</h1>
         <div className="text-sm text-gray-500">
-          {mockData.length} items
+          {mediaItems.length} items
         </div>
-        <Button variant='outline'>+ Add Media Item</Button>
+        <Button variant='outline' onClick={() => setIsAddModalOpen(true)}>
+          + Add Media Item
+        </Button>
       </div>
 
       {state.error && (
@@ -116,17 +119,30 @@ export default function MediaLibrary() {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {mockData.map((item) => (
-          <MediaItemCard key={item.id} item={item} />
-        ))}
-      </div>
-
-      {mockData.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No media items available
+      {state.isLoading ? (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {mediaItems.map((item) => (
+              <MediaItemCard key={item.id} item={item} />
+            ))}
+          </div>
+
+          {mediaItems.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No media items available
+            </div>
+          )}
+        </>
       )}
+
+      <AddMediaModal 
+        open={isAddModalOpen} 
+        onOpenChange={setIsAddModalOpen} 
+      />
     </div>
   );
 }

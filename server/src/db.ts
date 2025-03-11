@@ -14,11 +14,29 @@ const client = createClient({
 
 // Initialize database tables
 export async function initDb() {
-  const createTableSQL = await fs.readFile(
-    path.join(__dirname, 'sql', 'create_users_table.sql'),
-    'utf-8'
-  );
-  await client.execute(createTableSQL);
+  const [usersTableSQL, mediaTablesSQL] = await Promise.all([
+    fs.readFile(
+      path.join(__dirname, 'sql', 'create_users_table.sql'),
+      'utf-8'
+    ),
+    fs.readFile(
+      path.join(__dirname, 'sql', 'create_media_tables.sql'),
+      'utf-8'
+    )
+  ]);
+
+  // Execute users table creation
+  await client.execute(usersTableSQL);
+
+  // Split media tables SQL into separate statements and execute them
+  const mediaStatements = mediaTablesSQL
+    .split(';')
+    .map(stmt => stmt.trim())
+    .filter(stmt => stmt.length > 0);
+
+  for (const statement of mediaStatements) {
+    await client.execute(statement);
+  }
 }
 
 // User-related database functions

@@ -9,6 +9,7 @@ interface MediaState {
 
 type MediaAction =
   | { type: 'SET_MEDIA'; payload: MediaItem }
+  | { type: 'CREATE_MEDIA'; payload: MediaItem }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'CLEAR_MEDIA' };
@@ -29,7 +30,13 @@ const MediaContext = createContext<{
 // Media reducer
 function mediaReducer(state: MediaState, action: MediaAction): MediaState {
   switch (action.type) {
-    case 'MEDIA':
+    case 'SET_MEDIA':
+      return {
+        ...state,
+        activeMedia: action.payload,
+        error: null,
+      };
+    case 'CREATE_MEDIA':
       return {
         ...state,
         activeMedia: action.payload,
@@ -86,11 +93,14 @@ export function useMediaOperations() {
   const { dispatch } = useMedia();
 
   return {
-    setMedia: (Media: MediaSection) => {
-      dispatch({ type: 'SET_Media', payload: Media });
+    setMedia: (media: MediaItem) => {
+      dispatch({ type: 'SET_MEDIA', payload: media });
+    },
+    createMedia: (media: MediaItem) => {
+      dispatch({ type: 'CREATE_MEDIA', payload: media });
     },
     clearMedia: () => {
-      dispatch({ type: 'CLEAR_Media' });
+      dispatch({ type: 'CLEAR_MEDIA' });
     },
     setLoading: (loading: boolean) => {
       dispatch({ type: 'SET_LOADING', payload: loading });
