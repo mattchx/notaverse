@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router';
 import { useState, useEffect } from 'react';
+import { get as apiGet } from '../../utils/api';
 import { MediaItem } from '../../types';
 import { useMedia, useMediaOperations } from '../../contexts/MediaContext';
 import { Button } from '@/components/ui/button';
@@ -59,30 +60,10 @@ export default function MediaLibrary() {
       
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3002/api/media', {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+        const data = await apiGet<MediaItem[]>('/media', {
+          credentials: 'include'
         });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch media items');
-        }
-
-        const text = await response.text();
-        console.log('Raw response:', text);
-        
-        if (!mounted) return;
-
-        try {
-          const data = JSON.parse(text);
-          setMediaItems(data);
-        } catch (parseError) {
-          console.error('JSON parse error:', parseError);
-          throw new Error('Invalid JSON response from server');
-        }
+        setMediaItems(data);
       } catch (error) {
         if (mounted) {
           setError(error instanceof Error ? error.message : 'Failed to fetch media items');

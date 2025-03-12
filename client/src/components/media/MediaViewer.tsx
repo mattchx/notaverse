@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { get as apiGet, post as apiPost } from '@/utils/api';
 import { MediaItem, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
 import Section from './Section';
@@ -19,21 +20,11 @@ export default function MediaViewer() {
     async function fetchMediaItem() {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3002/api/media/${id}`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json'
-          }
+        const media = await apiGet<MediaItem>(`/media/${id}`, {
+          credentials: 'include'
         });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch media item');
-        }
-
-        const data = await response.json();
-        setActiveMedia(data);
-        setMedia(data);
+        setActiveMedia(media);
+        setMedia(media);
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Failed to fetch media item');
       } finally {
@@ -56,17 +47,9 @@ export default function MediaViewer() {
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3002/api/media/${activeMedia.id}/sections`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newSection),
+      await apiPost<SectionType>(`/media/${activeMedia.id}/sections`, newSection, {
         credentials: 'include'
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add section');
-      }
 
       const updatedMedia = {
         ...activeMedia,
@@ -86,17 +69,9 @@ export default function MediaViewer() {
 
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:3002/api/media/${activeMedia.id}/sections/${sectionId}/markers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newMarker),
+      await apiPost<Marker>(`/media/${activeMedia.id}/sections/${sectionId}/markers`, newMarker, {
         credentials: 'include'
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add marker');
-      }
 
       const updatedMedia = {
         ...activeMedia,

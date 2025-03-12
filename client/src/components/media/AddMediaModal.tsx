@@ -1,10 +1,11 @@
 import React from 'react';
+import { post as apiPost } from '@/utils/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMediaOperations } from "@/contexts/MediaContext";
-import { MediaType } from "@/types";
+import { MediaItem, MediaType } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
 
 interface AddMediaModalProps {
@@ -62,21 +63,9 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
           }
         ],
       };
-
       // Send request to API
-      const response = await fetch('/api/media', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newMedia),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create media item');
-      }
-
-      const data = await response.json();
-      createMedia(data);
+      const createdMedia = await apiPost<MediaItem>('/media', newMedia);
+      createMedia(createdMedia);
       onOpenChange(false);
       
       // Reset form

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { get as apiGet, post as apiPost } from '../utils/api';
 
 interface User {
   id: string;
@@ -37,17 +38,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkAuth = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:3002/api/auth/me', {
+      const data = await apiGet<{ user: User }>('/auth/me', {
         credentials: 'include',
       });
-
-      if (!response.ok) {
-        setIsAuthenticated(false);
-        setUser(null);
-        return;
-      }
-
-      const data = await response.json();
       setIsAuthenticated(true);
       setUser(data.user);
     } catch {
@@ -60,15 +53,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      const response = await fetch('http://localhost:3002/api/auth/logout', {
-        method: 'POST',
+      await apiPost('/auth/logout', null, {
         credentials: 'include',
       });
-
-      if (!response.ok) {
-        throw new Error('Logout failed');
-      }
-
       setIsAuthenticated(false);
       setUser(null);
     } catch (error) {
