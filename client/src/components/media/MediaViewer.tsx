@@ -14,12 +14,17 @@ export default function MediaViewer() {
 
   // Fetch media item data
   React.useEffect(() => {
-    async function fetchMediaItem() {
-      if (!id) return;
+    if (!id) return;
 
+    async function fetchMediaItem() {
       try {
         setLoading(true);
-        const response = await fetch(`/api/media/${id}`);
+        const response = await fetch(`http://localhost:3002/api/media/${id}`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -31,7 +36,6 @@ export default function MediaViewer() {
         setMedia(data);
       } catch (error) {
         setError(error instanceof Error ? error.message : 'Failed to fetch media item');
-        navigate('/library');
       } finally {
         setLoading(false);
       }
@@ -52,10 +56,11 @@ export default function MediaViewer() {
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/media/${activeMedia.id}/sections`, {
+      const response = await fetch(`http://localhost:3002/api/media/${activeMedia.id}/sections`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSection),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -81,10 +86,11 @@ export default function MediaViewer() {
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/media/${activeMedia.id}/sections/${sectionId}/markers`, {
+      const response = await fetch(`http://localhost:3002/api/media/${activeMedia.id}/sections/${sectionId}/markers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMarker),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -127,7 +133,7 @@ export default function MediaViewer() {
     return (
       <div className="container mx-auto py-8">
         <div className="text-center">
-          <p className="text-red-500">Media item not found</p>
+          <p className="text-red-500">{state.error || 'Media item not found'}</p>
           <Button onClick={() => navigate('/library')} className="mt-4">
             Return to Library
           </Button>
