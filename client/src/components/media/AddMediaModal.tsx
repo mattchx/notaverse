@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useMediaOperations } from "@/contexts/MediaContext";
 import { MediaItem, MediaType } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
+import { formatSectionName } from '@/utils/sectionNames';
 
 interface AddMediaModalProps {
   open: boolean;
@@ -57,7 +58,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         sections: [
           {
             id: uuidv4(),
-            name: formData.initialSection.trim(),
+            name: formData.initialSection.trim() || formatSectionName(formData.type, 1),
             order: 1,
             markers: [],
           }
@@ -147,7 +148,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
               name="initialSection"
               value={formData.initialSection}
               onChange={handleInputChange}
-              placeholder="Enter first section name (e.g., Chapter 1)"
+              placeholder={`Enter first section name (defaults to ${formData.type === 'book' ? 'Chapter 1' : 'Hour 1'})`}
               required
               minLength={2}
               maxLength={100}

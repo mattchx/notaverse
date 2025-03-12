@@ -5,6 +5,7 @@ import { MediaItem, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
 import Section from './Section';
 import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
+import { formatSectionName } from '@/utils/sectionNames';
 
 export default function MediaViewer() {
   const { id } = useParams();
@@ -40,7 +41,7 @@ export default function MediaViewer() {
 
     const newSection: SectionType = {
       id: crypto.randomUUID(),
-      name: `Section ${activeMedia.sections.length + 1}`,
+      name: formatSectionName(activeMedia.type, activeMedia.sections.length + 1),
       order: activeMedia.sections.length,
       markers: []
     };
