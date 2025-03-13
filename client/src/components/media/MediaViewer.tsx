@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { get as apiGet, post as apiPost } from '@/utils/api';
+import { get as apiGet, post as apiPost, put as apiPut } from '@/utils/api';
 import { MediaItem, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
 import Section from './Section';
 import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
-import { formatSectionName } from '@/utils/sectionNames';
 
 export default function MediaViewer() {
   const { id } = useParams();
@@ -41,8 +40,8 @@ export default function MediaViewer() {
 
     const newSection: SectionType = {
       id: crypto.randomUUID(),
-      name: formatSectionName(activeMedia.type, activeMedia.sections.length + 1),
-      order: activeMedia.sections.length,
+      title: 'New Section',
+      number: activeMedia.sections.length + 1,
       markers: []
     };
 
@@ -60,6 +59,32 @@ export default function MediaViewer() {
       setMedia(updatedMedia);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to add section');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateSectionTitle = async (sectionId: string, title: string) => {
+    if (!activeMedia) return;
+
+    try {
+      setLoading(true);
+      await apiPut<SectionType>(`/media/${activeMedia.id}/sections/${sectionId}`, { title }, {
+        credentials: 'include'
+      });
+
+      const updatedMedia = {
+        ...activeMedia,
+        sections: activeMedia.sections.map(section => 
+          section.id === sectionId 
+            ? { ...section, title }
+            : section
+        )
+      };
+      setActiveMedia(updatedMedia);
+      setMedia(updatedMedia);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to update section');
     } finally {
       setLoading(false);
     }
@@ -91,10 +116,10 @@ export default function MediaViewer() {
     }
   };
 
-  // Sort sections by order
+  // Sort sections by number
   const sortedSections = React.useMemo(() => {
     if (!activeMedia) return [];
-    return [...activeMedia.sections].sort((a, b) => a.order - b.order);
+    return [...activeMedia.sections].sort((a, b) => a.number - b.number);
   }, [activeMedia?.sections]);
 
   if (state.isLoading) {
@@ -142,6 +167,8 @@ export default function MediaViewer() {
           <Section 
             key={section.id}
             section={section}
+            mediaType={activeMedia.type}
+            onUpdateTitle={handleUpdateSectionTitle}
             onAddMarker={handleAddMarker}
           />
         ))}

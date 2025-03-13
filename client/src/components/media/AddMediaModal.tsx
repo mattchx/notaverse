@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { useMediaOperations } from "@/contexts/MediaContext";
 import { MediaItem, MediaType } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
-import { formatSectionName } from '@/utils/sectionNames';
 
 interface AddMediaModalProps {
   open: boolean;
@@ -38,6 +37,10 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const getDefaultSectionTitle = (type: MediaType, number: number) => {
+    return `${type === 'book' ? 'Chapter' : 'Hour'} ${number}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -45,8 +48,8 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
 
     try {
       // Validate form
-      if (!formData.name.trim() || !formData.initialSection.trim()) {
-        throw new Error('Name and initial section are required');
+      if (!formData.name.trim()) {
+        throw new Error('Name is required');
       }
 
       // Create new media item
@@ -58,8 +61,8 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         sections: [
           {
             id: uuidv4(),
-            name: formData.initialSection.trim() || formatSectionName(formData.type, 1),
-            order: 1,
+            title: formData.initialSection.trim() || getDefaultSectionTitle(formData.type, 1),
+            number: 1,
             markers: [],
           }
         ],
@@ -140,7 +143,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
 
           <div className="space-y-2">
             <Label htmlFor="initialSection">
-              Initial Section Name
+              Initial Section Title
               <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -148,8 +151,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
               name="initialSection"
               value={formData.initialSection}
               onChange={handleInputChange}
-              placeholder={`Enter first section name (defaults to ${formData.type === 'book' ? 'Chapter 1' : 'Hour 1'})`}
-              required
+              placeholder={`Enter first section title (defaults to ${formData.type === 'book' ? 'Chapter 1' : 'Hour 1'})`}
               minLength={2}
               maxLength={100}
             />

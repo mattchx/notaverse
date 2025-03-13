@@ -1,29 +1,80 @@
 import React from 'react';
-import { Section as SectionType, Marker } from '../../types';
+import { Section as SectionType, Marker, MediaType } from '../../types';
 import { Button } from '@/components/ui/button';
 import MarkerModal from './MarkerModal';
+import { Input } from '@/components/ui/input';
 
 interface SectionProps {
   section: SectionType;
+  mediaType: MediaType;
+  onUpdateTitle: (sectionId: string, title: string) => void;
   onAddMarker?: (sectionId: string, marker: Marker) => void;
 }
 
-export default function Section({ section, onAddMarker }: SectionProps) {
+export default function Section({ section, mediaType, onUpdateTitle, onAddMarker }: SectionProps) {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [title, setTitle] = React.useState(section.title);
+
+  const handleTitleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdateTitle(section.id, title);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setTitle(section.title);
+    setIsEditing(false);
+  };
+
+  const handleAddMarker = (marker: Marker) => {
+    onAddMarker?.(section.id, marker);
+  };
+
+  const getSectionPrefix = () => {
+    return mediaType === 'book' ? 'Chapter' : 'Hour';
+  };
 
   // Sort markers by order
   const sortedMarkers = React.useMemo(() => {
     return [...section.markers].sort((a, b) => a.order - b.order);
   }, [section.markers]);
 
-  const handleAddMarker = (marker: Marker) => {
-    onAddMarker?.(section.id, marker);
-  };
-
   return (
     <div className="p-4 border rounded-lg">
       <div className="mb-4">
-        <h2 className="text-xl font-semibold">{section.name}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">
+            {getSectionPrefix()} {section.number}
+          </h2>
+          {isEditing ? (
+            <form onSubmit={handleTitleSubmit} className="flex items-center gap-2 flex-1">
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="flex-1"
+                placeholder="Enter section title"
+                autoFocus
+              />
+              <Button type="submit" size="sm">Save</Button>
+              <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
+                Cancel
+              </Button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-2 flex-1">
+              <span className="text-gray-600">- {section.title}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-2"
+                onClick={() => setIsEditing(true)}
+              >
+                Edit
+              </Button>
+            </div>
+          )}
+        </div>
         {section.start && (
           <p className="text-sm text-gray-500">
             Starts at: {section.start}
@@ -57,10 +108,10 @@ export default function Section({ section, onAddMarker }: SectionProps) {
 
               {marker.dateCreated && (
                 <div className="mt-2 text-xs text-gray-400">
-                  Created: {new Date(Number(marker.dateCreated)).toLocaleDateString()}
+                  Created: {new Date(marker.dateCreated).toLocaleDateString()}
                   {marker.dateUpdated && (
                     <span className="ml-2">
-                      • Updated: {new Date(Number(marker.dateUpdated)).toLocaleDateString()}
+                      • Updated: {new Date(marker.dateUpdated).toLocaleDateString()}
                     </span>
                   )}
                 </div>

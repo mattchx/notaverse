@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS media_items (
 CREATE TABLE IF NOT EXISTS sections (
   id TEXT PRIMARY KEY,
   media_id TEXT NOT NULL,
-  name TEXT NOT NULL,
-  order_num INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  number INTEGER NOT NULL,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
   FOREIGN KEY (media_id) REFERENCES media_items(id) ON DELETE CASCADE

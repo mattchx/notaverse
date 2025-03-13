@@ -11,8 +11,8 @@ export interface MediaItem {
 export interface Section {
   id: string;
   mediaId: string;
-  name: string;
-  order: number;
+  title: string;      // Changed from name to title
+  number: number;     // Changed from order to number
   markers: Marker[];
   createdAt: Date;
   updatedAt: Date;

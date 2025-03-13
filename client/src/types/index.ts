@@ -8,12 +8,11 @@ export interface MediaItem {
   type: MediaType
 }
 
-// chapter or hours
 export interface Section {
   id: string
-  name: string
-  order: number // Position in the sequence of sections
-  start?: string // page number or timestamp
+  title: string     // Changed from name
+  number: number    // Changed from order
+  start?: string    // page number or timestamp
   markers: Marker[]
 }
 
@@ -27,8 +26,6 @@ export interface Marker {
   dateCreated?: string
   dateUpdated?: string
 }
-
-// remove or update below as needed
 
 // Helper type for active content state
 export interface ContentState {

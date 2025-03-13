@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import db from '../db.js';
-import { MediaItem } from '../types/media.js';
+import { MediaItem, Section } from '../types/media.js';
 
 const router = Router();
 
@@ -57,7 +57,7 @@ router.get('/:id', async (req, res) => {
 
     // Get sections
     const sectionsResult = await db.execute({
-      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY order_num',
+      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
       args: [id]
     });
 
@@ -70,8 +70,8 @@ router.get('/:id', async (req, res) => {
 
       return {
         id: section.id,
-        name: section.name,
-        order: section.order_num,
+        title: section.title,
+        number: section.number,
         markers: markersResult.rows.map(marker => ({
           id: marker.id,
           position: marker.position,
@@ -124,8 +124,8 @@ router.post('/', async (req, res) => {
     // Insert sections
     for (const section of newMedia.sections) {
       await db.execute({
-        sql: 'INSERT INTO sections (id, media_id, name, order_num, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-        args: [section.id, newMedia.id, section.name, section.order, now, now]
+        sql: 'INSERT INTO sections (id, media_id, title, number, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+        args: [section.id, newMedia.id, section.title, section.number, now, now]
       });
 
       // Insert markers if any
@@ -156,7 +156,7 @@ router.post('/', async (req, res) => {
 
     // Get sections
     const sectionsResult = await db.execute({
-      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY order_num',
+      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
       args: [newMedia.id]
     });
 
@@ -169,8 +169,8 @@ router.post('/', async (req, res) => {
 
       return {
         id: section.id,
-        name: section.name,
-        order: section.order_num,
+        title: section.title,
+        number: section.number,
         markers: markersResult.rows.map(marker => ({
           id: marker.id,
           position: marker.position,
@@ -202,7 +202,7 @@ router.post('/', async (req, res) => {
 router.post('/:mediaId/sections', async (req, res) => {
   try {
     const { mediaId } = req.params;
-    const section = req.body;
+    const section: Section = req.body;
     const now = Date.now();
 
     // Verify media item exists
@@ -217,8 +217,8 @@ router.post('/:mediaId/sections', async (req, res) => {
 
     // Insert section
     await db.execute({
-      sql: 'INSERT INTO sections (id, media_id, name, order_num, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      args: [section.id, mediaId, section.name, section.order, now, now]
+      sql: 'INSERT INTO sections (id, media_id, title, number, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+      args: [section.id, mediaId, section.title, section.number, now, now]
     });
 
     const createdSection = {
@@ -231,6 +231,49 @@ router.post('/:mediaId/sections', async (req, res) => {
   } catch (error) {
     console.error('Error creating section:', error);
     res.status(500).json({ error: 'Failed to create section' });
+  }
+});
+
+// Update section title
+router.put('/:mediaId/sections/:sectionId', async (req, res) => {
+  try {
+    const { mediaId, sectionId } = req.params;
+    const { title } = req.body;
+    const now = Date.now();
+
+    // Verify section exists and belongs to the media item
+    const sectionResult = await db.execute({
+      sql: 'SELECT id FROM sections WHERE id = ? AND media_id = ?',
+      args: [sectionId, mediaId]
+    });
+
+    if (sectionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Section not found' });
+    }
+
+    // Update section title
+    await db.execute({
+      sql: 'UPDATE sections SET title = ?, updated_at = ? WHERE id = ?',
+      args: [title, now, sectionId]
+    });
+
+    // Get updated section
+    const updatedSectionResult = await db.execute({
+      sql: 'SELECT * FROM sections WHERE id = ?',
+      args: [sectionId]
+    });
+
+    const section = updatedSectionResult.rows[0];
+
+    res.json({
+      id: section.id,
+      title: section.title,
+      number: section.number,
+      markers: [] // We don't need to fetch markers for a title update
+    });
+  } catch (error) {
+    console.error('Error updating section:', error);
+    res.status(500).json({ error: 'Failed to update section' });
   }
 });
 
