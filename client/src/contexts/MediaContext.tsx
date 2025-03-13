@@ -2,12 +2,14 @@ import React, { createContext, useContext, useReducer } from 'react';
 import { MediaItem } from '../types';
 
 interface MediaState {
+  mediaItems: MediaItem[];
   activeMedia: MediaItem | null;
   isLoading: boolean;
   error: string | null;
 }
 
 type MediaAction =
+  | { type: 'SET_MEDIA_LIST'; payload: MediaItem[] }
   | { type: 'SET_MEDIA'; payload: MediaItem }
   | { type: 'CREATE_MEDIA'; payload: MediaItem }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -16,6 +18,7 @@ type MediaAction =
 
 // Initial state
 const initialState: MediaState = {
+  mediaItems: [],
   activeMedia: null,
   isLoading: false,
   error: null,
@@ -30,6 +33,12 @@ const MediaContext = createContext<{
 // Media reducer
 function mediaReducer(state: MediaState, action: MediaAction): MediaState {
   switch (action.type) {
+    case 'SET_MEDIA_LIST':
+      return {
+        ...state,
+        mediaItems: action.payload,
+        error: null,
+      };
     case 'SET_MEDIA':
       return {
         ...state,
@@ -39,6 +48,7 @@ function mediaReducer(state: MediaState, action: MediaAction): MediaState {
     case 'CREATE_MEDIA':
       return {
         ...state,
+        mediaItems: [...state.mediaItems, action.payload],
         activeMedia: action.payload,
         error: null,
       };
@@ -93,6 +103,9 @@ export function useMediaOperations() {
   const { dispatch } = useMedia();
 
   return {
+    setMediaList: (mediaItems: MediaItem[]) => {
+      dispatch({ type: 'SET_MEDIA_LIST', payload: mediaItems });
+    },
     setMedia: (media: MediaItem) => {
       dispatch({ type: 'SET_MEDIA', payload: media });
     },

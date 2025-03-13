@@ -18,15 +18,30 @@ router.get('/', async (req, res) => {
       return;
     }
 
-    // Transform the results to handle dates
-    const mediaItems = mediaResult.rows.map(row => {
+    // Transform media items and fetch their sections
+    const mediaItems = await Promise.all(mediaResult.rows.map(async row => {
       const { created_at, updated_at, ...rest } = row;
+
+      // Get sections for this media item
+      const sectionsResult = await db.execute({
+        sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
+        args: [row.id]
+      });
+
+      const sections = sectionsResult.rows.map(section => ({
+        id: section.id,
+        title: section.title,
+        number: section.number,
+        markers: [], // We don't need markers for the list view
+      }));
+
       return {
         ...rest,
+        sections,
         createdAt: new Date(created_at as number).toISOString(),
         updatedAt: new Date(updated_at as number).toISOString()
       };
-    });
+    }));
 
     res.json(mediaItems);
   } catch (error) {

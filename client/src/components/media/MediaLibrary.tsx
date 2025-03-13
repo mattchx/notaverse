@@ -1,14 +1,32 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { AddMediaModal } from './AddMediaModal';
 import { Button } from '@/components/ui/button';
 import { MediaItem } from '@/types';
-import { useMedia } from '@/contexts/MediaContext';
+import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
+import { get as apiGet } from '@/utils/api';
 
 export default function MediaLibrary() {
   const navigate = useNavigate();
   const { state } = useMedia();
+  const { setMediaList, setLoading, setError } = useMediaOperations();
   const [open, setOpen] = React.useState(false);
+
+  useEffect(() => {
+    async function fetchMedia() {
+      setLoading(true);
+      try {
+        const media = await apiGet<MediaItem[]>('/media');
+        setMediaList(media);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Failed to fetch media items');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMedia();
+  }, []);
 
   const handleCardClick = (mediaItem: MediaItem) => {
     navigate(`/library/item/${mediaItem.id}`);
@@ -36,25 +54,25 @@ export default function MediaLibrary() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {state.activeMedia && (
+        {state.mediaItems.map((mediaItem) => (
           <div
-            key={state.activeMedia.id}
+            key={mediaItem.id}
             className="border rounded-lg p-6 cursor-pointer hover:border-blue-500 transition-colors"
-            onClick={() => handleCardClick(state.activeMedia!)}
+            onClick={() => handleCardClick(mediaItem)}
           >
-            <h2 className="text-xl font-semibold mb-2">{state.activeMedia.name}</h2>
-            {state.activeMedia.author && (
-              <p className="text-gray-600 mb-4">{state.activeMedia.author}</p>
+            <h2 className="text-xl font-semibold mb-2">{mediaItem.name}</h2>
+            {mediaItem.author && (
+              <p className="text-gray-600 mb-4">{mediaItem.author}</p>
             )}
             <div className="flex justify-between items-center text-sm text-gray-500">
-              <span className="capitalize">{state.activeMedia.type}</span>
-              <span>{state.activeMedia.sections.length} sections</span>
+              <span className="capitalize">{mediaItem.type}</span>
+              <span>{mediaItem.sections.length} sections</span>
             </div>
           </div>
-        )}
+        ))}
       </div>
 
-      {!state.activeMedia && !state.isLoading && (
+      {state.mediaItems.length === 0 && !state.isLoading && (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">No media items yet</p>
           <Button onClick={() => setOpen(true)}>
