@@ -11,7 +11,7 @@ export default function MediaLibrary() {
   const [open, setOpen] = React.useState(false);
 
   const handleCardClick = (mediaItem: MediaItem) => {
-    navigate(`/media/${mediaItem.id}`);
+    navigate(`/library/item/${mediaItem.id}`);
   };
 
   if (state.isLoading) {

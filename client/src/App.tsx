@@ -26,7 +26,7 @@ function App() {
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 {/* Media liobrary management routes */}
                 <Route path="/library" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
-                <Route path="/library/book/:id" element={<ProtectedRoute><MediaViewer /></ProtectedRoute>} />
+                <Route path="/library/item/:id" element={<ProtectedRoute><MediaViewer /></ProtectedRoute>} />
               </Routes>
             </div>
           </BrowserRouter>
