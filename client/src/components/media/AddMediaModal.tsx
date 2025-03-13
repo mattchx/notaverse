@@ -1,6 +1,6 @@
 import React from 'react';
 import { post as apiPost } from '@/utils/api';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -92,6 +92,9 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Media Item</DialogTitle>
+          <DialogDescription>
+            Add a new book or podcast to your library. Required fields are marked with an asterisk (*).
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
