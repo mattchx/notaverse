@@ -37,10 +37,6 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const getDefaultSectionTitle = (type: MediaType, number: number) => {
-    return `${type === 'book' ? 'Chapter' : 'Hour'} ${number}`;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -61,7 +57,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         sections: [
           {
             id: uuidv4(),
-            title: formData.initialSection.trim() || getDefaultSectionTitle(formData.type, 1),
+            title: formData.initialSection.trim() || 'Untitled Section',
             number: 1,
             markers: [],
           }
@@ -154,7 +150,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
               name="initialSection"
               value={formData.initialSection}
               onChange={handleInputChange}
-              placeholder={`Enter first section title (defaults to ${formData.type === 'book' ? 'Chapter 1' : 'Hour 1'})`}
+              placeholder="Enter section title (defaults to Untitled)"
               minLength={2}
               maxLength={100}
             />

@@ -40,7 +40,7 @@ export default function MediaViewer() {
 
     const newSection: SectionType = {
       id: crypto.randomUUID(),
-      title: 'New Section',
+      title: 'Untitled Section',
       number: activeMedia.sections.length + 1,
       markers: []
     };
