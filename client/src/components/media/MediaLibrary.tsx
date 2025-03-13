@@ -1,16 +1,55 @@
 import React, { useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { AddMediaModal } from './AddMediaModal';
 import { Button } from '@/components/ui/button';
 import { MediaItem } from '@/types';
 import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
-import { get as apiGet } from '@/utils/api';
+import { get as apiGet, del as apiDelete } from '@/utils/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function MediaLibrary() {
   const navigate = useNavigate();
   const { state } = useMedia();
-  const { setMediaList, setLoading, setError } = useMediaOperations();
+  const { setMediaList, setLoading, setError, deleteMedia } = useMediaOperations();
   const [open, setOpen] = React.useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+  const [mediaToDelete, setMediaToDelete] = React.useState<MediaItem | null>(null);
+
+  const handleDelete = async () => {
+    if (!mediaToDelete) return;
+    
+    const idToDelete = mediaToDelete.id;
+    
+    // Close dialog first
+    setShowDeleteDialog(false);
+    setMediaToDelete(null);
+    
+    try {
+      // Delete from server - ignoring return since it's a 204
+      await apiDelete(`/media/${idToDelete}`, {
+        credentials: 'include'
+      });
+      
+      // Update local state
+      deleteMedia(idToDelete);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete media item');
+    }
+  };
+
+  const confirmDelete = (e: React.MouseEvent, mediaItem: MediaItem) => {
+    e.stopPropagation(); // Prevent navigation
+    setMediaToDelete(mediaItem);
+    setShowDeleteDialog(true);
+  };
 
   useEffect(() => {
     async function fetchMedia() {
@@ -60,14 +99,27 @@ export default function MediaLibrary() {
             className="border rounded-lg p-6 cursor-pointer hover:border-blue-500 transition-colors"
             onClick={() => handleCardClick(mediaItem)}
           >
-            <h2 className="text-xl font-semibold mb-2">{mediaItem.name}</h2>
-            {mediaItem.author && (
-              <p className="text-gray-600 mb-4">{mediaItem.author}</p>
-            )}
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-xl font-semibold mb-2">{mediaItem.name}</h2>
+                {mediaItem.author && (
+                  <p className="text-gray-600">{mediaItem.author}</p>
+                )}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => confirmDelete(e, mediaItem)}
+                className="h-8 w-8 hover:text-red-500"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
             <div className="flex justify-between items-center text-sm text-gray-500">
               <span className="capitalize">{mediaItem.type}</span>
               <span>{mediaItem.sections.length} sections</span>
             </div>
+
           </div>
         ))}
       </div>
@@ -80,6 +132,31 @@ export default function MediaLibrary() {
           </Button>
         </div>
       )}
+
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) setMediaToDelete(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Media</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{mediaToDelete?.name}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={state.isLoading}>
+              {state.isLoading ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AddMediaModal
         open={open}

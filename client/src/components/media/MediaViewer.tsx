@@ -1,16 +1,8 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { get as apiGet, post as apiPost, put as apiPut, del as apiDelete } from '@/utils/api';
+import { get as apiGet, post as apiPost, put as apiPut } from '@/utils/api';
 import { MediaItem, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import Section from './Section';
 import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
 
@@ -18,25 +10,8 @@ export default function MediaViewer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state } = useMedia();
-  const { setMedia, setLoading, setError, deleteMedia } = useMediaOperations();
+  const { setMedia, setLoading, setError } = useMediaOperations();
   const [activeMedia, setActiveMedia] = React.useState<MediaItem | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
-
-  const handleDelete = async () => {
-    if (!activeMedia) return;
-    
-    try {
-      setLoading(true);
-      await apiDelete(`/media/${activeMedia.id}`);
-      deleteMedia(activeMedia.id);
-      navigate('/library');
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete media item');
-    } finally {
-      setLoading(false);
-      setShowDeleteDialog(false);
-    }
-  };
 
   // Fetch media item data
   React.useEffect(() => {

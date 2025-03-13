@@ -22,6 +22,11 @@ async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
     throw new Error(response.statusText);
   }
 
+  // Handle empty responses (like 204 No Content)
+  if (response.status === 204) {
+    return null as T;
+  }
+
   return response.json();
 }
 
