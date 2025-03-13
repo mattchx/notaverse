@@ -338,4 +338,56 @@ router.post('/:mediaId/sections/:sectionId/markers', async (req, res) => {
   }
 });
 
+// Delete media item
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // First verify the media item exists
+    const mediaResult = await db.execute({
+      sql: 'SELECT id FROM media_items WHERE id = ?',
+      args: [id]
+    });
+
+    if (mediaResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Media item not found' });
+    }
+
+    // Get all sections for this media item
+    const sectionsResult = await db.execute({
+      sql: 'SELECT id FROM sections WHERE media_id = ?',
+      args: [id]
+    });
+
+    // Delete in order: markers -> sections -> media item
+    for (const section of sectionsResult.rows) {
+      // Delete all markers for this section
+      await db.execute({
+        sql: 'DELETE FROM markers WHERE section_id = ?',
+        args: [section.id]
+      });
+    }
+
+    // Delete all sections
+    await db.execute({
+      sql: 'DELETE FROM sections WHERE media_id = ?',
+      args: [id]
+    });
+
+    // Finally, delete the media item
+    await db.execute({
+      sql: 'DELETE FROM media_items WHERE id = ?',
+      args: [id]
+    });
+
+    res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting media item:', error);
+    res.status(500).json({
+      error: 'Failed to delete media item',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;
