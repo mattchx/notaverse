@@ -163,32 +163,7 @@ export default function MediaViewer() {
               <p className="text-xl text-gray-600">{activeMedia.author}</p>
             )}
           </div>
-          <Button
-            variant="destructive"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            Delete Media
-          </Button>
         </div>
-
-        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Media</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete "{activeMedia.name}"? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={state.isLoading}>
-                {state.isLoading ? 'Deleting...' : 'Delete'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <div className="space-y-6">
