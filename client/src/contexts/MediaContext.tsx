@@ -12,6 +12,7 @@ type MediaAction =
   | { type: 'SET_MEDIA_LIST'; payload: MediaItem[] }
   | { type: 'SET_MEDIA'; payload: MediaItem }
   | { type: 'CREATE_MEDIA'; payload: MediaItem }
+  | { type: 'DELETE_MEDIA'; payload: string }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'CLEAR_MEDIA' };
@@ -62,6 +63,12 @@ function mediaReducer(state: MediaState, action: MediaAction): MediaState {
         ...state,
         error: action.payload,
         isLoading: false,
+      };
+    case 'DELETE_MEDIA':
+      return {
+        ...state,
+        mediaItems: state.mediaItems.filter(item => item.id !== action.payload),
+        error: null,
       };
     case 'CLEAR_MEDIA':
       return {
@@ -120,6 +127,9 @@ export function useMediaOperations() {
     },
     setError: (error: string) => {
       dispatch({ type: 'SET_ERROR', payload: error });
+    },
+    deleteMedia: (mediaId: string) => {
+      dispatch({ type: 'DELETE_MEDIA', payload: mediaId });
     },
   };
 }
