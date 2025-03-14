@@ -25,7 +25,7 @@ interface SectionProps {
   mediaType: MediaType;
   onUpdateTitle: (sectionId: string, title: string) => void;
   onAddMarker?: (sectionId: string, marker: Marker) => void;
-  onDeleteSection?: (sectionId: string) => void;
+  // onDeleteSection?: (sectionId: string) => void; // Temporarily disabled
   onDeleteMarker?: (sectionId: string, markerId: string) => void;
   onUpdateMarker?: (sectionId: string, marker: Marker) => void;
 }
@@ -35,14 +35,14 @@ export default function Section({
   mediaType,
   onUpdateTitle,
   onAddMarker,
-  onDeleteSection,
+  // onDeleteSection, // Temporarily disabled
   onDeleteMarker,
   onUpdateMarker
 }: SectionProps) {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isEditing, setIsEditing] = React.useState(false);
   const [title, setTitle] = React.useState(section.title);
-  const [deleteSectionDialog, setDeleteSectionDialog] = React.useState(false);
+  // const [deleteSectionDialog, setDeleteSectionDialog] = React.useState(false); // Temporarily disabled
   const [deleteMarkerDialog, setDeleteMarkerDialog] = React.useState<string | null>(null);
   const [editingMarker, setEditingMarker] = React.useState<Marker | null>(null);
 
@@ -120,12 +120,14 @@ export default function Section({
                   <DropdownMenuItem onClick={() => setIsEditing(true)}>
                     Edit
                   </DropdownMenuItem>
+                  {/* Delete functionality temporarily disabled
                   <DropdownMenuItem
                     onClick={() => setDeleteSectionDialog(true)}
                     className="text-red-600"
                   >
                     Delete
                   </DropdownMenuItem>
+                  */}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -169,7 +171,7 @@ export default function Section({
         />
       </div>
 
-      {/* Delete Section Dialog */}
+      {/* Delete Section Dialog - temporarily disabled
       <Dialog open={deleteSectionDialog} onOpenChange={setDeleteSectionDialog}>
         <DialogContent>
           <DialogHeader>
@@ -193,6 +195,7 @@ export default function Section({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      */}
 
       {/* Delete Marker Dialog */}
       <Dialog open={!!deleteMarkerDialog} onOpenChange={() => setDeleteMarkerDialog(null)}>

@@ -10,7 +10,7 @@ export default function MediaViewer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state } = useMedia();
-  const { setMedia, setLoading, setError, deleteSection, deleteMarker, updateMarker } = useMediaOperations();
+  const { setMedia, setLoading, setError, deleteMarker, updateMarker } = useMediaOperations();
   const [activeMedia, setActiveMedia] = React.useState<MediaItem | null>(null);
 
   // Fetch media item data
@@ -116,29 +116,30 @@ export default function MediaViewer() {
     }
   };
 
-  const handleDeleteSection = async (sectionId: string) => {
-    if (!activeMedia) return;
+  // Delete section functionality temporarily disabled
+  // const handleDeleteSection = async (sectionId: string) => {
+  //   if (!activeMedia) return;
 
-    try {
-      setLoading(true);
-      await fetch(`/media/${activeMedia.id}/sections/${sectionId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
+  //   try {
+  //     setLoading(true);
+  //     await fetch(`/media/${activeMedia.id}/sections/${sectionId}`, {
+  //       method: 'DELETE',
+  //       credentials: 'include'
+  //     });
 
-      deleteSection(sectionId);
-      const updatedMedia = {
-        ...activeMedia,
-        sections: activeMedia.sections.filter(section => section.id !== sectionId)
-      };
-      setActiveMedia(updatedMedia);
-      setMedia(updatedMedia);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete section');
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     deleteSection(sectionId);
+  //     const updatedMedia = {
+  //       ...activeMedia,
+  //       sections: activeMedia.sections.filter(section => section.id !== sectionId)
+  //     };
+  //     setActiveMedia(updatedMedia);
+  //     setMedia(updatedMedia);
+  //   } catch (error) {
+  //     setError(error instanceof Error ? error.message : 'Failed to delete section');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleDeleteMarker = async (sectionId: string, markerId: string) => {
     if (!activeMedia) return;
@@ -263,7 +264,7 @@ export default function MediaViewer() {
             mediaType={activeMedia.type}
             onUpdateTitle={handleUpdateSectionTitle}
             onAddMarker={handleAddMarker}
-            onDeleteSection={handleDeleteSection}
+            // onDeleteSection={handleDeleteSection} // Temporarily disabled
             onDeleteMarker={handleDeleteMarker}
             onUpdateMarker={handleUpdateMarker}
           />
