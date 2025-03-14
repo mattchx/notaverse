@@ -30,3 +30,6 @@
 - [ ] add bulk media import functionality
 - [ ] implement media search and filtering
 - [ ] add keyboard shortcuts for common actions
+- [ ] explore alternative marker views:
+  - [ ] timeline view for video/audio content
+  - [ ] grid view for book markers
