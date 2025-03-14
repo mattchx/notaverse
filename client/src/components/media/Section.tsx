@@ -19,6 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from '@/components/ui/accordion';
 
 interface SectionProps {
   section: SectionType;
@@ -70,103 +76,107 @@ export default function Section({
   }, [section.markers]);
 
   return (
-    <div className="p-4 border rounded-lg">
-      <div className="mb-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">
-            {getSectionPrefix()} {section.number}
-          </h2>
-          {isEditing ? (
-            <form onSubmit={handleTitleSubmit} className="flex items-center gap-2 flex-1">
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="flex-1"
-                placeholder="Enter section title"
-                autoFocus
-              />
-              <Button type="submit" size="sm">Save</Button>
-              <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
-                Cancel
-              </Button>
-            </form>
-          ) : (
-            <div className="flex items-center gap-2 flex-1">
-              <span className="text-gray-600">- {section.title}</span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      height="24"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      xmlns="http://www.w3.org/2000/svg"
+    <Accordion type="single" collapsible className="border rounded-lg">
+      <AccordionItem value={section.id} className="border-none">
+        <AccordionTrigger className="px-4 hover:no-underline">
+          <div className="flex items-center gap-2 flex-1">
+            <h2 className="text-xl font-semibold">
+              {getSectionPrefix()} {section.number}
+            </h2>
+            {isEditing ? (
+              <form onSubmit={handleTitleSubmit} className="flex items-center gap-2 flex-1" onClick={e => e.stopPropagation()}>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="flex-1"
+                  placeholder="Enter section title"
+                  autoFocus
+                />
+                <Button type="submit" size="sm">Save</Button>
+                <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
+                  Cancel
+                </Button>
+              </form>
+            ) : (
+              <div className="flex items-center gap-2 flex-1">
+                <span className="text-gray-600">- {section.title}</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        height="24"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                        width="24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <circle cx="12" cy="12" r="1" />
+                        <circle cx="12" cy="5" r="1" />
+                        <circle cx="12" cy="19" r="1" />
+                      </svg>
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setDeleteSectionDialog(true)}
+                      className="text-red-600"
                     >
-                      <circle cx="12" cy="12" r="1" />
-                      <circle cx="12" cy="5" r="1" />
-                      <circle cx="12" cy="19" r="1" />
-                    </svg>
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setDeleteSectionDialog(true)}
-                    className="text-red-600"
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            )}
+          </div>
+          {section.start && (
+            <p className="text-sm text-gray-500 mt-1" onClick={e => e.stopPropagation()}>
+              Starts at: {section.start}
+            </p>
           )}
-        </div>
-        {section.start && (
-          <p className="text-sm text-gray-500">
-            Starts at: {section.start}
-          </p>
-        )}
-      </div>
+        </AccordionTrigger>
 
-      <div className="space-y-4">
-        <div className="space-y-4">
-          {sortedMarkers.map(marker => (
-            <MarkerCard
-              key={marker.id}
-              marker={marker}
+        <AccordionContent className="px-4">
+          <div className="space-y-4">
+            <div className="space-y-4">
+              {sortedMarkers.map(marker => (
+                <MarkerCard
+                  key={marker.id}
+                  marker={marker}
+                  mediaType={mediaType}
+                  sectionNumber={section.number}
+                  onEdit={setEditingMarker}
+                  onDelete={setDeleteMarkerDialog}
+                />
+              ))}
+            </div>
+
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              variant="outline"
+              className="w-full"
+            >
+              + Add Marker
+            </Button>
+
+            <MarkerModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onAddMarker={handleAddMarker}
               mediaType={mediaType}
               sectionNumber={section.number}
-              onEdit={setEditingMarker}
-              onDelete={setDeleteMarkerDialog}
             />
-          ))}
-        </div>
-
-        <Button
-          onClick={() => setIsModalOpen(true)}
-          variant="outline"
-          className="w-full"
-        >
-          + Add Marker
-        </Button>
-
-        <MarkerModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onAddMarker={handleAddMarker}
-          mediaType={mediaType}
-          sectionNumber={section.number}
-        />
-      </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
 
       <Dialog open={deleteSectionDialog} onOpenChange={setDeleteSectionDialog}>
         <DialogContent>
@@ -232,6 +242,6 @@ export default function Section({
           sectionNumber={section.number}
         />
       )}
-    </div>
+    </Accordion>
   );
 }
