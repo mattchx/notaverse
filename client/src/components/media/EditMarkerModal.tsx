@@ -28,8 +28,13 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
   const validatePosition = (value: string) => {
     if (mediaType === 'book') {
       // Only allow positive numbers for books
+      // Check if value contains any non-digit characters
+      if (!/^\d+$/.test(value)) {
+        setError('Please enter only numbers');
+        return false;
+      }
       const pageNum = parseInt(value);
-      if (isNaN(pageNum) || pageNum < 1 || value.includes('.')) {
+      if (pageNum < 1) {
         setError('Please enter a valid page number');
         return false;
       }
