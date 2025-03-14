@@ -53,13 +53,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      await apiPost('/auth/logout', null, {
+      await apiPost('/auth/logout', {}, {
         credentials: 'include',
       });
       setIsAuthenticated(false);
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
+      throw error; // Re-throw error to handle in UI
     }
   };
 
