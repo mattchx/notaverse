@@ -1,8 +1,9 @@
 /** Table view for managing media items with sorting and actions */
 import React, { useEffect, useState } from 'react';
-import { ArrowUpDown, Trash2 } from 'lucide-react';
+import { ArrowUpDown, Trash2, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { AddMediaModal } from './AddMediaModal';
+import { EditMediaModal } from './EditMediaModal';
 import { Button } from '@/components/ui/button';
 import { MediaItem } from '@/types';
 import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
@@ -38,6 +39,8 @@ export default function MediaLibrary() {
   const [open, setOpen] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState<MediaItem | null>(null);
+  const [mediaToEdit, setMediaToEdit] = useState<MediaItem | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
   /** Memoized sorted items based on current sort configuration */
@@ -196,17 +199,31 @@ export default function MediaLibrary() {
                 <TableCell className="capitalize">{mediaItem.type}</TableCell>
                 <TableCell>{mediaItem.sections.length}</TableCell>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      confirmDelete(e, mediaItem);
-                    }}
-                    className="h-8 w-8 p-0 hover:text-red-500"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMediaToEdit(mediaItem);
+                        setShowEditDialog(true);
+                      }}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmDelete(e, mediaItem);
+                      }}
+                      className="h-8 w-8 p-0 hover:text-red-500"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -268,6 +285,15 @@ export default function MediaLibrary() {
       <AddMediaModal
         open={open}
         onOpenChange={setOpen}
+      />
+
+      <EditMediaModal
+        open={showEditDialog}
+        onOpenChange={(open) => {
+          setShowEditDialog(open);
+          if (!open) setMediaToEdit(null);
+        }}
+        mediaItem={mediaToEdit}
       />
     </div>
   );
