@@ -82,8 +82,14 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg w-full max-w-md">
+    <div
+      className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center"
+      onClick={() => handleClose()}
+    >
+      <div
+        className="bg-white p-8 rounded-lg w-full max-w-2xl shadow-xl"
+        onClick={e => e.stopPropagation()}
+      >
         <h2 className="text-xl font-semibold mb-4">Add New Marker</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -115,11 +121,12 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
 
           <div className="grid w-full gap-1.5">
             <Label htmlFor="quote">Quote (optional)</Label>
-            <Input
+            <Textarea
               id="quote"
               value={quote}
               onChange={(e) => setQuote(e.target.value)}
               placeholder="Enter text from the book or audio"
+              className="min-h-[75px]"
             />
           </div>
 
@@ -131,6 +138,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
               onChange={(e) => setNote(e.target.value)}
               placeholder="Type your note here"
               required
+              className="min-h-[100px]"
             />
           </div>
 
