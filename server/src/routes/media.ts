@@ -461,4 +461,118 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// Delete section
+router.delete('/:mediaId/sections/:sectionId', async (req, res) => {
+  try {
+    const { mediaId, sectionId } = req.params;
+
+    // Verify section exists and belongs to the media item
+    const sectionResult = await db.execute({
+      sql: 'SELECT id FROM sections WHERE id = ? AND media_id = ?',
+      args: [sectionId, mediaId]
+    });
+
+    if (sectionResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Section not found' });
+    }
+
+    // Delete all markers in this section first
+    await db.execute({
+      sql: 'DELETE FROM markers WHERE section_id = ?',
+      args: [sectionId]
+    });
+
+    // Then delete the section
+    await db.execute({
+      sql: 'DELETE FROM sections WHERE id = ?',
+      args: [sectionId]
+    });
+
+    res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting section:', error);
+    res.status(500).json({
+      error: 'Failed to delete section',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Update marker
+router.put('/:mediaId/sections/:sectionId/markers/:markerId', async (req, res) => {
+  try {
+    const { mediaId, sectionId, markerId } = req.params;
+    const updates = req.body;
+    const now = Date.now();
+
+    // Verify marker exists and belongs to the section
+    const markerResult = await db.execute({
+      sql: 'SELECT m.id FROM markers m JOIN sections s ON m.section_id = s.id WHERE m.id = ? AND s.id = ? AND s.media_id = ?',
+      args: [markerId, sectionId, mediaId]
+    });
+
+    if (markerResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Marker not found' });
+    }
+
+    // Update marker
+    await db.execute({
+      sql: 'UPDATE markers SET position = ?, quote = ?, note = ?, updated_at = ? WHERE id = ?',
+      args: [updates.position, updates.quote || null, updates.note, now, markerId]
+    });
+
+    // Get updated marker
+    const updatedMarkerResult = await db.execute({
+      sql: 'SELECT * FROM markers WHERE id = ?',
+      args: [markerId]
+    });
+
+    const marker = updatedMarkerResult.rows[0];
+
+    res.json({
+      id: marker.id,
+      position: marker.position,
+      order: marker.order_num,
+      quote: marker.quote,
+      note: marker.note,
+      dateCreated: new Date(marker.created_at as number).toISOString(),
+      dateUpdated: new Date(now).toISOString()
+    });
+  } catch (error) {
+    console.error('Error updating marker:', error);
+    res.status(500).json({ error: 'Failed to update marker' });
+  }
+});
+
+// Delete marker
+router.delete('/:mediaId/sections/:sectionId/markers/:markerId', async (req, res) => {
+  try {
+    const { mediaId, sectionId, markerId } = req.params;
+
+    // Verify marker exists and belongs to the section
+    const markerResult = await db.execute({
+      sql: 'SELECT m.id FROM markers m JOIN sections s ON m.section_id = s.id WHERE m.id = ? AND s.id = ? AND s.media_id = ?',
+      args: [markerId, sectionId, mediaId]
+    });
+
+    if (markerResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Marker not found' });
+    }
+
+    // Delete the marker
+    await db.execute({
+      sql: 'DELETE FROM markers WHERE id = ?',
+      args: [markerId]
+    });
+
+    res.status(204).end();
+  } catch (error) {
+    console.error('Error deleting marker:', error);
+    res.status(500).json({
+      error: 'Failed to delete marker',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;

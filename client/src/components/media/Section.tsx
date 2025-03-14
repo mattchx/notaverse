@@ -2,19 +2,42 @@ import React from 'react';
 import { Section as SectionType, Marker, MediaType } from '../../types';
 import { Button } from '@/components/ui/button';
 import MarkerModal from './MarkerModal';
+import EditMarkerModal from './EditMarkerModal';
 import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface SectionProps {
   section: SectionType;
   mediaType: MediaType;
   onUpdateTitle: (sectionId: string, title: string) => void;
   onAddMarker?: (sectionId: string, marker: Marker) => void;
+  onDeleteSection?: (sectionId: string) => void;
+  onDeleteMarker?: (sectionId: string, markerId: string) => void;
+  onUpdateMarker?: (sectionId: string, marker: Marker) => void;
 }
 
-export default function Section({ section, mediaType, onUpdateTitle, onAddMarker }: SectionProps) {
+export default function Section({
+  section,
+  mediaType,
+  onUpdateTitle,
+  onAddMarker,
+  onDeleteSection,
+  onDeleteMarker,
+  onUpdateMarker
+}: SectionProps) {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isEditing, setIsEditing] = React.useState(false);
   const [title, setTitle] = React.useState(section.title);
+  const [deleteSectionDialog, setDeleteSectionDialog] = React.useState(false);
+  const [deleteMarkerDialog, setDeleteMarkerDialog] = React.useState<string | null>(null);
+  const [editingMarker, setEditingMarker] = React.useState<Marker | null>(null);
 
   const handleTitleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,14 +87,23 @@ export default function Section({ section, mediaType, onUpdateTitle, onAddMarker
           ) : (
             <div className="flex items-center gap-2 flex-1">
               <span className="text-gray-600">- {section.title}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-2"
-                onClick={() => setIsEditing(true)}
-              >
-                Edit
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-500 hover:text-red-700"
+                  onClick={() => setDeleteSectionDialog(true)}
+                >
+                  Delete
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -95,6 +127,23 @@ export default function Section({ section, mediaType, onUpdateTitle, onAddMarker
                     <span className="text-xs text-gray-400">
                       #{marker.order}
                     </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditingMarker(marker)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => setDeleteMarkerDialog(marker.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-gray-800">{marker.note}</p>
                 </div>
@@ -120,7 +169,7 @@ export default function Section({ section, mediaType, onUpdateTitle, onAddMarker
           ))}
         </div>
 
-        <Button 
+        <Button
           onClick={() => setIsModalOpen(true)}
           variant="outline"
           className="w-full"
@@ -128,12 +177,76 @@ export default function Section({ section, mediaType, onUpdateTitle, onAddMarker
           + Add Marker
         </Button>
 
-        <MarkerModal 
+        <MarkerModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onAddMarker={handleAddMarker}
         />
       </div>
+
+      {/* Delete Section Dialog */}
+      <Dialog open={deleteSectionDialog} onOpenChange={setDeleteSectionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Section</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this section? This action cannot be undone.
+              All markers in this section will also be deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteSectionDialog(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onDeleteSection?.(section.id);
+                setDeleteSectionDialog(false);
+              }}
+            >
+              Delete Section
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Marker Dialog */}
+      <Dialog open={!!deleteMarkerDialog} onOpenChange={() => setDeleteMarkerDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Marker</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this marker? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteMarkerDialog(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (deleteMarkerDialog) {
+                  onDeleteMarker?.(section.id, deleteMarkerDialog);
+                  setDeleteMarkerDialog(null);
+                }
+              }}
+            >
+              Delete Marker
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Marker Modal */}
+      {editingMarker && (
+        <EditMarkerModal
+          isOpen={!!editingMarker}
+          onClose={() => setEditingMarker(null)}
+          onUpdateMarker={(updatedMarker) => {
+            onUpdateMarker?.(section.id, updatedMarker);
+            setEditingMarker(null);
+          }}
+          marker={editingMarker}
+        />
+      )}
     </div>
   );
 }

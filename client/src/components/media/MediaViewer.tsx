@@ -10,7 +10,7 @@ export default function MediaViewer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state } = useMedia();
-  const { setMedia, setLoading, setError } = useMediaOperations();
+  const { setMedia, setLoading, setError, deleteSection, deleteMarker, updateMarker } = useMediaOperations();
   const [activeMedia, setActiveMedia] = React.useState<MediaItem | null>(null);
 
   // Fetch media item data
@@ -101,8 +101,8 @@ export default function MediaViewer() {
 
       const updatedMedia = {
         ...activeMedia,
-        sections: activeMedia.sections.map(section => 
-          section.id === sectionId 
+        sections: activeMedia.sections.map(section =>
+          section.id === sectionId
             ? { ...section, markers: [...section.markers, newMarker] }
             : section
         )
@@ -111,6 +111,95 @@ export default function MediaViewer() {
       setMedia(updatedMedia);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to add marker');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSection = async (sectionId: string) => {
+    if (!activeMedia) return;
+
+    try {
+      setLoading(true);
+      await fetch(`/media/${activeMedia.id}/sections/${sectionId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      deleteSection(sectionId);
+      const updatedMedia = {
+        ...activeMedia,
+        sections: activeMedia.sections.filter(section => section.id !== sectionId)
+      };
+      setActiveMedia(updatedMedia);
+      setMedia(updatedMedia);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete section');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteMarker = async (sectionId: string, markerId: string) => {
+    if (!activeMedia) return;
+
+    try {
+      setLoading(true);
+      await fetch(`/media/${activeMedia.id}/sections/${sectionId}/markers/${markerId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      deleteMarker(sectionId, markerId);
+      const updatedMedia = {
+        ...activeMedia,
+        sections: activeMedia.sections.map(section =>
+          section.id === sectionId
+            ? {
+                ...section,
+                markers: section.markers.filter(marker => marker.id !== markerId)
+              }
+            : section
+        )
+      };
+      setActiveMedia(updatedMedia);
+      setMedia(updatedMedia);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete marker');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateMarker = async (sectionId: string, marker: Marker) => {
+    if (!activeMedia) return;
+
+    try {
+      setLoading(true);
+      const response = await apiPut<Marker>(
+        `/media/${activeMedia.id}/sections/${sectionId}/markers/${marker.id}`,
+        marker,
+        { credentials: 'include' }
+      );
+
+      updateMarker(sectionId, response);
+      const updatedMedia = {
+        ...activeMedia,
+        sections: activeMedia.sections.map(section =>
+          section.id === sectionId
+            ? {
+                ...section,
+                markers: section.markers.map(m =>
+                  m.id === marker.id ? response : m
+                )
+              }
+            : section
+        )
+      };
+      setActiveMedia(updatedMedia);
+      setMedia(updatedMedia);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to update marker');
     } finally {
       setLoading(false);
     }
@@ -168,12 +257,15 @@ export default function MediaViewer() {
 
       <div className="space-y-6">
         {sortedSections.map(section => (
-          <Section 
+          <Section
             key={section.id}
             section={section}
             mediaType={activeMedia.type}
             onUpdateTitle={handleUpdateSectionTitle}
             onAddMarker={handleAddMarker}
+            onDeleteSection={handleDeleteSection}
+            onDeleteMarker={handleDeleteMarker}
+            onUpdateMarker={handleUpdateMarker}
           />
         ))}
 

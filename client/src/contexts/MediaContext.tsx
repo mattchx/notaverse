@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import { MediaItem } from '../types';
+import { MediaItem, Marker } from '../types';
 
 interface MediaState {
   mediaItems: MediaItem[];
@@ -14,6 +14,9 @@ type MediaAction =
   | { type: 'CREATE_MEDIA'; payload: MediaItem }
   | { type: 'UPDATE_MEDIA'; payload: MediaItem }
   | { type: 'DELETE_MEDIA'; payload: string }
+  | { type: 'DELETE_SECTION'; payload: { sectionId: string } }
+  | { type: 'DELETE_MARKER'; payload: { sectionId: string; markerId: string } }
+  | { type: 'UPDATE_MARKER'; payload: { sectionId: string; marker: Marker } }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string }
   | { type: 'CLEAR_MEDIA' };
@@ -80,6 +83,55 @@ function mediaReducer(state: MediaState, action: MediaAction): MediaState {
         mediaItems: state.mediaItems.filter(item => item.id !== action.payload),
         error: null,
       };
+    case 'DELETE_SECTION':
+      return {
+        ...state,
+        activeMedia: state.activeMedia ? {
+          ...state.activeMedia,
+          sections: state.activeMedia.sections.filter(section =>
+            section.id !== action.payload.sectionId
+          )
+        } : null,
+        error: null,
+      };
+    case 'DELETE_MARKER':
+      return {
+        ...state,
+        activeMedia: state.activeMedia ? {
+          ...state.activeMedia,
+          sections: state.activeMedia.sections.map(section =>
+            section.id === action.payload.sectionId
+              ? {
+                  ...section,
+                  markers: section.markers.filter(marker =>
+                    marker.id !== action.payload.markerId
+                  )
+                }
+              : section
+          )
+        } : null,
+        error: null,
+      };
+    case 'UPDATE_MARKER':
+      return {
+        ...state,
+        activeMedia: state.activeMedia ? {
+          ...state.activeMedia,
+          sections: state.activeMedia.sections.map(section =>
+            section.id === action.payload.sectionId
+              ? {
+                  ...section,
+                  markers: section.markers.map(marker =>
+                    marker.id === action.payload.marker.id
+                      ? action.payload.marker
+                      : marker
+                  )
+                }
+              : section
+          )
+        } : null,
+        error: null,
+      };
     case 'CLEAR_MEDIA':
       return {
         ...initialState,
@@ -143,6 +195,15 @@ export function useMediaOperations() {
     },
     updateMedia: (media: MediaItem) => {
       dispatch({ type: 'UPDATE_MEDIA', payload: media });
+    },
+    deleteSection: (sectionId: string) => {
+      dispatch({ type: 'DELETE_SECTION', payload: { sectionId } });
+    },
+    deleteMarker: (sectionId: string, markerId: string) => {
+      dispatch({ type: 'DELETE_MARKER', payload: { sectionId, markerId } });
+    },
+    updateMarker: (sectionId: string, marker: Marker) => {
+      dispatch({ type: 'UPDATE_MARKER', payload: { sectionId, marker } });
     },
   };
 }
