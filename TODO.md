@@ -11,6 +11,7 @@
   - [ ] Add timestamp support for podcast sections (e.g., 00:15:30)
   - [ ] Implement drag-and-drop reordering of sections and markers
   - [x] Add confirmation dialogs for deletion operations
+- [ ] Add source links to media items (e.g., podcast URLs, PDF storage locations)
 - [ ] convert MediaLibrary view to table layout for better organization
 - [ ] improve add media form validation and error handling
 - [ ] add better loading states and user feedback
@@ -32,4 +33,10 @@
 - [ ] add keyboard shortcuts for common actions
 - [ ] explore alternative marker views:
   - [ ] timeline view for video/audio content
+  - [ ] grid view for book markers
+- [ ] Social features:
+  - [ ] Allow multiple users to comment on quotes/markers
+  - [ ] Support user mentions in comments
+  - [ ] Add like/reaction system for markers
+  - [ ] User profiles with activity feeds
   - [ ] grid view for book markers
