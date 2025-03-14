@@ -70,13 +70,15 @@ export default function MarkerCard({
       </div>
 
       <div className="mt-4 space-y-2">
-        <p className="text-gray-800">{marker.note}</p>
+
 
         {marker.quote && (
           <blockquote className="pl-4 border-l-2 border-gray-300 text-gray-600 italic">
             "{marker.quote}"
           </blockquote>
         )}
+
+        <p className="text-gray-800 font-semibold">{marker.note}</p>
       </div>
 
       {marker.dateCreated && (
