@@ -65,9 +65,8 @@ export default function Section({
     return mediaType === 'book' ? 'Chapter' : 'Hour';
   };
 
-  // Sort markers by order
   const sortedMarkers = React.useMemo(() => {
-    return [...section.markers].sort((a, b) => a.order - b.order);
+    return [...section.markers].sort((a, b) => parseInt(a.position) - parseInt(b.position));
   }, [section.markers]);
 
   return (
