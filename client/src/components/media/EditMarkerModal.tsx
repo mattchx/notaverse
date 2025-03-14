@@ -1,5 +1,5 @@
 import React from 'react';
-import { Marker } from '../../types';
+import { Marker, MediaType } from '../../types';
 import { Button } from '@/components/ui/button';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -17,10 +17,38 @@ interface EditMarkerModalProps {
   onClose: () => void;
   onUpdateMarker: (marker: Marker) => void;
   marker: Marker;
+  mediaType: MediaType;
 }
 
-export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker }: EditMarkerModalProps) {
+export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, mediaType }: EditMarkerModalProps) {
   const [position, setPosition] = React.useState(marker.position);
+  const [error, setError] = React.useState<string>('');
+
+  const validatePosition = (value: string) => {
+    if (mediaType === 'book') {
+      // Only allow positive numbers for books
+      const pageNum = parseInt(value);
+      if (isNaN(pageNum) || pageNum < 1 || value.includes('.')) {
+        setError('Please enter a valid page number');
+        return false;
+      }
+    } else {
+      // For audio, only allow minutes (0-59)
+      const minute = parseInt(value);
+      if (isNaN(minute) || minute < 0 || minute > 59 || value.includes('.')) {
+        setError('Please enter a valid minute (0-59)');
+        return false;
+      }
+    }
+    setError('');
+    return true;
+  };
+
+  const handlePositionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPosition(value);
+    validatePosition(value);
+  };
   const [quote, setQuote] = React.useState(marker.quote || '');
   const [note, setNote] = React.useState(marker.note);
 
@@ -33,6 +61,10 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validatePosition(position)) {
+      return;
+    }
 
     const updatedMarker: Marker = {
       ...marker,
@@ -50,6 +82,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
     setPosition(marker.position);
     setQuote(marker.quote || '');
     setNote(marker.note);
+    setError('');
     onClose();
   };
 
@@ -62,14 +95,22 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid w-full gap-1.5">
-            <Label htmlFor="position">Position (page number or timestamp)</Label>
+            <Label htmlFor="position">
+              {mediaType === 'book' ? 'Page Number' : 'Minute'}
+            </Label>
             <Input
               id="position"
               value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              placeholder="Enter the page number or timestamp"
+              onChange={handlePositionChange}
+              placeholder={mediaType === 'book'
+                ? "Enter page number (e.g., 42)"
+                : "Enter minute (0-59)"
+              }
               required
             />
+            {error && (
+              <p className="text-sm text-red-500 mt-1">{error}</p>
+            )}
           </div>
 
           <div className="grid w-full gap-1.5">

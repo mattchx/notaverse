@@ -181,6 +181,7 @@ export default function Section({
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onAddMarker={handleAddMarker}
+          mediaType={mediaType}
         />
       </div>
 
@@ -245,6 +246,7 @@ export default function Section({
             setEditingMarker(null);
           }}
           marker={editingMarker}
+          mediaType={mediaType}
         />
       )}
     </div>
