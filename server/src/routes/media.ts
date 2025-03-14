@@ -338,6 +338,77 @@ router.post('/:mediaId/sections/:sectionId/markers', async (req, res) => {
   }
 });
 
+// Update media item
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates: MediaItem = req.body;
+    const now = Date.now();
+
+    // Validate required fields
+    if (!updates.name || !updates.type) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Validate media type
+    if (!['book', 'podcast'].includes(updates.type)) {
+      return res.status(400).json({ error: 'Invalid media type' });
+    }
+
+    // Verify media item exists
+    const mediaResult = await db.execute({
+      sql: 'SELECT id FROM media_items WHERE id = ?',
+      args: [id]
+    });
+
+    if (mediaResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Media item not found' });
+    }
+
+    // Update media item
+    await db.execute({
+      sql: 'UPDATE media_items SET name = ?, type = ?, author = ?, updated_at = ? WHERE id = ?',
+      args: [updates.name, updates.type, updates.author || null, now, id]
+    });
+
+    // Get updated media item with sections
+    const result = await db.execute({
+      sql: 'SELECT * FROM media_items WHERE id = ?',
+      args: [id]
+    });
+
+    const { created_at, updated_at, ...rest } = result.rows[0];
+
+    // Get sections
+    const sectionsResult = await db.execute({
+      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
+      args: [id]
+    });
+
+    const sections = sectionsResult.rows.map(section => ({
+      id: section.id,
+      title: section.title,
+      number: section.number,
+      markers: [], // We don't need markers for updates
+    }));
+
+    const updatedMedia = {
+      ...rest,
+      sections,
+      createdAt: new Date(created_at as number),
+      updatedAt: new Date(now)
+    };
+
+    res.json(updatedMedia);
+  } catch (error) {
+    console.error('Error updating media item:', error);
+    res.status(500).json({
+      error: 'Failed to update media item',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Delete media item
 router.delete('/:id', async (req, res) => {
   try {
