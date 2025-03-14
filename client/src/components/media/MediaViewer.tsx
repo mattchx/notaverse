@@ -273,8 +273,8 @@ export default function MediaViewer() {
 
         <Button
           onClick={handleAddSection}
-          variant="outline"
-          className="w-full"
+          variant="default"
+          className="w-full bg-blue-200 text-blue-800 hover:bg-blue-300 border-2 border-blue-300 font-semibold"
           disabled={state.isLoading}
         >
           {state.isLoading ? 'Adding...' : '+ Add Section'}

@@ -159,8 +159,8 @@ export default function Section({
 
           <Button
             onClick={() => setIsModalOpen(true)}
-            variant="outline"
-            className="w-full"
+            variant="default"
+            className="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200"
           >
             + Add Marker
           </Button>
