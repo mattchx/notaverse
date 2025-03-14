@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { Trash2 } from 'lucide-react';
+/** Table view for managing media items with sorting and actions */
+import React, { useEffect, useState } from 'react';
+import { ArrowUpDown, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { AddMediaModal } from './AddMediaModal';
 import { Button } from '@/components/ui/button';
@@ -14,15 +15,66 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
+/** Configuration type for column sorting */
+type SortConfig = {
+  key: keyof MediaItem;
+  direction: 'asc' | 'desc';
+} | null;
+
+/** @returns Table interface for viewing and managing media items */
 export default function MediaLibrary() {
   const navigate = useNavigate();
   const { state } = useMedia();
   const { setMediaList, setLoading, setError, deleteMedia } = useMediaOperations();
-  const [open, setOpen] = React.useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
-  const [mediaToDelete, setMediaToDelete] = React.useState<MediaItem | null>(null);
+  const [open, setOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [mediaToDelete, setMediaToDelete] = useState<MediaItem | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
+  /** Memoized sorted items based on current sort configuration */
+  const sortedItems = React.useMemo(() => {
+    if (!sortConfig) return state.mediaItems;
+
+    return [...state.mediaItems].sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+
+      if (aValue === bValue) return 0;
+      
+      const multiplier = sortConfig.direction === 'asc' ? 1 : -1;
+      
+      if (aValue === undefined || aValue === null) return 1 * multiplier;
+      if (bValue === undefined || bValue === null) return -1 * multiplier;
+      
+      return aValue < bValue ? -1 * multiplier : 1 * multiplier;
+    });
+  }, [state.mediaItems, sortConfig]);
+
+  /** Cycles sort direction: null -> asc -> desc -> null */
+  const toggleSort = (key: keyof MediaItem) => {
+    setSortConfig(current => {
+      if (current?.key !== key) {
+        return { key, direction: 'asc' };
+      }
+      
+      if (current.direction === 'asc') {
+        return { key, direction: 'desc' };
+      }
+      
+      return null;
+    });
+  };
+
+  /** Deletes media item and updates UI optimistically */
   const handleDelete = async () => {
     if (!mediaToDelete) return;
     
@@ -45,6 +97,7 @@ export default function MediaLibrary() {
     }
   };
 
+  /** Shows delete confirmation dialog and prevents navigation */
   const confirmDelete = (e: React.MouseEvent, mediaItem: MediaItem) => {
     e.stopPropagation(); // Prevent navigation
     setMediaToDelete(mediaItem);
@@ -67,6 +120,7 @@ export default function MediaLibrary() {
     fetchMedia();
   }, []);
 
+  /** Navigates to media item detail view */
   const handleCardClick = (mediaItem: MediaItem) => {
     navigate(`/library/item/${mediaItem.id}`);
   };
@@ -92,44 +146,97 @@ export default function MediaLibrary() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {state.mediaItems.map((mediaItem) => (
-          <div
-            key={mediaItem.id}
-            className="border rounded-lg p-6 cursor-pointer hover:border-blue-500 transition-colors"
-            onClick={() => handleCardClick(mediaItem)}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-xl font-semibold mb-2">{mediaItem.name}</h2>
-                {mediaItem.author && (
-                  <p className="text-gray-600">{mediaItem.author}</p>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => confirmDelete(e, mediaItem)}
-                className="h-8 w-8 hover:text-red-500"
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => toggleSort('name')}
+                  className="h-8 px-2 hover:bg-transparent"
+                >
+                  Name
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => toggleSort('author')}
+                  className="h-8 px-2 hover:bg-transparent"
+                >
+                  Author
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => toggleSort('type')}
+                  className="h-8 px-2 hover:bg-transparent"
+                >
+                  Type
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
+              <TableHead>Sections</TableHead>
+              <TableHead className="w-24">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedItems.map((mediaItem) => (
+              <TableRow
+                key={mediaItem.id}
+                onClick={() => handleCardClick(mediaItem)}
+                className="cursor-pointer hover:bg-muted/50"
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex justify-between items-center text-sm text-gray-500">
-              <span className="capitalize">{mediaItem.type}</span>
-              <span>{mediaItem.sections.length} sections</span>
-            </div>
-
-          </div>
-        ))}
+                <TableCell className="font-medium">{mediaItem.name}</TableCell>
+                <TableCell>{mediaItem.author || '-'}</TableCell>
+                <TableCell className="capitalize">{mediaItem.type}</TableCell>
+                <TableCell>{mediaItem.sections.length}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDelete(e, mediaItem);
+                    }}
+                    className="h-8 w-8 p-0 hover:text-red-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       {state.mediaItems.length === 0 && !state.isLoading && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No media items yet</p>
-          <Button onClick={() => setOpen(true)}>
-            Add Your First Media
-          </Button>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Author</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Sections</TableHead>
+                <TableHead className="w-24">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell colSpan={5} className="h-32 text-center">
+                  <p className="text-gray-500 mb-4">No media items in your library</p>
+                  <Button onClick={() => setOpen(true)}>
+                    Add Your First Media
+                  </Button>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
       )}
 
