@@ -5,6 +5,7 @@ import { MediaItem, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
 import Section from './Section';
 import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
+import { Accordion } from '@/components/ui/accordion';
 
 export default function MediaViewer() {
   const { id } = useParams();
@@ -255,20 +256,22 @@ export default function MediaViewer() {
       </div>
 
       <div className="space-y-6">
-        {sortedSections.map(section => (
-          <Section
-            key={section.id}
-            section={section}
-            mediaType={activeMedia.type}
-            onUpdateTitle={handleUpdateSectionTitle}
-            onAddMarker={handleAddMarker}
-            onDeleteSection={handleDeleteSection}
-            onDeleteMarker={handleDeleteMarker}
-            onUpdateMarker={handleUpdateMarker}
-          />
-        ))}
+        <Accordion type="multiple">
+          {sortedSections.map(section => (
+            <Section
+              key={section.id}
+              section={section}
+              mediaType={activeMedia.type}
+              onUpdateTitle={handleUpdateSectionTitle}
+              onAddMarker={handleAddMarker}
+              onDeleteSection={handleDeleteSection}
+              onDeleteMarker={handleDeleteMarker}
+              onUpdateMarker={handleUpdateMarker}
+            />
+          ))}
+        </Accordion>
 
-        <Button 
+        <Button
           onClick={handleAddSection}
           variant="outline"
           className="w-full"
