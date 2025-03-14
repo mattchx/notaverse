@@ -13,6 +13,7 @@ export default function MediaViewer() {
   const { state } = useMedia();
   const { setMedia, setLoading, setError, deleteMarker, updateMarker } = useMediaOperations();
   const [activeMedia, setActiveMedia] = React.useState<MediaItem | null>(null);
+  const [openSections, setOpenSections] = React.useState<string[]>([]);
 
   // Fetch media item data
   React.useEffect(() => {
@@ -256,7 +257,11 @@ export default function MediaViewer() {
       </div>
 
       <div className="space-y-6">
-        <Accordion type="multiple">
+        <Accordion
+          type="multiple"
+          value={openSections}
+          onValueChange={setOpenSections}
+        >
           {sortedSections.map(section => (
             <Section
               key={section.id}
