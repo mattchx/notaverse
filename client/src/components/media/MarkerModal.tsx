@@ -65,7 +65,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
       order: Date.now(),
       quote: quote || undefined,
       note,
-      dateCreated: Date.now().toString(),
+      dateCreated: new Date().toISOString(),
       dateUpdated: undefined
     };
 

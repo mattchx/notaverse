@@ -77,7 +77,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
       position,
       quote: quote || undefined,
       note,
-      dateUpdated: Date.now().toString()
+      dateUpdated: new Date().toISOString()
     };
 
     onUpdateMarker(updatedMarker);
