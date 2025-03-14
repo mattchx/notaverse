@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { get as apiGet, post as apiPost, put as apiPut } from '@/utils/api';
+import { get as apiGet, post as apiPost, put as apiPut, del as apiDelete } from '@/utils/api';
 import { MediaItem, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
 import Section from './Section';
@@ -123,8 +123,7 @@ export default function MediaViewer() {
 
     try {
       setLoading(true);
-      await fetch(`/media/${activeMedia.id}/sections/${sectionId}`, {
-        method: 'DELETE',
+      await apiDelete(`/media/${activeMedia.id}/sections/${sectionId}`, {
         credentials: 'include'
       });
 
@@ -146,8 +145,7 @@ export default function MediaViewer() {
 
     try {
       setLoading(true);
-      await fetch(`/media/${activeMedia.id}/sections/${sectionId}/markers/${markerId}`, {
-        method: 'DELETE',
+      await apiDelete(`/media/${activeMedia.id}/sections/${sectionId}/markers/${markerId}`, {
         credentials: 'include'
       });
 
