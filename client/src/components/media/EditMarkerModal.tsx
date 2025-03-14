@@ -18,9 +18,10 @@ interface EditMarkerModalProps {
   onUpdateMarker: (marker: Marker) => void;
   marker: Marker;
   mediaType: MediaType;
+  sectionNumber?: number;  // Added for audio hour context
 }
 
-export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, mediaType }: EditMarkerModalProps) {
+export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, mediaType, sectionNumber }: EditMarkerModalProps) {
   const [position, setPosition] = React.useState(marker.position);
   const [error, setError] = React.useState<string>('');
 
@@ -96,18 +97,25 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid w-full gap-1.5">
             <Label htmlFor="position">
-              {mediaType === 'book' ? 'Page Number' : 'Minute'}
+              {mediaType === 'book' ? 'Page Number' : 'Timestamp'}
             </Label>
-            <Input
-              id="position"
-              value={position}
-              onChange={handlePositionChange}
-              placeholder={mediaType === 'book'
-                ? "Enter page number (e.g., 42)"
-                : "Enter minute (0-59)"
-              }
-              required
-            />
+            <div>
+              {mediaType === 'podcast' && sectionNumber !== undefined && (
+                <span className="block text-sm text-gray-500 mb-1">
+                  Hour {sectionNumber}
+                </span>
+              )}
+              <Input
+                id="position"
+                value={position}
+                onChange={handlePositionChange}
+                placeholder={mediaType === 'book'
+                  ? "Enter page number (e.g., 42)"
+                  : "Enter minute (0-59)"
+                }
+                required
+              />
+            </div>
             {error && (
               <p className="text-sm text-red-500 mt-1">{error}</p>
             )}

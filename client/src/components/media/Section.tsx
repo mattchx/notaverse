@@ -122,7 +122,10 @@ export default function Section({
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-medium text-gray-600">
-                      Position: {marker.position}
+                      {mediaType === 'book'
+                        ? `Page: ${marker.position}`
+                        : `Timestamp: ${section.number}:${marker.position.padStart(2, '0')}`
+                      }
                     </span>
                     <span className="text-xs text-gray-400">
                       #{marker.order}
@@ -182,6 +185,7 @@ export default function Section({
           onClose={() => setIsModalOpen(false)}
           onAddMarker={handleAddMarker}
           mediaType={mediaType}
+          sectionNumber={section.number}
         />
       </div>
 
@@ -247,6 +251,7 @@ export default function Section({
           }}
           marker={editingMarker}
           mediaType={mediaType}
+          sectionNumber={section.number}
         />
       )}
     </div>
