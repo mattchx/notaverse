@@ -75,8 +75,8 @@ export default function Section({
   }, [section.markers]);
 
   return (
-    <AccordionItem value={section.id} className="border rounded-lg">
-      <AccordionTrigger className="px-4 hover:no-underline">
+    <AccordionItem value={section.id} className="border rounded-lg transition-colors hover:bg-gray-50/50">
+      <AccordionTrigger className="px-4 hover:no-underline hover:bg-transparent">
         <div className="flex items-center gap-2 flex-1">
           <h2 className="text-xl font-semibold">
             {getSectionPrefix()} {section.number}
@@ -145,16 +145,20 @@ export default function Section({
       <AccordionContent className="px-4">
         <div className="space-y-4">
           <div className="space-y-4">
-            {sortedMarkers.map(marker => (
-              <MarkerCard
-                key={marker.id}
-                marker={marker}
-                mediaType={mediaType}
-                sectionNumber={section.number}
-                onEdit={setEditingMarker}
-                onDelete={setDeleteMarkerDialog}
-              />
-            ))}
+            {sortedMarkers.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No markers added to this section yet.</p>
+            ) : (
+              sortedMarkers.map(marker => (
+                <MarkerCard
+                  key={marker.id}
+                  marker={marker}
+                  mediaType={mediaType}
+                  sectionNumber={section.number}
+                  onEdit={setEditingMarker}
+                  onDelete={setDeleteMarkerDialog}
+                />
+              ))
+            )}
           </div>
 
           <Button
