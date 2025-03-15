@@ -13,7 +13,7 @@
     "migrate:source-url": "tsx src/sql/migrateSourceUrl.ts",
     "db:generate": "drizzle-kit generate",
     "db:push": "tsx src/db/migrate.ts",
-    "db:reset": "tsx src/db/migrate.ts --reset",
+    "db:reset": "drizzle-kit drop && tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "db:drop": "drizzle-kit drop"
   },

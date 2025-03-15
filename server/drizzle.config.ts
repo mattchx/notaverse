@@ -8,7 +8,7 @@ export default {
   out: './src/db/migrations',
   dialect: 'sqlite',
   dbCredentials: {
-    url: 'file:./src/data/dev.db'
+    url: process.env.TURSO_DB_URL || 'file:./src/data/dev.db'
   },
   verbose: true,
   strict: true
