@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import db from '../db.js';
+import { and, eq, desc, asc } from 'drizzle-orm';
+import { db, schema } from '../db/index.js';
+import { mediaItems, sections, markers } from '../db/schema.js';
 import { MediaItem, Section } from '../types/media.js';
 
 const router = Router();
@@ -7,43 +9,28 @@ const router = Router();
 // Get all media items
 router.get('/', async (req, res) => {
   try {
-    // Get all media items
-    const mediaResult = await db.execute({
-      sql: 'SELECT * FROM media_items ORDER BY created_at DESC',
-      args: []
+    // Get all media items with their sections
+    const mediaItems = await db.query.mediaItems.findMany({
+      orderBy: (mediaItems, { desc }) => [desc(mediaItems.createdAt)],
+      with: {
+        sections: {
+          orderBy: (sections, { asc }) => [asc(sections.number)],
+          columns: {
+            id: true,
+            title: true,
+            number: true,
+          }
+        }
+      }
     });
 
-    if (!mediaResult.rows) {
-      res.json([]);
-      return;
-    }
-
-    // Transform media items and fetch their sections
-    const mediaItems = await Promise.all(mediaResult.rows.map(async row => {
-      const { created_at, updated_at, ...rest } = row;
-
-      // Get sections for this media item
-      const sectionsResult = await db.execute({
-        sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
-        args: [row.id]
-      });
-
-      const sections = sectionsResult.rows.map(section => ({
-        id: section.id,
-        title: section.title,
-        number: section.number,
-        markers: [], // We don't need markers for the list view
-      }));
-
-      return {
-        ...rest,
-        sections,
-        createdAt: new Date(created_at as number).toISOString(),
-        updatedAt: new Date(updated_at as number).toISOString()
-      };
-    }));
-
-    res.json(mediaItems);
+    res.json(mediaItems.map(item => ({
+      ...item,
+      sections: item.sections.map(section => ({
+        ...section,
+        markers: [] // We don't need markers for the list view
+      }))
+    })));
   } catch (error) {
     console.error('Error getting media items:', error);
     res.status(500).json({
@@ -53,61 +40,41 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single media item
+// Get single media item with sections and markers
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Get media item
-    const result = await db.execute({
-      sql: 'SELECT * FROM media_items WHERE id = ?',
-      args: [id]
+    const mediaItem = await db.query.mediaItems.findFirst({
+      where: eq(mediaItems.id, id),
+      with: {
+        sections: {
+          orderBy: asc(sections.number),
+          with: {
+            markers: {
+              orderBy: asc(markers.orderNum)
+            }
+          }
+        }
+      }
     });
 
-    if (result.rows.length === 0) {
+    if (!mediaItem) {
       return res.status(404).json({ error: 'Media item not found' });
     }
 
-    const { created_at, updated_at, ...rest } = result.rows[0];
-
-    // Get sections
-    const sectionsResult = await db.execute({
-      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
-      args: [id]
-    });
-
-    // Get markers for each section
-    const sections = await Promise.all(sectionsResult.rows.map(async section => {
-      const markersResult = await db.execute({
-        sql: 'SELECT * FROM markers WHERE section_id = ? ORDER BY order_num',
-        args: [section.id]
-      });
-
-      return {
-        id: section.id,
-        title: section.title,
-        number: section.number,
-        markers: markersResult.rows.map(marker => ({
-          id: marker.id,
-          position: marker.position,
-          order: marker.order_num,
-          quote: marker.quote,
-          note: marker.note,
-          dateCreated: new Date(marker.created_at as number),
-          dateUpdated: new Date(marker.updated_at as number)
+    res.json({
+      ...mediaItem,
+      sections: mediaItem.sections.map(section => ({
+        ...section,
+        markers: section.markers.map(marker => ({
+          ...marker,
+          order: marker.orderNum,
+          dateCreated: new Date(Number(marker.createdAt)),
+          dateUpdated: new Date(Number(marker.updatedAt))
         }))
-      };
-    }));
-
-    const mediaItem = {
-      ...rest,
-      sections,
-      createdAt: new Date(created_at as number),
-      updatedAt: new Date(updated_at as number)
-    };
-
-    res.setHeader('Content-Type', 'application/json');
-    res.json(mediaItem);
+      }))
+    });
   } catch (error) {
     console.error('Error getting media item:', error);
     res.status(500).json({ error: 'Failed to get media item' });
@@ -371,6 +338,7 @@ router.put('/:id', async (req, res) => {
       args: [updates.name, updates.type, updates.author || null, updates.sourceUrl || null, now, id]
     });
 
+  
     // Get updated media item with sections
     const result = await db.execute({
       sql: 'SELECT * FROM media_items WHERE id = ?',
