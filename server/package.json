@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "migrate:sections": "tsx src/sql/migrateSections.ts",
-    "migrate:sections:safe": "tsx src/sql/safeMigrateSections.ts"
+    "migrate:sections:safe": "tsx src/sql/safeMigrateSections.ts",
+    "migrate:source-url": "tsx src/sql/migrateSourceUrl.ts"
   },
   "keywords": [],
   "author": "",

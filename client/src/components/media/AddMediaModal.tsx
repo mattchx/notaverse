@@ -17,6 +17,7 @@ interface FormData {
   name: string;
   type: MediaType;
   author?: string;
+  sourceUrl?: string;
   initialSection: string;
 }
 
@@ -26,6 +27,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
     name: '',
     type: 'book',
     author: '',
+    sourceUrl: '',
     initialSection: '',
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -54,6 +56,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         name: formData.name.trim(),
         type: formData.type,
         author: formData.author?.trim(),
+        sourceUrl: formData.sourceUrl?.trim(),
         sections: [
           {
             id: uuidv4(),
@@ -73,6 +76,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         name: '',
         type: 'book',
         author: '',
+        sourceUrl: '',
         initialSection: '',
       });
     } catch (error) {
@@ -137,6 +141,19 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
               onChange={handleInputChange}
               placeholder="Enter author or creator name"
               maxLength={100}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sourceUrl">Source URL</Label>
+            <Input
+              id="sourceUrl"
+              name="sourceUrl"
+              value={formData.sourceUrl}
+              onChange={handleInputChange}
+              type="url"
+              placeholder="Enter source URL (e.g., podcast URL, book storage location)"
+              maxLength={500}
             />
           </div>
 

@@ -4,6 +4,7 @@ export interface MediaItem {
   id: string
   name: string
   author?: string
+  sourceUrl?: string
   sections: Section[]
   type: MediaType
 }

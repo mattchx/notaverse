@@ -132,8 +132,8 @@ router.post('/', async (req, res) => {
 
     // Insert media item
     await db.execute({
-      sql: 'INSERT INTO media_items (id, name, type, author, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      args: [newMedia.id, newMedia.name, newMedia.type, newMedia.author || null, now, now]
+      sql: 'INSERT INTO media_items (id, name, type, author, source_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      args: [newMedia.id, newMedia.name, newMedia.type, newMedia.author || null, newMedia.sourceUrl || null, now, now]
     });
 
     // Insert sections
@@ -367,8 +367,8 @@ router.put('/:id', async (req, res) => {
 
     // Update media item
     await db.execute({
-      sql: 'UPDATE media_items SET name = ?, type = ?, author = ?, updated_at = ? WHERE id = ?',
-      args: [updates.name, updates.type, updates.author || null, now, id]
+      sql: 'UPDATE media_items SET name = ?, type = ?, author = ?, source_url = ?, updated_at = ? WHERE id = ?',
+      args: [updates.name, updates.type, updates.author || null, updates.sourceUrl || null, now, id]
     });
 
     // Get updated media item with sections

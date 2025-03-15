@@ -17,6 +17,7 @@ interface FormData {
   name: string;
   type: MediaType;
   author?: string;
+  sourceUrl?: string;
 }
 
 export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModalProps) {
@@ -25,6 +26,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
     name: '',
     type: 'book',
     author: '',
+    sourceUrl: '',
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -35,6 +37,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
         name: mediaItem.name,
         type: mediaItem.type,
         author: mediaItem.author || '',
+        sourceUrl: mediaItem.sourceUrl || '',
       });
     }
   }, [mediaItem]);
@@ -65,6 +68,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
         name: formData.name.trim(),
         type: formData.type,
         author: formData.author?.trim(),
+        sourceUrl: formData.sourceUrl?.trim(),
       };
 
       // Send request to API
@@ -135,6 +139,19 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
               onChange={handleInputChange}
               placeholder="Enter author or creator name"
               maxLength={100}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sourceUrl">Source URL</Label>
+            <Input
+              id="sourceUrl"
+              name="sourceUrl"
+              value={formData.sourceUrl}
+              onChange={handleInputChange}
+              type="url"
+              placeholder="Enter source URL (e.g., podcast URL, book storage location)"
+              maxLength={500}
             />
           </div>
 

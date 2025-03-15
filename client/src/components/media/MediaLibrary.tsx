@@ -184,6 +184,16 @@ export default function MediaLibrary() {
                 </Button>
               </TableHead>
               <TableHead>Sections</TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => toggleSort('sourceUrl')}
+                  className="h-8 px-2 hover:bg-transparent"
+                >
+                  Source URL
+                  <ArrowUpDown className="ml-2 h-4 w-4" />
+                </Button>
+              </TableHead>
               <TableHead className="w-24">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -198,6 +208,21 @@ export default function MediaLibrary() {
                 <TableCell>{mediaItem.author || '-'}</TableCell>
                 <TableCell className="capitalize">{mediaItem.type}</TableCell>
                 <TableCell>{mediaItem.sections.length}</TableCell>
+                <TableCell>
+                  {mediaItem.sourceUrl ? (
+                    <a
+                      href={mediaItem.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {new URL(mediaItem.sourceUrl).hostname}
+                    </a>
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button
@@ -240,12 +265,13 @@ export default function MediaLibrary() {
                 <TableHead>Author</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Sections</TableHead>
+                <TableHead>Source URL</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell colSpan={5} className="h-32 text-center">
+                <TableCell colSpan={6} className="h-32 text-center">
                   <p className="text-gray-500 mb-4">No media items in your library</p>
                   <Button onClick={() => setOpen(true)}>
                     Add Your First Media
