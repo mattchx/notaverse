@@ -461,27 +461,33 @@ router.delete('/:mediaId/sections/:sectionId', async (req, res) => {
   try {
     const { mediaId, sectionId } = req.params;
 
-    // Verify section exists and belongs to the media item
-    const sectionResult = await db.execute({
-      sql: 'SELECT id FROM sections WHERE id = ? AND media_id = ?',
-      args: [sectionId, mediaId]
+    const result = await db.transaction(async (tx) => {
+      // Verify section exists and belongs to the media item
+      const section = await tx.query.sections.findFirst({
+        where: and(
+          eq(sections.id, sectionId),
+          eq(sections.mediaId, mediaId)
+        )
+      });
+
+      if (!section) {
+        return false;
+      }
+
+      // Delete all markers in this section first
+      await tx.delete(markers)
+        .where(eq(markers.sectionId, sectionId));
+
+      // Then delete the section
+      await tx.delete(sections)
+        .where(eq(sections.id, sectionId));
+
+      return true;
     });
 
-    if (sectionResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Section not found' });
     }
-
-    // Delete all markers in this section first
-    await db.execute({
-      sql: 'DELETE FROM markers WHERE section_id = ?',
-      args: [sectionId]
-    });
-
-    // Then delete the section
-    await db.execute({
-      sql: 'DELETE FROM sections WHERE id = ?',
-      args: [sectionId]
-    });
 
     res.status(204).end();
   } catch (error) {
@@ -559,21 +565,34 @@ router.delete('/:mediaId/sections/:sectionId/markers/:markerId', async (req, res
   try {
     const { mediaId, sectionId, markerId } = req.params;
 
-    // Verify marker exists and belongs to the section
-    const markerResult = await db.execute({
-      sql: 'SELECT m.id FROM markers m JOIN sections s ON m.section_id = s.id WHERE m.id = ? AND s.id = ? AND s.media_id = ?',
-      args: [markerId, sectionId, mediaId]
+    const result = await db.transaction(async (tx) => {
+      // Verify marker exists and belongs to the correct section/media
+      const sectionAndMarker = await tx.query.sections.findFirst({
+        where: and(
+          eq(sections.id, sectionId),
+          eq(sections.mediaId, mediaId)
+        ),
+        with: {
+          markers: {
+            where: eq(markers.id, markerId)
+          }
+        }
+      });
+
+      if (!sectionAndMarker || sectionAndMarker.markers.length === 0) {
+        return false;
+      }
+
+      // Delete the marker
+      await tx.delete(markers)
+        .where(eq(markers.id, markerId));
+
+      return true;
     });
 
-    if (markerResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Marker not found' });
     }
-
-    // Delete the marker
-    await db.execute({
-      sql: 'DELETE FROM markers WHERE id = ?',
-      args: [markerId]
-    });
 
     res.status(204).end();
   } catch (error) {
