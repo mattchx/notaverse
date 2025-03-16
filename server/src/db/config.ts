@@ -6,9 +6,14 @@ if (!process.env.TURSO_DB_URL) {
   throw new Error('TURSO_DB_URL environment variable is required');
 }
 
+// Extract URL and auth token from TURSO_DB_URL
+const dbUrl = new URL(process.env.TURSO_DB_URL);
+const authToken = dbUrl.searchParams.get('authToken');
+
 // Create Turso client
 const client = createClient({
-  url: process.env.TURSO_DB_URL,
+  url: `${dbUrl.protocol}//${dbUrl.host}`,
+  authToken: authToken || undefined,
 });
 
 // Create Drizzle database instance
