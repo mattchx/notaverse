@@ -64,11 +64,19 @@ export const markersRelations = relations(markers, ({ one }) => ({
   })
 }));
 
+// Sessions table
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  expires: integer('expires'),
+  data: text('data').notNull(),
+});
+
 export const schema = {
   users,
   mediaItems,
   sections,
   markers,
+  sessions,
   mediaItemsRelations,
   sectionsRelations,
   markersRelations

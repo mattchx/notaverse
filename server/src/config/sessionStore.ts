@@ -1,44 +1,30 @@
 import { Store, SessionData } from 'express-session';
-import client from '../db.js';
-
-interface StoredSessionData {
-  id: string;
-  expires: number | null;
-  data: string;
-}
+import { eq, and, or, isNull, gt } from 'drizzle-orm';
+import { db } from '../db/index.js';
+import { sessions } from '../db/schema.js';
 
 export class TursoSessionStore extends Store {
-  private readonly tableName = 'sessions';
-
-  constructor() {
-    super();
-    this.initTable().catch(console.error);
-  }
-
-  private async initTable() {
-    await client.execute(
-      `CREATE TABLE IF NOT EXISTS ${this.tableName} (
-        id TEXT PRIMARY KEY,
-        expires INTEGER,
-        data TEXT
-      )`
-    );
-  }
-
   async get(sid: string, callback: (err: any, session?: SessionData | null) => void) {
     try {
       const now = Date.now();
-      const result = await client.execute({
-        sql: `SELECT * FROM ${this.tableName} WHERE id = ? AND (expires IS NULL OR expires > ?)`,
-        args: [sid, now]
-      });
+      const result = await db.select()
+        .from(sessions)
+        .where(
+          and(
+            eq(sessions.id, sid),
+            or(
+              isNull(sessions.expires),
+              gt(sessions.expires, now)
+            )
+          )
+        )
+        .limit(1);
 
-      if (!result.rows.length) {
+      if (!result.length) {
         return callback(null, null);
       }
 
-      const stored = result.rows[0] as StoredSessionData;
-      const session = JSON.parse(stored.data) as SessionData;
+      const session = JSON.parse(result[0].data) as SessionData;
       callback(null, session);
     } catch (err) {
       callback(err);
@@ -49,15 +35,20 @@ export class TursoSessionStore extends Store {
     try {
       const expires = session.cookie.expires ? new Date(session.cookie.expires).getTime() : null;
       const data = JSON.stringify(session);
-      const expiresStr = expires === null ? 'NULL' : expires.toString();
 
-      await client.execute(
-        `INSERT INTO ${this.tableName} (id, expires, data)
-         VALUES ('${sid}', ${expiresStr}, '${data}')
-         ON CONFLICT(id) DO UPDATE SET
-           expires = excluded.expires,
-           data = excluded.data`
-      );
+      await db.insert(sessions)
+        .values({
+          id: sid,
+          expires,
+          data
+        })
+        .onConflictDoUpdate({
+          target: sessions.id,
+          set: {
+            expires,
+            data
+          }
+        });
 
       if (callback) callback();
     } catch (err) {
@@ -67,9 +58,8 @@ export class TursoSessionStore extends Store {
 
   async destroy(sid: string, callback?: (err?: any) => void) {
     try {
-      await client.execute(
-        `DELETE FROM ${this.tableName} WHERE id = '${sid}'`
-      );
+      await db.delete(sessions)
+        .where(eq(sessions.id, sid));
 
       if (callback) callback();
     } catch (err) {
@@ -80,11 +70,10 @@ export class TursoSessionStore extends Store {
   async touch(sid: string, session: SessionData, callback?: (err?: any) => void) {
     try {
       const expires = session.cookie.expires ? new Date(session.cookie.expires).getTime() : null;
-      const expiresStr = expires === null ? 'NULL' : expires.toString();
 
-      await client.execute(
-        `UPDATE ${this.tableName} SET expires = ${expiresStr} WHERE id = '${sid}'`
-      );
+      await db.update(sessions)
+        .set({ expires })
+        .where(eq(sessions.id, sid));
 
       if (callback) callback();
     } catch (err) {
@@ -94,7 +83,7 @@ export class TursoSessionStore extends Store {
 
   async clear(callback?: (err?: any) => void) {
     try {
-      await client.execute(`DELETE FROM ${this.tableName}`);
+      await db.delete(sessions);
       if (callback) callback();
     } catch (err) {
       if (callback) callback(err);
