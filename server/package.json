@@ -8,8 +8,11 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrate:sections": "tsx src/sql/migrateSections.ts",
-    "migrate:sections:safe": "tsx src/sql/safeMigrateSections.ts"
+    "db:generate": "npx drizzle-kit generate",
+    "db:migrate": "npx drizzle-kit migrate",
+    "db:push": "npx drizzle-kit push",
+    "db:studio": "npx drizzle-kit studio",
+    "db:drop": "npx drizzle-kit drop"
   },
   "keywords": [],
   "author": "",
@@ -20,18 +23,19 @@
     "@types/express": "^4.17.21",
     "@types/node": "^20.11.19",
     "@types/uuid": "^10.0.0",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "drizzle-kit": "^0.30.5",
+    "drizzle-orm": "^0.40.0",
     "express": "^4.18.2",
-    "typescript": "^5.3.3",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2",
     "@types/express-session": "^1.18.1",
-    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
     "express-session": "^1.18.1",
-    "tsx": "^4.7.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
     "zod": "^3.24.2"
   }
 }

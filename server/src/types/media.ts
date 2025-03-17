@@ -3,6 +3,7 @@ export interface MediaItem {
   name: string;
   type: 'book' | 'podcast';
   author?: string;
+  sourceUrl?: string;
   sections: Section[];
   createdAt: Date;
   updatedAt: Date;

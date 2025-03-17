@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { requireAuth } from '../middleware/auth.js';
 import type { User } from '../types/auth.js';
-import { createUser, findUserByEmail, findUserById } from '../db.js';
+import { createUser, findUserByEmail, findUserById } from '../db/users.js';
 
 const router = Router();
 

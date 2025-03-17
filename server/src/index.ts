@@ -8,7 +8,6 @@ import { router as noteRouter } from './routes/notes.js';
 import mediaRouter from './routes/media.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { env } from './config/env.js';
-import { initDb } from './db.js';
 
 const app = express();
 
@@ -30,7 +29,6 @@ app.use(errorHandler);
 // Initialize database and start server
 async function start() {
   try {
-    await initDb();
     console.log('Database initialized successfully');
 
     app.listen(env.PORT, () => {

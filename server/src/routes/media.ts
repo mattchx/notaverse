@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import db from '../db.js';
+import { and, eq, desc, asc, inArray } from 'drizzle-orm';
+import { db, schema } from '../db/index.js';
+import { mediaItems, sections, markers } from '../db/schema.js';
 import { MediaItem, Section } from '../types/media.js';
 
 const router = Router();
@@ -7,43 +9,28 @@ const router = Router();
 // Get all media items
 router.get('/', async (req, res) => {
   try {
-    // Get all media items
-    const mediaResult = await db.execute({
-      sql: 'SELECT * FROM media_items ORDER BY created_at DESC',
-      args: []
+    // Get all media items with their sections
+    const mediaItems = await db.query.mediaItems.findMany({
+      orderBy: (mediaItems, { desc }) => [desc(mediaItems.createdAt)],
+      with: {
+        sections: {
+          orderBy: (sections, { asc }) => [asc(sections.number)],
+          columns: {
+            id: true,
+            title: true,
+            number: true,
+          }
+        }
+      }
     });
 
-    if (!mediaResult.rows) {
-      res.json([]);
-      return;
-    }
-
-    // Transform media items and fetch their sections
-    const mediaItems = await Promise.all(mediaResult.rows.map(async row => {
-      const { created_at, updated_at, ...rest } = row;
-
-      // Get sections for this media item
-      const sectionsResult = await db.execute({
-        sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
-        args: [row.id]
-      });
-
-      const sections = sectionsResult.rows.map(section => ({
-        id: section.id,
-        title: section.title,
-        number: section.number,
-        markers: [], // We don't need markers for the list view
-      }));
-
-      return {
-        ...rest,
-        sections,
-        createdAt: new Date(created_at as number).toISOString(),
-        updatedAt: new Date(updated_at as number).toISOString()
-      };
-    }));
-
-    res.json(mediaItems);
+    res.json(mediaItems.map(item => ({
+      ...item,
+      sections: item.sections.map(section => ({
+        ...section,
+        markers: [] // We don't need markers for the list view
+      }))
+    })));
   } catch (error) {
     console.error('Error getting media items:', error);
     res.status(500).json({
@@ -53,61 +40,41 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single media item
+// Get single media item with sections and markers
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Get media item
-    const result = await db.execute({
-      sql: 'SELECT * FROM media_items WHERE id = ?',
-      args: [id]
+    const mediaItem = await db.query.mediaItems.findFirst({
+      where: eq(mediaItems.id, id),
+      with: {
+        sections: {
+          orderBy: asc(sections.number),
+          with: {
+            markers: {
+              orderBy: asc(markers.orderNum)
+            }
+          }
+        }
+      }
     });
 
-    if (result.rows.length === 0) {
+    if (!mediaItem) {
       return res.status(404).json({ error: 'Media item not found' });
     }
 
-    const { created_at, updated_at, ...rest } = result.rows[0];
-
-    // Get sections
-    const sectionsResult = await db.execute({
-      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
-      args: [id]
-    });
-
-    // Get markers for each section
-    const sections = await Promise.all(sectionsResult.rows.map(async section => {
-      const markersResult = await db.execute({
-        sql: 'SELECT * FROM markers WHERE section_id = ? ORDER BY order_num',
-        args: [section.id]
-      });
-
-      return {
-        id: section.id,
-        title: section.title,
-        number: section.number,
-        markers: markersResult.rows.map(marker => ({
-          id: marker.id,
-          position: marker.position,
-          order: marker.order_num,
-          quote: marker.quote,
-          note: marker.note,
-          dateCreated: new Date(marker.created_at as number),
-          dateUpdated: new Date(marker.updated_at as number)
+    res.json({
+      ...mediaItem,
+      sections: mediaItem.sections.map(section => ({
+        ...section,
+        markers: section.markers.map(marker => ({
+          ...marker,
+          order: marker.orderNum,
+          dateCreated: new Date(Number(marker.createdAt)),
+          dateUpdated: new Date(Number(marker.updatedAt))
         }))
-      };
-    }));
-
-    const mediaItem = {
-      ...rest,
-      sections,
-      createdAt: new Date(created_at as number),
-      updatedAt: new Date(updated_at as number)
-    };
-
-    res.setHeader('Content-Type', 'application/json');
-    res.json(mediaItem);
+      }))
+    });
   } catch (error) {
     console.error('Error getting media item:', error);
     res.status(500).json({ error: 'Failed to get media item' });
@@ -130,83 +97,80 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Invalid media type' });
     }
 
-    // Insert media item
-    await db.execute({
-      sql: 'INSERT INTO media_items (id, name, type, author, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      args: [newMedia.id, newMedia.name, newMedia.type, newMedia.author || null, now, now]
-    });
-
-    // Insert sections
-    for (const section of newMedia.sections) {
-      await db.execute({
-        sql: 'INSERT INTO sections (id, media_id, title, number, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-        args: [section.id, newMedia.id, section.title, section.number, now, now]
+    // Use a transaction for atomic operation
+    const result = await db.transaction(async (tx) => {
+      // Insert media item
+      await tx.insert(mediaItems).values({
+        id: newMedia.id,
+        name: newMedia.name,
+        type: newMedia.type,
+        author: newMedia.author ?? null,
+        sourceUrl: newMedia.sourceUrl ?? null,
+        createdAt: new Date(now),
+        updatedAt: new Date(now),
       });
 
-      // Insert markers if any
-      for (const marker of section.markers) {
-        await db.execute({
-          sql: 'INSERT INTO markers (id, section_id, position, order_num, quote, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          args: [
-            marker.id,
-            section.id,
-            marker.position,
-            marker.order,
-            marker.quote || null,
-            marker.note,
-            now,
-            now
-          ]
+      // Insert all sections
+      for (const section of newMedia.sections) {
+        await tx.insert(sections).values({
+          id: section.id,
+          mediaId: newMedia.id,
+          title: section.title,
+          number: section.number,
+          createdAt: new Date(now),
+          updatedAt: new Date(now),
         });
+
+        // Insert markers for this section
+        if (section.markers?.length > 0) {
+          for (const marker of section.markers) {
+            await tx.insert(markers).values({
+              id: marker.id,
+              sectionId: section.id,
+              position: marker.position,
+              orderNum: marker.order,
+              quote: marker.quote ?? null,
+              note: marker.note,
+              createdAt: new Date(now),
+              updatedAt: new Date(now),
+            });
+          }
+        }
       }
+
+      // Return the created item with all its data
+      return await tx.query.mediaItems.findFirst({
+        where: eq(mediaItems.id, newMedia.id),
+        with: {
+          sections: {
+            orderBy: asc(sections.number),
+            with: {
+              markers: {
+                orderBy: asc(markers.orderNum)
+              }
+            }
+          }
+        }
+      });
+    });
+
+    if (!result) {
+      throw new Error('Failed to create media item');
     }
 
-    // Get the created item with all its data
-    const result = await db.execute({
-      sql: 'SELECT * FROM media_items WHERE id = ?',
-      args: [newMedia.id]
-    });
-
-    const { created_at, updated_at, ...rest } = result.rows[0];
-
-    // Get sections
-    const sectionsResult = await db.execute({
-      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
-      args: [newMedia.id]
-    });
-
-    // Get markers for each section
-    const sections = await Promise.all(sectionsResult.rows.map(async section => {
-      const markersResult = await db.execute({
-        sql: 'SELECT * FROM markers WHERE section_id = ? ORDER BY order_num',
-        args: [section.id]
-      });
-
-      return {
-        id: section.id,
-        title: section.title,
-        number: section.number,
-        markers: markersResult.rows.map(marker => ({
-          id: marker.id,
-          position: marker.position,
-          order: marker.order_num,
-          quote: marker.quote,
-          note: marker.note,
-          dateCreated: new Date(marker.created_at as number),
-          dateUpdated: new Date(marker.updated_at as number)
+    // Transform response to match expected format
+    res.status(201).json({
+      ...result,
+      sections: result.sections.map(section => ({
+        ...section,
+        markers: section.markers.map(marker => ({
+          ...marker,
+          order: marker.orderNum,
+          dateCreated: new Date(Number(marker.createdAt)),
+          dateUpdated: new Date(Number(marker.updatedAt))
         }))
-      };
-    }));
-
-    const createdMedia = {
-      ...rest,
-      sections,
-      createdAt: new Date(now),
-      updatedAt: new Date(now)
-    };
-
-    res.setHeader('Content-Type', 'application/json');
-    res.status(201).json(createdMedia);
+      }))
+    });
   } catch (error) {
     console.error('Error creating media item:', error);
     res.status(500).json({ error: 'Failed to create media item' });
@@ -220,29 +184,39 @@ router.post('/:mediaId/sections', async (req, res) => {
     const section: Section = req.body;
     const now = Date.now();
 
-    // Verify media item exists
-    const mediaResult = await db.execute({
-      sql: 'SELECT id FROM media_items WHERE id = ?',
-      args: [mediaId]
+    const result = await db.transaction(async (tx) => {
+      // Verify media item exists
+      const mediaItem = await tx.query.mediaItems.findFirst({
+        where: eq(mediaItems.id, mediaId),
+        columns: { id: true }
+      });
+
+      if (!mediaItem) {
+        return null;
+      }
+
+      // Insert section
+      await tx.insert(sections).values({
+        id: section.id,
+        mediaId: mediaId,
+        title: section.title,
+        number: section.number,
+        createdAt: new Date(now),
+        updatedAt: new Date(now)
+      });
+
+      return section;
     });
 
-    if (mediaResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Media item not found' });
     }
 
-    // Insert section
-    await db.execute({
-      sql: 'INSERT INTO sections (id, media_id, title, number, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      args: [section.id, mediaId, section.title, section.number, now, now]
-    });
-
-    const createdSection = {
-      ...section,
-      markers: []
-    };
-
     res.setHeader('Content-Type', 'application/json');
-    res.status(201).json(createdSection);
+    res.status(201).json({
+      ...result,
+      markers: []
+    });
   } catch (error) {
     console.error('Error creating section:', error);
     res.status(500).json({ error: 'Failed to create section' });
@@ -256,34 +230,44 @@ router.put('/:mediaId/sections/:sectionId', async (req, res) => {
     const { title } = req.body;
     const now = Date.now();
 
-    // Verify section exists and belongs to the media item
-    const sectionResult = await db.execute({
-      sql: 'SELECT id FROM sections WHERE id = ? AND media_id = ?',
-      args: [sectionId, mediaId]
+    const result = await db.transaction(async (tx) => {
+      // Verify section exists and belongs to the media item
+      const existingSection = await tx.query.sections.findFirst({
+        where: and(
+          eq(sections.id, sectionId),
+          eq(sections.mediaId, mediaId)
+        ),
+      });
+
+      if (!existingSection) {
+        return null;
+      }
+
+      // Update section
+      await tx.update(sections)
+        .set({
+          title,
+          updatedAt: new Date(now)
+        })
+        .where(eq(sections.id, sectionId));
+
+      // Get updated section
+      return await tx.query.sections.findFirst({
+        where: eq(sections.id, sectionId),
+        columns: {
+          id: true,
+          title: true,
+          number: true
+        }
+      });
     });
 
-    if (sectionResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    // Update section title
-    await db.execute({
-      sql: 'UPDATE sections SET title = ?, updated_at = ? WHERE id = ?',
-      args: [title, now, sectionId]
-    });
-
-    // Get updated section
-    const updatedSectionResult = await db.execute({
-      sql: 'SELECT * FROM sections WHERE id = ?',
-      args: [sectionId]
-    });
-
-    const section = updatedSectionResult.rows[0];
-
     res.json({
-      id: section.id,
-      title: section.title,
-      number: section.number,
+      ...result,
       markers: [] // We don't need to fetch markers for a title update
     });
   } catch (error) {
@@ -299,39 +283,42 @@ router.post('/:mediaId/sections/:sectionId/markers', async (req, res) => {
     const marker = req.body;
     const now = Date.now();
 
-    // Verify section exists
-    const sectionResult = await db.execute({
-      sql: 'SELECT id FROM sections WHERE id = ?',
-      args: [sectionId]
+    const result = await db.transaction(async (tx) => {
+      // Verify section exists
+      const section = await tx.query.sections.findFirst({
+        where: eq(sections.id, sectionId),
+        columns: { id: true }
+      });
+
+      if (!section) {
+        return null;
+      }
+
+      // Insert marker
+      await tx.insert(markers).values({
+        id: marker.id,
+        sectionId: sectionId,
+        position: marker.position,
+        orderNum: marker.order,
+        quote: marker.quote ?? null,
+        note: marker.note,
+        createdAt: new Date(now),
+        updatedAt: new Date(now)
+      });
+
+      return marker;
     });
 
-    if (sectionResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Section not found' });
     }
 
-    // Insert marker
-    await db.execute({
-      sql: 'INSERT INTO markers (id, section_id, position, order_num, quote, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      args: [
-        marker.id,
-        sectionId,
-        marker.position,
-        marker.order,
-        marker.quote || null,
-        marker.note,
-        now,
-        now
-      ]
-    });
-
-    const createdMarker = {
-      ...marker,
+    res.setHeader('Content-Type', 'application/json');
+    res.status(201).json({
+      ...result,
       dateCreated: new Date(now),
       dateUpdated: new Date(now)
-    };
-
-    res.setHeader('Content-Type', 'application/json');
-    res.status(201).json(createdMarker);
+    });
   } catch (error) {
     console.error('Error creating marker:', error);
     res.status(500).json({ error: 'Failed to create marker' });
@@ -355,51 +342,54 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid media type' });
     }
 
-    // Verify media item exists
-    const mediaResult = await db.execute({
-      sql: 'SELECT id FROM media_items WHERE id = ?',
-      args: [id]
+    const result = await db.transaction(async (tx) => {
+      // Verify and update media item
+      const mediaItem = await tx.query.mediaItems.findFirst({
+        where: eq(mediaItems.id, id)
+      });
+
+      if (!mediaItem) {
+        return null;
+      }
+
+      // Update media item
+      await tx.update(mediaItems)
+        .set({
+          name: updates.name,
+          type: updates.type,
+          author: updates.author ?? null,
+          sourceUrl: updates.sourceUrl ?? null,
+          updatedAt: new Date(now)
+        })
+        .where(eq(mediaItems.id, id));
+
+      // Get updated media item with sections
+      return await tx.query.mediaItems.findFirst({
+        where: eq(mediaItems.id, id),
+        with: {
+          sections: {
+            orderBy: asc(sections.number),
+            columns: {
+              id: true,
+              title: true,
+              number: true
+            }
+          }
+        }
+      });
     });
 
-    if (mediaResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Media item not found' });
     }
 
-    // Update media item
-    await db.execute({
-      sql: 'UPDATE media_items SET name = ?, type = ?, author = ?, updated_at = ? WHERE id = ?',
-      args: [updates.name, updates.type, updates.author || null, now, id]
+    res.json({
+      ...result,
+      sections: result.sections.map(section => ({
+        ...section,
+        markers: [] // We don't need markers for updates
+      }))
     });
-
-    // Get updated media item with sections
-    const result = await db.execute({
-      sql: 'SELECT * FROM media_items WHERE id = ?',
-      args: [id]
-    });
-
-    const { created_at, updated_at, ...rest } = result.rows[0];
-
-    // Get sections
-    const sectionsResult = await db.execute({
-      sql: 'SELECT * FROM sections WHERE media_id = ? ORDER BY number',
-      args: [id]
-    });
-
-    const sections = sectionsResult.rows.map(section => ({
-      id: section.id,
-      title: section.title,
-      number: section.number,
-      markers: [], // We don't need markers for updates
-    }));
-
-    const updatedMedia = {
-      ...rest,
-      sections,
-      createdAt: new Date(created_at as number),
-      updatedAt: new Date(now)
-    };
-
-    res.json(updatedMedia);
   } catch (error) {
     console.error('Error updating media item:', error);
     res.status(500).json({
@@ -414,42 +404,47 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    // First verify the media item exists
-    const mediaResult = await db.execute({
-      sql: 'SELECT id FROM media_items WHERE id = ?',
-      args: [id]
+    const result = await db.transaction(async (tx) => {
+      // Verify media item exists
+      const mediaItem = await tx.query.mediaItems.findFirst({
+        where: eq(mediaItems.id, id),
+        columns: { id: true }
+      });
+
+      if (!mediaItem) {
+        return false;
+      }
+
+      // Delete in order: markers -> sections -> media item
+      // First, get all sections
+      const sectionIds = await tx.query.sections.findMany({
+        where: eq(sections.mediaId, id),
+        columns: { id: true }
+      });
+
+      // Delete all markers for these sections
+      if (sectionIds.length > 0) {
+        await tx
+          .delete(markers)
+          .where(inArray(markers.sectionId, sectionIds.map(s => s.id)));
+      }
+
+      // Delete sections
+      await tx
+        .delete(sections)
+        .where(eq(sections.mediaId, id));
+
+      // Delete media item
+      await tx
+        .delete(mediaItems)
+        .where(eq(mediaItems.id, id));
+
+      return true;
     });
 
-    if (mediaResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Media item not found' });
     }
-
-    // Get all sections for this media item
-    const sectionsResult = await db.execute({
-      sql: 'SELECT id FROM sections WHERE media_id = ?',
-      args: [id]
-    });
-
-    // Delete in order: markers -> sections -> media item
-    for (const section of sectionsResult.rows) {
-      // Delete all markers for this section
-      await db.execute({
-        sql: 'DELETE FROM markers WHERE section_id = ?',
-        args: [section.id]
-      });
-    }
-
-    // Delete all sections
-    await db.execute({
-      sql: 'DELETE FROM sections WHERE media_id = ?',
-      args: [id]
-    });
-
-    // Finally, delete the media item
-    await db.execute({
-      sql: 'DELETE FROM media_items WHERE id = ?',
-      args: [id]
-    });
 
     res.status(204).end();
   } catch (error) {
@@ -466,27 +461,33 @@ router.delete('/:mediaId/sections/:sectionId', async (req, res) => {
   try {
     const { mediaId, sectionId } = req.params;
 
-    // Verify section exists and belongs to the media item
-    const sectionResult = await db.execute({
-      sql: 'SELECT id FROM sections WHERE id = ? AND media_id = ?',
-      args: [sectionId, mediaId]
+    const result = await db.transaction(async (tx) => {
+      // Verify section exists and belongs to the media item
+      const section = await tx.query.sections.findFirst({
+        where: and(
+          eq(sections.id, sectionId),
+          eq(sections.mediaId, mediaId)
+        )
+      });
+
+      if (!section) {
+        return false;
+      }
+
+      // Delete all markers in this section first
+      await tx.delete(markers)
+        .where(eq(markers.sectionId, sectionId));
+
+      // Then delete the section
+      await tx.delete(sections)
+        .where(eq(sections.id, sectionId));
+
+      return true;
     });
 
-    if (sectionResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Section not found' });
     }
-
-    // Delete all markers in this section first
-    await db.execute({
-      sql: 'DELETE FROM markers WHERE section_id = ?',
-      args: [sectionId]
-    });
-
-    // Then delete the section
-    await db.execute({
-      sql: 'DELETE FROM sections WHERE id = ?',
-      args: [sectionId]
-    });
 
     res.status(204).end();
   } catch (error) {
@@ -505,37 +506,52 @@ router.put('/:mediaId/sections/:sectionId/markers/:markerId', async (req, res) =
     const updates = req.body;
     const now = Date.now();
 
-    // Verify marker exists and belongs to the section
-    const markerResult = await db.execute({
-      sql: 'SELECT m.id FROM markers m JOIN sections s ON m.section_id = s.id WHERE m.id = ? AND s.id = ? AND s.media_id = ?',
-      args: [markerId, sectionId, mediaId]
+    const result = await db.transaction(async (tx) => {
+      // Verify marker exists and belongs to the section
+      // Verify marker exists and belongs to the correct section/media
+      const sectionAndMarker = await tx.query.sections.findFirst({
+        where: and(
+          eq(sections.id, sectionId),
+          eq(sections.mediaId, mediaId)
+        ),
+        with: {
+          markers: {
+            where: eq(markers.id, markerId)
+          }
+        }
+      });
+
+      if (!sectionAndMarker || sectionAndMarker.markers.length === 0) {
+        return null;
+      }
+
+      // Update marker
+      await tx.update(markers)
+        .set({
+          position: updates.position,
+          quote: updates.quote ?? null,
+          note: updates.note,
+          updatedAt: new Date(now)
+        })
+        .where(eq(markers.id, markerId));
+
+      // Get updated marker
+      return await tx.query.markers.findFirst({
+        where: eq(markers.id, markerId),
+      });
     });
 
-    if (markerResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Marker not found' });
     }
 
-    // Update marker
-    await db.execute({
-      sql: 'UPDATE markers SET position = ?, quote = ?, note = ?, updated_at = ? WHERE id = ?',
-      args: [updates.position, updates.quote || null, updates.note, now, markerId]
-    });
-
-    // Get updated marker
-    const updatedMarkerResult = await db.execute({
-      sql: 'SELECT * FROM markers WHERE id = ?',
-      args: [markerId]
-    });
-
-    const marker = updatedMarkerResult.rows[0];
-
     res.json({
-      id: marker.id,
-      position: marker.position,
-      order: marker.order_num,
-      quote: marker.quote,
-      note: marker.note,
-      dateCreated: new Date(marker.created_at as number).toISOString(),
+      id: result.id,
+      position: result.position,
+      order: result.orderNum,
+      quote: result.quote,
+      note: result.note,
+      dateCreated: new Date(Number(result.createdAt)).toISOString(),
       dateUpdated: new Date(now).toISOString()
     });
   } catch (error) {
@@ -549,21 +565,34 @@ router.delete('/:mediaId/sections/:sectionId/markers/:markerId', async (req, res
   try {
     const { mediaId, sectionId, markerId } = req.params;
 
-    // Verify marker exists and belongs to the section
-    const markerResult = await db.execute({
-      sql: 'SELECT m.id FROM markers m JOIN sections s ON m.section_id = s.id WHERE m.id = ? AND s.id = ? AND s.media_id = ?',
-      args: [markerId, sectionId, mediaId]
+    const result = await db.transaction(async (tx) => {
+      // Verify marker exists and belongs to the correct section/media
+      const sectionAndMarker = await tx.query.sections.findFirst({
+        where: and(
+          eq(sections.id, sectionId),
+          eq(sections.mediaId, mediaId)
+        ),
+        with: {
+          markers: {
+            where: eq(markers.id, markerId)
+          }
+        }
+      });
+
+      if (!sectionAndMarker || sectionAndMarker.markers.length === 0) {
+        return false;
+      }
+
+      // Delete the marker
+      await tx.delete(markers)
+        .where(eq(markers.id, markerId));
+
+      return true;
     });
 
-    if (markerResult.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'Marker not found' });
     }
-
-    // Delete the marker
-    await db.execute({
-      sql: 'DELETE FROM markers WHERE id = ?',
-      args: [markerId]
-    });
 
     res.status(204).end();
   } catch (error) {
