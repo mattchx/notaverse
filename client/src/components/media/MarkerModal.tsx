@@ -22,7 +22,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
   if (!isOpen) return null;
 
   const validatePosition = (value: string) => {
-    if (mediaType === 'book') {
+    if (mediaType === 'book' || mediaType === 'article') {
       // Only allow positive numbers for books
       // Check if value contains any non-digit characters
       if (!/^\d+$/.test(value)) {
@@ -95,7 +95,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid w-full gap-1.5">
             <Label htmlFor="position">
-              {mediaType === 'book' ? 'Page Number' : 'Timestamp'}
+              {mediaType === 'book' || mediaType === 'article' ? 'Page Number' : 'Timestamp'}
             </Label>
             <div>
               {mediaType === 'podcast' && sectionNumber !== undefined && (
@@ -107,7 +107,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
                 id="position"
                 value={position}
                 onChange={handlePositionChange}
-                placeholder={mediaType === 'book'
+                placeholder={mediaType === 'book' || mediaType === 'article'
                   ? "Enter page number (e.g., 42)"
                   : "Enter minute (0-59)"
                 }

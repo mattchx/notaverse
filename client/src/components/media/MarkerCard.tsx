@@ -28,7 +28,7 @@ export default function MarkerCard({
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-600">
-            {mediaType === 'book'
+            {mediaType === 'book' || mediaType === 'article'
               ? `Page: ${marker.position}`
               : `Timestamp: ${sectionNumber}:${marker.position.padStart(2, '0')}`}
           </span>
