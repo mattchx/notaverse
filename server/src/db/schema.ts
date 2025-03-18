@@ -14,7 +14,7 @@ export const users = sqliteTable('users', {
 export const mediaItems = sqliteTable('media_items', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
-  type: text('type', { enum: ['book', 'podcast'] }).notNull(),
+  type: text('type', { enum: ['book', 'podcast', 'article'] }).notNull(),
   author: text('author'),
   sourceUrl: text('source_url'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),

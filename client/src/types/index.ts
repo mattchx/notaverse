@@ -1,4 +1,4 @@
-export type MediaType = 'podcast' | 'book'
+export type MediaType = 'podcast' | 'book' | 'article'
 
 export interface MediaItem {
   id: string

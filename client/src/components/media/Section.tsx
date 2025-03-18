@@ -67,17 +67,43 @@ export default function Section({
   };
 
   const getSectionPrefix = () => {
-    return mediaType === 'book' ? 'Chapter' : 'Hour';
+    switch (mediaType) {
+      case 'book':
+        return 'Chapter';
+      case 'podcast':
+        return 'Hour';
+      case 'article':
+        return 'Section';
+    }
   };
+
+  // For articles, we want to keep the accordion always open
+  React.useEffect(() => {
+    if (mediaType === 'article') {
+      const accordionItem = document.querySelector(`[data-state][value="${section.id}"]`);
+      if (accordionItem) {
+        accordionItem.setAttribute('data-state', 'open');
+      }
+    }
+  }, [mediaType, section.id]);
 
   const sortedMarkers = React.useMemo(() => {
     return [...section.markers].sort((a, b) => parseInt(a.position) - parseInt(b.position));
   }, [section.markers]);
 
   return (
-    <AccordionItem value={section.id} className="border rounded-lg transition-colors hover:bg-gray-50/50 group">
-      <AccordionTrigger className="px-4 hover:no-underline hover:bg-transparent cursor-pointer" title="Click to expand/collapse">
-        <span className="absolute left-2 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-90">→</span>
+    <AccordionItem
+      value={section.id}
+      className="border rounded-lg transition-colors hover:bg-gray-50/50 group"
+      data-media-type={mediaType}
+    >
+      <AccordionTrigger
+        className={`px-4 hover:no-underline hover:bg-transparent ${mediaType === 'article' ? '' : 'cursor-pointer'}`}
+        title={mediaType === 'article' ? undefined : "Click to expand/collapse"}
+      >
+        {mediaType !== 'article' && (
+          <span className="absolute left-2 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-90">→</span>
+        )}
         <div className="flex items-center gap-2 flex-1">
           <h2 className="text-xl font-semibold">
             {getSectionPrefix()} {section.number}
@@ -162,21 +188,25 @@ export default function Section({
             )}
           </div>
 
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            variant="default"
-            className="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200"
-          >
-            + Add Marker
-          </Button>
+          {mediaType !== 'article' && (
+            <>
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                variant="default"
+                className="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200"
+              >
+                + Add Marker
+              </Button>
 
-          <MarkerModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onAddMarker={handleAddMarker}
-            mediaType={mediaType}
-            sectionNumber={section.number}
-          />
+              <MarkerModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onAddMarker={handleAddMarker}
+                mediaType={mediaType}
+                sectionNumber={section.number}
+              />
+            </>
+          )}
         </div>
       </AccordionContent>
 
