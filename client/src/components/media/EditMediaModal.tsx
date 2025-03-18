@@ -91,7 +91,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
         <DialogHeader>
           <DialogTitle>Edit Media Item</DialogTitle>
           <DialogDescription>
-            Update the details of your media item. Required fields are marked with an asterisk (*).
+            Update the details of your book, podcast, or article. Required fields are marked with an asterisk (*).
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -127,6 +127,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
             >
               <option value="book">Book</option>
               <option value="podcast">Podcast</option>
+              <option value="article">Article</option>
             </select>
           </div>
 

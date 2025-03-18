@@ -15,6 +15,13 @@ export default function MediaViewer() {
   const [activeMedia, setActiveMedia] = React.useState<MediaItem | null>(null);
   const [openSections, setOpenSections] = React.useState<string[]>([]);
 
+  // Keep all sections open for articles
+  React.useEffect(() => {
+    if (activeMedia?.type === 'article') {
+      setOpenSections(activeMedia.sections.map(section => section.id));
+    }
+  }, [activeMedia]);
+
   // Fetch media item data
   React.useEffect(() => {
     if (!id) return;
@@ -283,7 +290,15 @@ export default function MediaViewer() {
         <Accordion
           type="multiple"
           value={openSections}
-          onValueChange={setOpenSections}
+          onValueChange={(value) => {
+            // For articles, prevent sections from being collapsed
+            if (activeMedia?.type === 'article') {
+              const allSectionIds = activeMedia.sections.map(section => section.id);
+              setOpenSections(allSectionIds);
+            } else {
+              setOpenSections(value);
+            }
+          }}
         >
           {sortedSections.map(section => (
             <Section
@@ -299,25 +314,29 @@ export default function MediaViewer() {
           ))}
         </Accordion>
 
-        <Button
-          onClick={handleAddSection}
-          variant="default"
-          className="w-full bg-blue-200 text-blue-800 hover:bg-blue-300 border-2 border-blue-300 font-semibold"
-          disabled={state.isLoading}
-        >
-          {state.isLoading ? 'Adding...' : '+ Add Section'}
-        </Button>
-
-        {activeMedia.sections.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">No sections yet</p>
-            <Button 
+        {activeMedia.type !== 'article' && (
+          <>
+            <Button
               onClick={handleAddSection}
+              variant="default"
+              className="w-full bg-blue-200 text-blue-800 hover:bg-blue-300 border-2 border-blue-300 font-semibold"
               disabled={state.isLoading}
             >
-              Add First Section
+              {state.isLoading ? 'Adding...' : '+ Add Section'}
             </Button>
-          </div>
+
+            {activeMedia.sections.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No sections yet</p>
+                <Button
+                  onClick={handleAddSection}
+                  disabled={state.isLoading}
+                >
+                  Add First Section
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

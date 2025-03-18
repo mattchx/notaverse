@@ -94,16 +94,14 @@ export default function Section({
   return (
     <AccordionItem
       value={section.id}
-      className="border rounded-lg transition-colors hover:bg-gray-50/50 group"
+      className={`border rounded-lg transition-colors ${mediaType === 'article' ? 'bg-white' : 'hover:bg-gray-50/50'} group`}
       data-media-type={mediaType}
     >
       <AccordionTrigger
-        className={`px-4 hover:no-underline hover:bg-transparent ${mediaType === 'article' ? '' : 'cursor-pointer'}`}
+        className={`px-4 hover:no-underline hover:bg-transparent ${mediaType === 'article' ? 'cursor-default' : 'cursor-pointer'}`}
         title={mediaType === 'article' ? undefined : "Click to expand/collapse"}
+        disabled={mediaType === 'article'}
       >
-        {mediaType !== 'article' && (
-          <span className="absolute left-2 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-90">→</span>
-        )}
         <div className="flex items-center gap-2 flex-1">
           <h2 className="text-xl font-semibold">
             {getSectionPrefix()} {section.number}

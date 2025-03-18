@@ -93,7 +93,7 @@ router.post('/', async (req, res) => {
     }
 
     // Validate media type
-    if (!['book', 'podcast'].includes(newMedia.type)) {
+    if (!['book', 'podcast', 'article'].includes(newMedia.type)) {
       return res.status(400).json({ error: 'Invalid media type' });
     }
 
@@ -338,7 +338,7 @@ router.put('/:id', async (req, res) => {
     }
 
     // Validate media type
-    if (!['book', 'podcast'].includes(updates.type)) {
+    if (!['book', 'podcast', 'article'].includes(updates.type)) {
       return res.status(400).json({ error: 'Invalid media type' });
     }
 
