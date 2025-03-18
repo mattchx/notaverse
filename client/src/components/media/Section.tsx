@@ -186,25 +186,21 @@ export default function Section({
             )}
           </div>
 
-          {mediaType !== 'article' && (
-            <>
-              <Button
-                onClick={() => setIsModalOpen(true)}
-                variant="default"
-                className="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200"
-              >
-                + Add Marker
-              </Button>
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            variant="default"
+            className="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200"
+          >
+            + Add Marker
+          </Button>
 
-              <MarkerModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onAddMarker={handleAddMarker}
-                mediaType={mediaType}
-                sectionNumber={section.number}
-              />
-            </>
-          )}
+          <MarkerModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onAddMarker={handleAddMarker}
+            mediaType={mediaType}
+            sectionNumber={section.number}
+          />
         </div>
       </AccordionContent>
 
