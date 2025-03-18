@@ -16,6 +16,14 @@
 - [ ] improve add media form validation and error handling
 - [ ] add better loading states and user feedback
 - [ ] implement image upload functionality for media items
+- [ ] Implement marker tagging system:
+  - [ ] Add tags to markers for better organization
+  - [ ] Support multiple tags per marker
+  - [ ] Add tag filtering and search
+- [ ] Enable marker linking functionality:
+  - [ ] Allow linking related markers across media items
+  - [ ] Visual indication of linked markers
+  - [ ] Navigation between linked markers
 
 ## ⏱️ Next Up
 - [ ] Add section-specific features for podcasts:
@@ -25,6 +33,10 @@
 - [ ] style media type select input consistently
 - [ ] enhance error handling in MediaContext and API calls
 - [ ] implement proper data validation on media routes
+- [ ] Implement privacy controls:
+  - [ ] Add public/private toggle for markers
+  - [ ] Add public/private toggle for media items
+  - [ ] User-specific visibility settings
 
 ## 🎯 Optional Improvements
 - [ ] add support for more granular section intervals (e.g., 30-minute segments for podcasts)
@@ -39,4 +51,6 @@
   - [ ] Support user mentions in comments
   - [ ] Add like/reaction system for markers
   - [ ] User profiles with activity feeds
-  - [ ] grid view for book markers
+  - [ ] Public marker discovery feed
+  - [ ] Follow other users' public markers
+  - [ ] Share markers on external social platforms
