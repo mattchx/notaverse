@@ -98,7 +98,7 @@ export default function Section({
       data-media-type={mediaType}
     >
       <AccordionTrigger
-        className={`px-4 hover:no-underline hover:bg-transparent ${mediaType === 'article' ? 'cursor-default' : 'cursor-pointer'}`}
+        className={`px-4 hover:no-underline hover:bg-transparent ${mediaType === 'article' && 'hidden'} `}
         title={mediaType === 'article' ? undefined : "Click to expand/collapse"}
         disabled={mediaType === 'article'}
       >
@@ -167,11 +167,11 @@ export default function Section({
         )}
       </AccordionTrigger>
 
-      <AccordionContent className="px-4">
+      <AccordionContent className={`px-4 ${mediaType === 'article' && 'pt-4'}`}>
         <div className="space-y-4">
           <div className="space-y-4">
             {sortedMarkers.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No markers added to this section yet.</p>
+              <p className="text-gray-500 text-center py-4">No markers have been added yet.</p>
             ) : (
               sortedMarkers.map(marker => (
                 <MarkerCard
