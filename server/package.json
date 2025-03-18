@@ -12,7 +12,8 @@
     "db:migrate": "npx drizzle-kit migrate",
     "db:push": "npx drizzle-kit push",
     "db:studio": "npx drizzle-kit studio",
-    "db:drop": "npx drizzle-kit drop"
+    "db:drop": "npx drizzle-kit drop",
+    "db:backup": "bash scripts/backup-turso.sh"
   },
   "keywords": [],
   "author": "",
