@@ -15,10 +15,12 @@ export default function MediaViewer() {
   const [activeMedia, setActiveMedia] = React.useState<MediaItem | null>(null);
   const [openSections, setOpenSections] = React.useState<string[]>([]);
 
-  // Keep all sections open for articles
+  // Keep all sections open for articles or single sections
   React.useEffect(() => {
-    if (activeMedia?.type === 'article') {
-      setOpenSections(activeMedia.sections.map(section => section.id));
+    if (activeMedia) {
+      if (activeMedia.type === 'article' || activeMedia.sections.length === 1) {
+        setOpenSections(activeMedia.sections.map(section => section.id));
+      }
     }
   }, [activeMedia]);
 

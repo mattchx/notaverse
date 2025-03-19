@@ -98,7 +98,7 @@ export default function Section({
       data-media-type={mediaType}
     >
       <AccordionTrigger
-        className={`px-4 hover:no-underline hover:bg-transparent ${mediaType === 'article' && 'hidden'} `}
+        className={`px-4 hover:no-underline hover:bg-transparent ${mediaType === 'article' && 'hidden'} cursor-pointer`}
         title={mediaType === 'article' ? undefined : "Click to expand/collapse"}
         disabled={mediaType === 'article'}
       >
@@ -123,6 +123,9 @@ export default function Section({
           ) : (
             <div className="flex items-center gap-2 flex-1">
               <span className="text-gray-600">- {section.title}</span>
+              <span className="text-gray-400 text-sm ml-2">
+                ({section.markers.length} marker{section.markers.length !== 1 ? 's' : ''})
+              </span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -171,7 +174,7 @@ export default function Section({
         <div className="space-y-4">
           <div className="space-y-4">
             {sortedMarkers.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No markers have been added yet.</p>
+              <p className="text-gray-500 text-center py-4">Click the button below to add your first marker.</p>
             ) : (
               sortedMarkers.map(marker => (
                 <MarkerCard
