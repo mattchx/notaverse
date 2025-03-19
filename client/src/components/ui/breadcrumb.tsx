@@ -71,6 +71,9 @@ export function useBreadcrumbs() {
         case 'login':
           breadcrumbs.push({ label: 'Login', href: currentPath });
           break;
+        case 'item':
+          breadcrumbs.push({ label: 'Item', href: currentPath });
+          break;
         default:
           // If it's an ID parameter (e.g., in /library/item/:id), don't add it
           if (!segment.match(/^[0-9a-f-]+$/)) {

@@ -243,49 +243,49 @@ export default function MediaViewer() {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/library')}
-          className="mb-4 border-blue-400 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-          Back to Library
-        </Button>
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold">{activeMedia.name}</h1>
-            {activeMedia.author && (
-              <p className="text-xl text-gray-600">{activeMedia.author}</p>
-            )}
-            {activeMedia.sourceUrl && (
-              <a
-                href={activeMedia.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 mt-3 px-3 py-1 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
+        <div className="flex items-center gap-4 mb-2">
+          <h1 className="text-3xl font-bold">{activeMedia.name}</h1>
+          {activeMedia.sourceUrl && (
+            <a
+              href={activeMedia.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                  <polyline points="15 3 21 3 21 9" />
-                  <line x1="10" y1="14" x2="21" y2="3" />
-                </svg>
-                {activeMedia.type === 'book' ? 'Open Book Link' : 'Listen to Podcast'}
-              </a>
-            )}
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
+              </svg>
+              {activeMedia.type === 'book' ? 'Open Book Link' : 'Listen to Podcast'}
+            </a>
+          )}
+          <div className="ml-auto">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/library')}
+              className="border-blue-400 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+              Back to Library
+            </Button>
           </div>
         </div>
+        {activeMedia.author && (
+          <p className="text-xl text-gray-600">{activeMedia.author}</p>
+        )}
       </div>
 
       <div className="space-y-6">
