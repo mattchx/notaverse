@@ -53,7 +53,7 @@ function mediaReducer(state: MediaState, action: MediaAction): MediaState {
     case 'CREATE_MEDIA':
       return {
         ...state,
-        mediaItems: [...state.mediaItems, action.payload],
+        mediaItems: [action.payload, ...state.mediaItems],
         activeMedia: action.payload,
         error: null,
       };
