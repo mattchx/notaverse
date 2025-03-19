@@ -52,7 +52,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mediaItem) return;
-    
+
     setIsSubmitting(true);
     setLoading(true);
 
@@ -98,7 +98,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
           <div className="space-y-2">
             <Label htmlFor="name">
               Name
-              <span className="text-red-500">*</span>
+              <span className="text-black">*</span>
             </Label>
             <Input
               id="name"
@@ -115,7 +115,6 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
           <div className="space-y-2">
             <Label htmlFor="type">
               Type
-              <span className="text-red-500">*</span>
             </Label>
             <select
               id="type"

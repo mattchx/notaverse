@@ -103,6 +103,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
           <div className="grid w-full gap-1.5">
             <Label htmlFor="position">
               {mediaType === 'book' || mediaType === 'article' ? 'Page Number' : 'Timestamp'}
+              <span className="text-black">*</span>
             </Label>
             <div>
               {mediaType === 'podcast' && sectionNumber !== undefined && (
@@ -137,7 +138,10 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
           </div>
 
           <div className="grid w-full gap-1.5">
-            <Label htmlFor="note">Note</Label>
+            <Label htmlFor="note">
+              Note
+              <span className="text-black">*</span>
+            </Label>
             <Textarea
               id="note"
               value={note}

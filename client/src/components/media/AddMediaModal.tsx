@@ -100,7 +100,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
           <div className="space-y-2">
             <Label htmlFor="name">
               Name
-              <span className="text-red-500">*</span>
+              <span className="text-black">*</span>
             </Label>
             <Input
               id="name"
@@ -117,7 +117,6 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
           <div className="space-y-2">
             <Label htmlFor="type">
               Type
-              <span className="text-red-500">*</span>
             </Label>
             <select
               id="type"
@@ -161,7 +160,6 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
           <div className="space-y-2">
             <Label htmlFor="initialSection">
               Initial Section Title
-              <span className="text-red-500">*</span>
             </Label>
             <Input
               id="initialSection"
