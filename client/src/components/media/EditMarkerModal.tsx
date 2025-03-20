@@ -1,9 +1,17 @@
 import React from 'react';
-import { Marker, MediaType } from '../../types';
+import { Marker, MediaType, NoteType } from '../../types';
 import { Button } from '@/components/ui/button';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +31,15 @@ interface EditMarkerModalProps {
 
 export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, mediaType, sectionNumber }: EditMarkerModalProps) {
   const [position, setPosition] = React.useState(marker.position);
+  const [type, setType] = React.useState<NoteType>(marker.type);
   const [error, setError] = React.useState<string>('');
+
+  const noteTypes = [
+    { value: 'general', label: 'General Note' },
+    { value: 'concept', label: 'Core Concept' },
+    { value: 'question', label: 'Question/Clarification' },
+    { value: 'summary', label: 'Summary' }
+  ] as const;
 
   const validatePosition = (value: string) => {
     if (mediaType === 'book' || mediaType === 'article') {
@@ -63,6 +79,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
     setPosition(marker.position);
     setQuote(marker.quote || '');
     setNote(marker.note);
+    setType(marker.type);
   }, [marker]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,6 +94,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
       position,
       quote: quote || undefined,
       note,
+      type,
       dateUpdated: new Date().toISOString()
     };
 
@@ -88,6 +106,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
     setPosition(marker.position);
     setQuote(marker.quote || '');
     setNote(marker.note);
+    setType(marker.type);
     setError('');
     onClose();
   };
@@ -125,6 +144,24 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
             {error && (
               <p className="text-sm text-red-500 mt-1">{error}</p>
             )}
+          </div>
+
+          <div className="grid w-full gap-1.5">
+            <Label htmlFor="type">Note Type</Label>
+            <Select defaultValue={type} onValueChange={(value: NoteType) => setType(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {noteTypes.map(noteType => (
+                    <SelectItem key={noteType.value} value={noteType.value}>
+                      {noteType.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid w-full gap-1.5">

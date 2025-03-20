@@ -1,5 +1,7 @@
 export type MediaType = 'podcast' | 'book' | 'article'
 
+export type NoteType = 'general' | 'concept' | 'question' | 'summary'
+
 export interface MediaItem {
   id: string
   name: string
@@ -24,6 +26,7 @@ export interface Marker {
   order: number // Position in the sequence of markers within a section
   quote?: string // (optional) lines from a book or snippet of audio
   note: string // thought or comment
+  type: NoteType // categorization of the note
   dateCreated?: string
   dateUpdated?: string
 }

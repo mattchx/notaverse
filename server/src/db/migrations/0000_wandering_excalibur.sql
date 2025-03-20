@@ -5,6 +5,7 @@ CREATE TABLE `markers` (
 	`order_num` integer NOT NULL,
 	`quote` text,
 	`note` text NOT NULL,
+	`type` text DEFAULT 'general' NOT NULL,
 	`created_at` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	`updated_at` integer DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	FOREIGN KEY (`section_id`) REFERENCES `sections`(`id`) ON UPDATE no action ON DELETE cascade

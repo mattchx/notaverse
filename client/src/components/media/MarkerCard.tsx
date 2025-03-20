@@ -1,5 +1,5 @@
 import React from 'react';
-import { Marker, MediaType } from '../../types';
+import { Marker, MediaType, NoteType } from '../../types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,6 +7,35 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import {
+  Lightbulb,
+  HelpCircle,
+  FileText,
+  Bookmark
+} from 'lucide-react';
+
+const typeConfig: Record<NoteType, { color: string; icon: React.ReactNode; label: string }> = {
+  concept: {
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
+    icon: <Lightbulb className="w-4 h-4" />,
+    label: 'Concept'
+  },
+  question: {
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    icon: <HelpCircle className="w-4 h-4" />,
+    label: 'Question'
+  },
+  summary: {
+    color: 'bg-green-100 text-green-800 border-green-200',
+    icon: <FileText className="w-4 h-4" />,
+    label: 'Summary'
+  },
+  general: {
+    color: 'bg-gray-100 text-gray-800 border-gray-200',
+    icon: <Bookmark className="w-4 h-4" />,
+    label: 'Note'
+  }
+};
 
 interface MarkerCardProps {
   marker: Marker;
@@ -26,12 +55,16 @@ export default function MarkerCard({
   return (
     <div className="p-4 bg-gray-50 rounded-lg">
       <div className="flex justify-between items-start">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-gray-600">
             {mediaType === 'book' || mediaType === 'article'
               ? `Page: ${marker.position}`
               : `Timestamp: ${sectionNumber}:${marker.position.padStart(2, '0')}`}
           </span>
+          <div className={`flex items-center gap-1 px-2 py-1 rounded border ${typeConfig[marker.type].color}`}>
+            {typeConfig[marker.type].icon}
+            <span className="text-xs font-medium">{typeConfig[marker.type].label}</span>
+          </div>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

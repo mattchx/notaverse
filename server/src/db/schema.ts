@@ -39,6 +39,7 @@ export const markers = sqliteTable('markers', {
   orderNum: integer('order_num').notNull(),
   quote: text('quote'),
   note: text('note').notNull(),
+  type: text('type', { enum: ['general', 'concept', 'question', 'summary'] }).notNull().default('general'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
 });

@@ -1,9 +1,17 @@
 import React from 'react';
-import { Marker, MediaType } from '../../types';
+import { Marker, MediaType, NoteType } from '../../types';
 import { Button } from '@/components/ui/button';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MarkerModalProps {
   isOpen: boolean;
@@ -17,7 +25,15 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
   const [position, setPosition] = React.useState('');
   const [quote, setQuote] = React.useState('');
   const [note, setNote] = React.useState('');
+  const [type, setType] = React.useState<NoteType>('general');
   const [error, setError] = React.useState<string>('');
+
+  const noteTypes = [
+    { value: 'general', label: 'General Note' },
+    { value: 'concept', label: 'Core Concept' },
+    { value: 'question', label: 'Question/Clarification' },
+    { value: 'summary', label: 'Summary' }
+  ] as const;
 
   if (!isOpen) return null;
 
@@ -65,6 +81,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
       order: Date.now(),
       quote: quote || undefined,
       note,
+      type,
       dateCreated: new Date().toISOString(),
       dateUpdated: undefined
     };
@@ -77,6 +94,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
     setPosition('');
     setQuote('');
     setNote('');
+    setType('general');
     setError('');
     onClose();
   };
@@ -119,17 +137,35 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, mediaType, s
               <p className="text-sm text-red-500 mt-1">{error}</p>
             )}
           </div>
+<div className="grid w-full gap-1.5">
+  <Label htmlFor="type">Note Type</Label>
+  <Select defaultValue={type} onValueChange={(value: NoteType) => setType(value)}>
+    <SelectTrigger className="w-full">
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectGroup>
+        {noteTypes.map(noteType => (
+          <SelectItem key={noteType.value} value={noteType.value}>
+            {noteType.label}
+          </SelectItem>
+        ))}
+      </SelectGroup>
+    </SelectContent>
+  </Select>
+</div>
 
-          <div className="grid w-full gap-1.5">
-            <Label htmlFor="quote">Quote (optional)</Label>
-            <Textarea
-              id="quote"
-              value={quote}
-              onChange={(e) => setQuote(e.target.value)}
-              placeholder="Enter text from the book or audio"
-              className="min-h-[75px]"
-            />
-          </div>
+<div className="grid w-full gap-1.5">
+  <Label htmlFor="quote">Quote (optional)</Label>
+  <Textarea
+    id="quote"
+    value={quote}
+    onChange={(e) => setQuote(e.target.value)}
+    placeholder="Enter text from the book or audio"
+    className="min-h-[75px]"
+  />
+</div>
+
 
           <div className="grid w-full gap-1.5">
             <Label htmlFor="note">
