@@ -3,54 +3,82 @@
 ## ✅ Completed
 - [x] fix add media item
 - [x] change how new sections(chapters) are added
+- [x] Add ability to delete sections and markers
+- [x] Add ability to edit existing markers
+- [x] Add confirmation dialogs for deletion operations
 
 ## 🔥 High Priority
-- [ ] Enhance sections and markers management:
-  - [x] Add ability to delete sections and markers
-  - [x] Add ability to edit existing markers (currently only creation is supported)
-  - [ ] Add timestamp support for podcast sections (e.g., 00:15:30)
-  - [ ] Implement drag-and-drop reordering of sections and markers
-  - [x] Add confirmation dialogs for deletion operations
-- [ ] Add source links to media items (e.g., podcast URLs, PDF storage locations)
-- [ ] convert MediaLibrary view to table layout for better organization
-- [ ] improve add media form validation and error handling
-- [ ] add better loading states and user feedback
-- [ ] implement image upload functionality for media items
+
+### Core Note Organization (Phase 1)
+- [ ] Implement basic note categorization:
+  - [ ] Add note type field (concept, question, summary)
+  - [ ] Update marker creation/edit forms
+  - [ ] Add visual indicators for different note types
+  - [ ] Filter markers by type
+- [ ] Implement image upload functionality:
+  - [ ] Basic image upload for notes
+  - [ ] Image preview support
+  - [ ] Storage optimization
+- [ ] Add source links to media items
+- [ ] Convert MediaLibrary view to table layout
+- [ ] Improve add media form validation
+
+### Enhanced Organization (Phase 2)
 - [ ] Implement marker tagging system:
-  - [ ] Add tags to markers for better organization
-  - [ ] Support multiple tags per marker
-  - [ ] Add tag filtering and search
-- [ ] Enable marker linking functionality:
-  - [ ] Allow linking related markers across media items
-  - [ ] Visual indication of linked markers
-  - [ ] Navigation between linked markers
+  - [ ] Basic tag support
+  - [ ] Tag management UI
+  - [ ] Tag filtering
+- [ ] Enable marker linking:
+  - [ ] Link related markers
+  - [ ] Visual indication of links
+  - [ ] Quick navigation between linked markers
+- [ ] Enhance sections management:
+  - [ ] Timestamp support for podcasts
+  - [ ] Drag-and-drop reordering
+  - [ ] Improved section navigation
 
 ## ⏱️ Next Up
-- [ ] Add section-specific features for podcasts:
-  - [ ] Support for timestamp linking (clicking jumps to that point in audio)
-  - [ ] Quick timestamp capture button while listening
-  - [ ] Automatic section suggestions based on silence detection
-- [ ] style media type select input consistently
-- [ ] enhance error handling in MediaContext and API calls
-- [ ] implement proper data validation on media routes
-- [ ] Implement privacy controls:
-  - [ ] Add public/private toggle for markers
-  - [ ] Add public/private toggle for media items
-  - [ ] User-specific visibility settings
 
-## 🎯 Optional Improvements
-- [ ] add support for more granular section intervals (e.g., 30-minute segments for podcasts)
-- [ ] add bulk media import functionality
-- [ ] implement media search and filtering
-- [ ] add keyboard shortcuts for common actions
-- [ ] explore alternative marker views:
-  - [ ] timeline view for video/audio content
-  - [ ] grid view for book markers
-- [ ] Social features:
-  - [ ] Allow multiple users to comment on quotes/markers
-  - [ ] Support user mentions in comments
-  - [ ] Add like/reaction system for markers
-  - [ ] User profiles with activity feeds
-  - [ ] Public marker discovery feed
-  - [ ] Follow other users' public markers
-  - [ ] Share markers on external social platforms
+### Learning Support Features (Phase 3)
+- [ ] Enhanced search functionality:
+  - [ ] Search within specific courses/media
+  - [ ] Filter by note types and tags
+  - [ ] Save common searches
+- [ ] Resource management:
+  - [ ] Add resource links to notes
+  - [ ] Resource categorization
+  - [ ] Quick reference view
+- [ ] Study aids:
+  - [ ] Export notes by section/topic
+  - [ ] Generate study summaries
+  - [ ] Key points highlighting
+
+### Media-Specific Enhancements (Phase 4)
+- [ ] Podcast-specific features:
+  - [ ] Timestamp linking
+  - [ ] Quick timestamp capture
+  - [ ] Section suggestions
+- [ ] Enhanced error handling
+- [ ] Data validation improvements
+- [ ] Better loading states
+
+## 🎯 Future Improvements
+- [ ] Knowledge organization:
+  - [ ] Concept mapping
+  - [ ] Topic relationships
+  - [ ] Learning progress tracking
+- [ ] Collaborative features:
+  - [ ] Note sharing
+  - [ ] Study groups
+  - [ ] Discussion threads
+- [ ] Advanced features:
+  - [ ] AI-assisted organization
+  - [ ] Spaced repetition support
+  - [ ] Knowledge visualization
+
+## Development Guidelines
+1. Focus on core note-taking improvements first
+2. Build features incrementally
+3. Test thoroughly with real course content
+4. Gather user feedback early
+5. Maintain simplicity in UI/UX
