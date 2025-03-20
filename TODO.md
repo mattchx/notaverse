@@ -75,6 +75,14 @@
   - [ ] AI-assisted organization
   - [ ] Spaced repetition support
   - [ ] Knowledge visualization
+- [ ] Section hierarchy research:
+  - [ ] Investigate nested sections for large courses
+  - [ ] Consider UX implications and complexity
+  - [ ] Research alternatives like:
+    - Using tags for sub-grouping
+    - Enhanced section naming conventions
+    - Visual section grouping without database nesting
+  - [ ] Evaluate based on actual user needs and usage patterns
 
 ## Development Guidelines
 1. Focus on core note-taking improvements first
@@ -82,3 +90,6 @@
 3. Test thoroughly with real course content
 4. Gather user feedback early
 5. Maintain simplicity in UI/UX
+
+## Research Notes
+- Nested sections: While useful for large courses, the added complexity might not justify the benefit at this stage. Current flat section structure with good organization tools (tags, search, filtering) may be sufficient. Revisit based on user feedback and actual usage patterns.
