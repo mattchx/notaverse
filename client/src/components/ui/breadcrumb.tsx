@@ -71,6 +71,12 @@ export function useBreadcrumbs() {
         case 'login':
           breadcrumbs.push({ label: 'Login', href: currentPath });
           break;
+        case 'profile':
+          breadcrumbs.push({ label: 'Profile', href: currentPath });
+          break;
+        case 'settings':
+          breadcrumbs.push({ label: 'Settings', href: currentPath });
+          break;
         case 'item':
           breadcrumbs.push({ label: 'Item', href: currentPath });
           break;

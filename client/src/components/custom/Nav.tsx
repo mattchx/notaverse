@@ -2,16 +2,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router';
 import { Button } from '../ui/button';
 import { Breadcrumbs, useBreadcrumbs } from '../ui/breadcrumb';
+import { UserDropdown } from './UserDropdown';
 
 export default function Nav() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const breadcrumbItems = useBreadcrumbs();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
 
   return (
     <div className="space-y-4 mb-8">
@@ -24,11 +20,7 @@ export default function Nav() {
             </Button>
           )}
         </div>
-        {isAuthenticated && (
-          <Button variant="outline" onClick={handleLogout}>
-            Logout
-          </Button>
-        )}
+        {isAuthenticated && <UserDropdown />}
       </nav>
       <Breadcrumbs items={breadcrumbItems} className="py-2" />
     </div>
