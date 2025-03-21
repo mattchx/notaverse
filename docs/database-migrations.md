@@ -22,12 +22,19 @@ This occurs because:
 
 1. **Preferred Schema Definition:**
 ```typescript
-// Option 1: Use column options
+// Option 1: Use unique().on()
+export const users = sqliteTable('users', {
+  email: text('email').notNull(),
+}, (t) => ({
+  emailIndex: unique().on(t.email),
+}));
+
+// Option 2: Use column options
 export const users = sqliteTable('users', {
   email: text('email', { unique: true }).notNull(),
 });
 
-// Option 2: Use PRIMARY KEY if applicable
+// Option 3: Use PRIMARY KEY if applicable
 export const users = sqliteTable('users', {
   email: text('email').notNull().primaryKey(),
 });
