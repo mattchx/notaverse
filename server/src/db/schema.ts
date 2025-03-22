@@ -6,6 +6,8 @@ export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
   password: text('password').notNull(),
+  name: text('name'),
+  avatarUrl: text('avatar_url'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -13,10 +15,12 @@ export const users = sqliteTable('users', {
 // Media items table
 export const mediaItems = sqliteTable('media_items', {
   id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
   name: text('name').notNull(),
-  type: text('type', { enum: ['book', 'podcast', 'article'] }).notNull(),
+  type: text('type', { enum: ['book', 'podcast', 'article', 'video'] }).notNull(),
   author: text('author'),
   sourceUrl: text('source_url'),
+  description: text('description'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -35,6 +39,7 @@ export const sections = sqliteTable('sections', {
 export const markers = sqliteTable('markers', {
   id: text('id').primaryKey(),
   sectionId: text('section_id').notNull().references(() => sections.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id),
   position: text('position').notNull(),
   orderNum: integer('order_num').notNull(),
   quote: text('quote'),
@@ -44,33 +49,47 @@ export const markers = sqliteTable('markers', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-// Export table schemas
+// Sessions table
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  expires: integer('expires'),
+  data: text('data').notNull(),
+});
+
 // Define relationships
-export const mediaItemsRelations = relations(mediaItems, ({ many }) => ({
-  sections: many(sections)
+export const usersRelations = relations(users, ({ many }) => ({
+  mediaItems: many(mediaItems),
+  markers: many(markers),
+  sessions: many(sessions),
+}));
+
+export const mediaItemsRelations = relations(mediaItems, ({ one, many }) => ({
+  user: one(users, {
+    fields: [mediaItems.userId],
+    references: [users.id],
+  }),
+  sections: many(sections),
 }));
 
 export const sectionsRelations = relations(sections, ({ one, many }) => ({
   mediaItem: one(mediaItems, {
     fields: [sections.mediaId],
-    references: [mediaItems.id]
+    references: [mediaItems.id],
   }),
-  markers: many(markers)
+  markers: many(markers),
 }));
 
 export const markersRelations = relations(markers, ({ one }) => ({
   section: one(sections, {
     fields: [markers.sectionId],
-    references: [sections.id]
-  })
+    references: [sections.id],
+  }),
+  user: one(users, {
+    fields: [markers.userId],
+    references: [users.id],
+  }),
 }));
-
-// Sessions table
-export const sessions = sqliteTable('sessions', {
-  id: text('id').primaryKey(),
-  expires: integer('expires'),
-  data: text('data').notNull(),
-});
 
 export const schema = {
   users,
@@ -78,7 +97,8 @@ export const schema = {
   sections,
   markers,
   sessions,
+  usersRelations,
   mediaItemsRelations,
   sectionsRelations,
-  markersRelations
+  markersRelations,
 };
