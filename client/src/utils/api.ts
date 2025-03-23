@@ -16,6 +16,7 @@ async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
   const response = await fetch(url, {
     ...config,
     headers,
+    credentials: 'include', // Add this to send cookies with requests
   });
 
   if (!response.ok) {

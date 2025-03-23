@@ -90,12 +90,20 @@ export const markersRelations = relations(markers, ({ one }) => ({
   }),
 }));
 
+// Drizzle migrations table
+export const drizzleMigrations = sqliteTable('__drizzle_migrations', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  hash: text('hash').notNull(),
+  createdAt: integer('created_at').notNull(),
+});
+
 export const schema = {
   users,
   mediaItems,
   sections,
   markers,
   sessions,
+  drizzleMigrations,
   usersRelations,
   mediaItemsRelations,
   sectionsRelations,

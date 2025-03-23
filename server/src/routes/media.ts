@@ -1,5 +1,7 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { and, eq, desc, asc, inArray } from 'drizzle-orm';
+import { SessionData } from 'express-session';
+
 import { db, schema } from '../db/config.js';
 import { mediaItems, sections, markers } from '../db/schema.js';
 import { MediaItem, Section } from '../types/media.js';
@@ -94,8 +96,15 @@ router.post('/', async (req, res) => {
 
     // Validate media type
     if (!['book', 'podcast', 'article'].includes(newMedia.type)) {
-      return res.status(400).json({ error: 'Invalid media type' });
+      return res.status(400).json({ error: 'Invalid media type must be "book", "podcast", or "article"' });
     }
+
+    // Check user authentication
+    if (!req.session.userId) {
+      return res.status(401).json({ error: 'User not logged in' });
+    }
+
+    const userId = req.session.userId;
 
     // Use a transaction for atomic operation
     const result = await db.transaction(async (tx) => {
@@ -108,6 +117,7 @@ router.post('/', async (req, res) => {
         sourceUrl: newMedia.sourceUrl ?? null,
         createdAt: new Date(now),
         updatedAt: new Date(now),
+        userId: userId,
       });
 
       // Insert all sections
@@ -127,10 +137,12 @@ router.post('/', async (req, res) => {
             await tx.insert(markers).values({
               id: marker.id,
               sectionId: section.id,
+              userId: userId,
               position: marker.position,
               orderNum: marker.order,
               quote: marker.quote ?? null,
               note: marker.note,
+              type: marker.type ?? 'general',
               createdAt: new Date(now),
               updatedAt: new Date(now),
             });
@@ -279,6 +291,11 @@ router.put('/:mediaId/sections/:sectionId', async (req, res) => {
 // Add marker to section
 router.post('/:mediaId/sections/:sectionId/markers', async (req, res) => {
   try {
+    if (!req.session.userId) {
+      return res.status(401).json({ error: 'User not logged in' });
+    }
+    const userId = req.session.userId;
+
     const { sectionId } = req.params;
     const marker = req.body;
     const now = Date.now();
@@ -298,10 +315,12 @@ router.post('/:mediaId/sections/:sectionId/markers', async (req, res) => {
       await tx.insert(markers).values({
         id: marker.id,
         sectionId: sectionId,
+        userId: userId,
         position: marker.position,
         orderNum: marker.order,
         quote: marker.quote ?? null,
         note: marker.note,
+        type: marker.type ?? 'general',
         createdAt: new Date(now),
         updatedAt: new Date(now)
       });

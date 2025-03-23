@@ -26,6 +26,7 @@ export interface Marker {
   order: number;
   quote?: string;
   note: string;
+  type?: 'general' | 'concept' | 'question' | 'summary';
   createdAt: Date;
   updatedAt: Date;
 }
