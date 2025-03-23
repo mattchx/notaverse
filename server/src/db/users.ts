@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { db } from './index.js';
+import { db } from './config.js';
 import { users } from './schema.js';
 import type { User } from '../types/auth.js';
 

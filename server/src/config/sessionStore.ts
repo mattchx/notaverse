@@ -1,12 +1,12 @@
 import { Store, SessionData } from 'express-session';
 import { eq, and, or, isNull, gt } from 'drizzle-orm';
-import { db } from '../db/index.js';
+import { db } from '../db/config.js';
 import { sessions } from '../db/schema.js';
 
 export class TursoSessionStore extends Store {
   async get(sid: string, callback: (err: any, session?: SessionData | null) => void) {
     try {
-      const now = Date.now();
+      const now = new Date();
       const result = await db.select()
         .from(sessions)
         .where(
@@ -33,7 +33,7 @@ export class TursoSessionStore extends Store {
 
   async set(sid: string, session: SessionData, callback?: (err?: any) => void) {
     try {
-      const expires = session.cookie.expires ? new Date(session.cookie.expires).getTime() : null;
+      const expires = session.cookie.expires ? new Date(session.cookie.expires) : null;
       const data = JSON.stringify(session);
 
       await db.insert(sessions)
@@ -69,7 +69,7 @@ export class TursoSessionStore extends Store {
 
   async touch(sid: string, session: SessionData, callback?: (err?: any) => void) {
     try {
-      const expires = session.cookie.expires ? new Date(session.cookie.expires).getTime() : null;
+      const expires = session.cookie.expires ? new Date(session.cookie.expires) : null;
 
       await db.update(sessions)
         .set({ expires })

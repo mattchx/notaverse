@@ -8,7 +8,8 @@ const envSchema = z.object({
   PORT: z.string().default('3002'),
   SESSION_SECRET: z.string().min(32),
   CORS_ORIGIN: z.string().url().default('http://localhost:5173'),
-  TURSO_DB_URL: z.string().url()
+  TURSO_DB_URL: z.string().url(),
+  TURSO_AUTH_TOKEN: z.string().min(1, 'Auth token is required')
 });
 
 export const env = envSchema.parse(process.env);

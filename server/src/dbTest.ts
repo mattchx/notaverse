@@ -1,12 +1,29 @@
-import client from './db.js';
+import * as dotenv from 'dotenv';
+import { createClient } from '@libsql/client/http';
 
-async function testDb() {
+// Load environment variables
+dotenv.config();
+
+const url = process.env.TURSO_DB_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+
+console.log('Attempting connection with:', {
+  url,
+  authTokenLength: authToken?.length
+});
+
+const client = createClient({
+  url: url!,
+  authToken: authToken!
+});
+
+async function testConnection() {
   try {
-    const result = await client.execute("SELECT 1 as result;");
-    console.log("DB Test Successful:", result);
+    const result = await client.execute('SELECT 1 as test');
+    console.log('Connection successful:', result);
   } catch (error) {
-    console.error("DB Test failed:", error);
+    console.error('Connection failed. Full error:', error);
   }
 }
 
-testDb();
+testConnection();

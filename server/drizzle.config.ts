@@ -1,22 +1,14 @@
-import type { Config } from 'drizzle-kit';
-import * as dotenv from 'dotenv';
+import { config } from 'dotenv';
+import { defineConfig } from 'drizzle-kit';
 
-dotenv.config();
+config({ path: '.env' });
 
-export default {
+export default defineConfig({
   schema: './src/db/schema.ts',
   out: './src/db/migrations',
-  dialect: 'sqlite',
-  dbCredentials: process.env.TURSO_DB_URL
-    ? (() => {
-        const url = new URL(process.env.TURSO_DB_URL);
-        const [databaseId] = url.host.split('.');
-        return {
-          url: url.origin,
-          authToken: url.searchParams.get('authToken') || ''
-        };
-      })()
-    : { url: 'file:./src/data/dev.db' },
-  verbose: true,
-  strict: true
-} satisfies Config;
+  dialect: 'turso',
+  dbCredentials: {
+    url: process.env.TURSO_DB_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
+  },
+});

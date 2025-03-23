@@ -49,19 +49,18 @@ export const markers = sqliteTable('markers', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-// Sessions table
+// Sessions table for authentication
 export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id),
-  expires: integer('expires'),
   data: text('data').notNull(),
+  expires: integer('expires', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`)
 });
 
 // Define relationships
 export const usersRelations = relations(users, ({ many }) => ({
   mediaItems: many(mediaItems),
-  markers: many(markers),
-  sessions: many(sessions),
+  markers: many(markers)
 }));
 
 export const mediaItemsRelations = relations(mediaItems, ({ one, many }) => ({

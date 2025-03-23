@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { and, eq, desc, asc, inArray } from 'drizzle-orm';
-import { db, schema } from '../db/index.js';
+import { db, schema } from '../db/config.js';
 import { mediaItems, sections, markers } from '../db/schema.js';
 import { MediaItem, Section } from '../types/media.js';
 
