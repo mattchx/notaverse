@@ -1,27 +1,23 @@
 # TODO List
 
-## ✅ Completed
-- [x] fix add media item
-- [x] change how new sections(chapters) are added
-- [x] Add ability to delete sections and markers
-- [x] Add ability to edit existing markers
-- [x] Add confirmation dialogs for deletion operations
-
 ## 🔥 High Priority
 
 ### Core Note Organization (Phase 1)
-- [ ] Implement basic note categorization:
-  - [ ] Add note type field (concept, question, summary)
-  - [ ] Update marker creation/edit forms
+- [x] Add note type field support in backend (concept, question, summary)
+- [x] Add ability to delete sections and markers
+- [x] Add ability to edit existing markers
+- [x] Add confirmation dialogs for deletion operations
+- [x] Add source links to media items
+- [x] Improve add media form validation
+- [ ] Update note type UI:
+  - [ ] Update marker creation/edit forms to use note types
   - [ ] Add visual indicators for different note types
-  - [ ] Filter markers by type
+  - [ ] Add filters for note types in the UI
 - [ ] Implement image upload functionality:
   - [ ] Basic image upload for notes
   - [ ] Image preview support
   - [ ] Storage optimization
-- [ ] Add source links to media items
 - [ ] Convert MediaLibrary view to table layout
-- [ ] Improve add media form validation
 
 ### Enhanced Organization (Phase 2)
 - [ ] Implement marker tagging system:
