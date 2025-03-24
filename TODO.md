@@ -71,6 +71,11 @@
   - [ ] AI-assisted organization
   - [ ] Spaced repetition support
   - [ ] Knowledge visualization
+  - [ ] Study progress gamification:
+    - [ ] Automatic progress tracking
+    - [ ] Achievement system
+    - [ ] Learning streak tracking
+    - [ ] Study statistics and insights
 - [ ] Section hierarchy research:
   - [ ] Investigate nested sections for large courses
   - [ ] Consider UX implications and complexity

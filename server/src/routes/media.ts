@@ -95,8 +95,8 @@ router.post('/', async (req, res) => {
     }
 
     // Validate media type
-    if (!['book', 'podcast', 'article'].includes(newMedia.type)) {
-      return res.status(400).json({ error: 'Invalid media type must be "book", "podcast", or "article"' });
+    if (!['book', 'podcast', 'article', 'course'].includes(newMedia.type)) {
+      return res.status(400).json({ error: 'Invalid media type must be "book", "podcast", "article", or "course"' });
     }
 
     // Check user authentication
@@ -357,8 +357,8 @@ router.put('/:id', async (req, res) => {
     }
 
     // Validate media type
-    if (!['book', 'podcast', 'article'].includes(updates.type)) {
-      return res.status(400).json({ error: 'Invalid media type' });
+    if (!['book', 'podcast', 'article', 'course'].includes(updates.type)) {
+      return res.status(400).json({ error: 'Invalid media type must be "book", "podcast", "article", or "course"' });
     }
 
     const result = await db.transaction(async (tx) => {

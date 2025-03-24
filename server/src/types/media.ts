@@ -1,7 +1,7 @@
 export interface MediaItem {
   id: string;
   name: string;
-  type: 'book' | 'podcast';
+  type: 'book' | 'podcast' | 'article' | 'course';
   author?: string;
   sourceUrl?: string;
   sections: Section[];

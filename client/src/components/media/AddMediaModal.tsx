@@ -93,7 +93,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         <DialogHeader>
           <DialogTitle>Add New Media Item</DialogTitle>
           <DialogDescription>
-            Add a new book, podcast, or article to your library. Required fields are marked with an asterisk (*).
+            Add a new book, podcast, article, or course to your library. Required fields are marked with an asterisk (*).
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,6 +129,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
               <option value="book">Book</option>
               <option value="podcast">Podcast</option>
               <option value="article">Article</option>
+              <option value="course">Course</option>
             </select>
           </div>
 

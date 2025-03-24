@@ -17,7 +17,7 @@ export const mediaItems = sqliteTable('media_items', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id),
   name: text('name').notNull(),
-  type: text('type', { enum: ['book', 'podcast', 'article', 'video'] }).notNull(),
+  type: text('type', { enum: ['book', 'podcast', 'article', 'course'] }).notNull(),
   author: text('author'),
   sourceUrl: text('source_url'),
   description: text('description'),
