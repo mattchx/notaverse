@@ -94,3 +94,72 @@
 
 ## Research Notes
 - Nested sections: While useful for large courses, the added complexity might not justify the benefit at this stage. Current flat section structure with good organization tools (tags, search, filtering) may be sufficient. Revisit based on user feedback and actual usage patterns.
+
+## Solo Dev Project Management
+Consider migrating to a streamlined GitHub Projects setup optimized for solo development:
+
+### Simplified Structure
+- Single Board: "Notaverse Development"
+  - Views:
+    1. Main Kanban (Default)
+       - Backlog: Features/bugs to tackle
+       - This Week: Current focus
+       - In Progress: What you're actively working on
+       - Done: Recently completed items
+    2. Feature Planning
+       - Table view for feature details
+       - Priority field
+       - Estimated complexity
+       - Notes/References
+
+### Backlog Prioritization
+- Priority Levels:
+  - `p0`: Critical (bugs affecting core functionality)
+  - `p1`: High (key features, important improvements)
+  - `p2`: Medium (nice-to-have features)
+  - `p3`: Low (minor enhancements, cosmetic changes)
+
+- Organization:
+  - Sort backlog by priority labels
+  - Pin critical items to top
+  - Group related items using milestones
+  - Add complexity estimates (Small/Medium/Large)
+
+### Quick Capture Workflow
+1. Use GitHub mobile app to quickly capture ideas/bugs
+2. Convert relevant TODO.md items into issues
+3. Immediately assign priority label (p0-p3)
+4. Group related issues under milestones
+5. Add complexity estimate
+
+### Minimal Automation
+- Issues auto-add to Backlog
+- Auto-close issues when PRs merged
+- Auto-generate release notes from merged PRs
+
+### Daily Workflow
+1. Start day:
+   - Quick board review
+   - Check for any new p0 (critical) items
+   - Review "This Week" priorities
+
+2. Task Selection:
+   - Focus on highest priority items first
+   - Aim to have 1 p0/p1 and 1 p2/p3 in progress
+   - Move items to "This Week" based on priority and complexity
+
+3. During day:
+   - Work on selected items
+   - Document any blockers or dependencies
+   - Update estimates if needed
+
+4. End day:
+   - Update progress in issues
+   - Review priorities for tomorrow
+   - Quick scan of backlog for any priority changes
+
+Benefits:
+- Low maintenance overhead
+- Clear picture of project state
+- History of decisions/changes
+- Easy GitHub mobile capture
