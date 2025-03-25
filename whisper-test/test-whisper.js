@@ -1,13 +1,19 @@
 import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
-import FormData from 'form-data';
-import https from 'https';
+import 'dotenv/config';
 
+// Validate API key
 const apiKey = process.env.OPENAI_API_KEY;
 if (!apiKey) {
-  throw new Error('OPENAI_API_KEY environment variable is not set');
+  throw new Error('OPENAI_API_KEY environment variable is not set in .env file');
 }
+
+const openai = new OpenAI({
+  apiKey: apiKey,
+  maxRetries: 3,
+  timeout: 60000 // 60 seconds timeout
+});
 
 async function transcribeAudio(audioFilePath) {
   try {
@@ -23,12 +29,9 @@ async function transcribeAudio(audioFilePath) {
       throw new Error('Audio file is empty');
     }
 
-    // Create form data
-    const form = new FormData();
-    form.append('file', fs.createReadStream(audioFilePath));
-    form.append('model', 'whisper-1');
-    form.append('response_format', 'verbose_json');
-
+    // Create file stream
+    const fileStream = fs.createReadStream(audioFilePath);
+    
     console.log('Starting transcription...');
     console.log('Request details:', {
       model: 'whisper-1',
@@ -36,77 +39,46 @@ async function transcribeAudio(audioFilePath) {
       timestamp: new Date().toISOString()
     });
 
-    // Create manual request
-    return new Promise((resolve, reject) => {
-      const request = https.request({
-        hostname: 'api.openai.com',
-        path: '/v1/audio/transcriptions',
-        method: 'POST',
-        headers: {
-          ...form.getHeaders(),
-          'Authorization': `Bearer ${apiKey}`,
-          'OpenAI-Beta': 'whisper-1'
-        }
-      }, (response) => {
-        let data = '';
-
-        response.on('data', (chunk) => {
-          data += chunk;
-        });
-
-        response.on('end', () => {
-          if (response.statusCode === 200) {
-            try {
-              const result = JSON.parse(data);
-              console.log('Transcription completed successfully');
-              console.log('Response details:', {
-                duration: result.duration,
-                language: result.language,
-                text: result.text
-              });
-              resolve(result);
-            } catch (error) {
-              reject(new Error('Failed to parse response: ' + error.message));
-            }
-          } else {
-            console.error('API Error Response:', {
-              statusCode: response.statusCode,
-              statusMessage: response.statusMessage,
-              data: data
-            });
-            reject(new Error(`API request failed with status ${response.statusCode}`));
-          }
-        });
-      });
-
-      request.on('error', (error) => {
-        console.error('Request error:', error);
-        reject(error);
-      });
-
-      // Set timeout
-      request.setTimeout(60000, () => {
-        request.destroy();
-        reject(new Error('Request timed out after 60 seconds'));
-      });
-
-      // Send the form data
-      form.pipe(request);
+    const transcription = await openai.audio.transcriptions.create({
+      file: fileStream,
+      model: "whisper-1",
+      response_format: "verbose_json" // Get detailed response
     });
+
+    console.log('Transcription completed successfully');
+    console.log('Response details:', {
+      duration: transcription.duration,
+      language: transcription.language,
+      text: transcription.text
+    });
+
+    return transcription;
   } catch (error) {
     console.error('Error details:', {
       name: error.name,
       message: error.message,
+      status: error.status,
+      type: error.type,
       code: error.code
     });
+
+    if (error.response) {
+      console.error('API Response:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      });
+    }
+    
     throw error;
   }
 }
 
-// Example usage
+// Get audio file path from command line arguments
 const audioFile = process.argv[2];
 if (!audioFile) {
-  console.error('Please provide an audio file path: node test-whisper.js <audio-file>');
+  console.error('Please provide an audio file path:');
+  console.error('npm run transcribe /path/to/audio.mp3');
   process.exit(1);
 }
 
