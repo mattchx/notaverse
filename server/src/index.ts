@@ -32,7 +32,7 @@ async function start() {
     console.log('Database initialized successfully');
 
     app.listen(env.PORT, () => {
-      console.log(`Server running at ${env.API_BASE_URL}:${env.PORT}`);
+      console.log(`Server running on port ${env.PORT}`);
     });
   } catch (error) {
     console.error('Failed to initialize database:', error);
