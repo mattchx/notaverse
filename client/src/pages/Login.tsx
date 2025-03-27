@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { LoginForm } from '../components/auth/LoginForm';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../utils/api';
+
+interface LoginResponse {
+  user: {
+    id: string;
+    email: string;
+  };
+}
 
 export default function Login() {
   const [error, setError] = useState<string>('');
@@ -11,21 +19,7 @@ export default function Login() {
 
   const handleSubmit = async (credentials: { email: string; password: string }) => {
     try {
-      const response = await fetch('http://localhost:3002/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Login failed');
-      }
-
-      const data = await response.json();
+      const data = await api.post<LoginResponse>('/api/auth/login', credentials);
       setIsAuthenticated(true);
       setUser(data.user);
 

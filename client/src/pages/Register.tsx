@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { RegisterForm } from '../components/auth/RegisterForm';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../utils/api';
+
+interface RegisterResponse {
+  user: {
+    id: string;
+    email: string;
+  };
+}
 
 export default function Register() {
   const [error, setError] = useState<string>('');
@@ -14,21 +22,7 @@ export default function Register() {
     confirmPassword: string;
   }) => {
     try {
-      const response = await fetch('http://localhost:3002/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Registration failed');
-      }
-
-      const data = await response.json();
+      const data = await api.post<RegisterResponse>('/api/auth/register', credentials);
       setIsAuthenticated(true);
       setUser(data.user);
 
