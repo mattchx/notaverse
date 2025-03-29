@@ -9,7 +9,9 @@ export const sessionConfig = session({
   cookie: {
     maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // HTTPS required in production
+    // In production: Strict security with SameSite=Lax
+    // In development: More permissive with SameSite=None (requires HTTPS)
+    secure: true, // Required for both SameSite=None and production security
     sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'none',
     path: '/'
   },
