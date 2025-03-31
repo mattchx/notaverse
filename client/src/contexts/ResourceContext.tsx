@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer } from 'react';
-import { MediaItem as Resource, Marker } from '../types';
+import { Resource, Marker } from '../types';
 
 interface ResourceState {
   resources: Resource[];

@@ -4,24 +4,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMediaOperations } from "@/contexts/MediaContext";
-import { MediaItem, MediaType } from "@/types";
+import { useResourceOperations } from "@/contexts/ResourceContext";
+import { Resource, ResourceType } from "@/types";
 
-interface EditMediaModalProps {
+interface EditResourceModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mediaItem: MediaItem | null;
+  resource: Resource | null;
 }
 
 interface FormData {
   name: string;
-  type: MediaType;
+  type: ResourceType;
   author?: string;
   sourceUrl?: string;
 }
 
-export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModalProps) {
-  const { updateMedia, setLoading, setError } = useMediaOperations();
+export function EditResourceModal({ open, onOpenChange, resource }: EditResourceModalProps) {
+  const { updateResource, setLoading, setError } = useResourceOperations();
   const [formData, setFormData] = React.useState<FormData>({
     name: '',
     type: 'book',
@@ -30,17 +30,17 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // Update form data when mediaItem changes
+  // Update form data when resource changes
   React.useEffect(() => {
-    if (mediaItem) {
+    if (resource) {
       setFormData({
-        name: mediaItem.name,
-        type: mediaItem.type,
-        author: mediaItem.author || '',
-        sourceUrl: mediaItem.sourceUrl || '',
+        name: resource.name,
+        type: resource.type,
+        author: resource.author || '',
+        sourceUrl: resource.sourceUrl || '',
       });
     }
-  }, [mediaItem]);
+  }, [resource]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -51,7 +51,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mediaItem) return;
+    if (!resource) return;
 
     setIsSubmitting(true);
     setLoading(true);
@@ -62,9 +62,9 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
         throw new Error('Name is required');
       }
 
-      // Create updated media item
-      const updatedMedia = {
-        ...mediaItem,
+      // Create updated resource item
+      const updatedResource = {
+        ...resource,
         name: formData.name.trim(),
         type: formData.type,
         author: formData.author?.trim(),
@@ -72,24 +72,24 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
       };
 
       // Send request to API
-      const result = await apiPut<MediaItem>(`/media/${mediaItem.id}`, updatedMedia);
-      updateMedia(result);
+      const result = await apiPut<Resource>(`/resource/${resource.id}`, updatedResource);
+      updateResource(result);
       onOpenChange(false);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to update media item');
+      setError(error instanceof Error ? error.message : 'Failed to update resource item');
     } finally {
       setIsSubmitting(false);
       setLoading(false);
     }
   };
 
-  if (!mediaItem) return null;
+  if (!resource) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Media Item</DialogTitle>
+          <DialogTitle>Edit Resource Item</DialogTitle>
           <DialogDescription>
             Update the details of your book, podcast, article, or course. Required fields are marked with an asterisk (*).
           </DialogDescription>
@@ -105,7 +105,7 @@ export function EditMediaModal({ open, onOpenChange, mediaItem }: EditMediaModal
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              placeholder="Enter media name"
+              placeholder="Enter resource name"
               required
               minLength={2}
               maxLength={100}
