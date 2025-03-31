@@ -1,73 +1,76 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { get as apiGet, post as apiPost, put as apiPut, del as apiDelete } from '@/utils/api';
-import { MediaItem, Marker, Section as SectionType } from '../../types';
+import { Resource, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
 import Section from './Section';
-import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
+import { useResource, useResourceOperations } from '@/contexts/ResourceContext';
 import { Accordion } from '@/components/ui/accordion';
 
-export default function MediaViewer() {
+export default function ResourceViewer() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { state } = useMedia();
-  const { setMedia, setLoading, setError, deleteMarker, updateMarker } = useMediaOperations();
-  const [activeMedia, setActiveMedia] = React.useState<MediaItem | null>(null);
+  const { state } = useResource();
+  const { setResource, setLoading, setError, deleteMarker, updateMarker } = useResourceOperations();
+  const [activeResource, setActiveResource] = React.useState<Resource | null>(null);
   const [openSections, setOpenSections] = React.useState<string[]>([]);
 
   // Keep all sections open for articles or single sections
   React.useEffect(() => {
-    if (activeMedia) {
-      if (activeMedia.type === 'article' || activeMedia.sections.length === 1) {
-        setOpenSections(activeMedia.sections.map(section => section.id));
+    if (activeResource) {
+      if (activeResource.type === 'article' || activeResource.sections.length === 1) {
+        setOpenSections(activeResource.sections.map(section => section.id));
       }
     }
-  }, [activeMedia]);
+  }, [activeResource]);
 
-  // Fetch media item data
+  // Fetch Resource item data
   React.useEffect(() => {
     if (!id) return;
 
-    async function fetchMediaItem() {
+    async function fetchResourceItem() {
       try {
         setLoading(true);
-        const media = await apiGet<MediaItem>(`/media/${id}`, {
+        const resource = await apiGet<Resource>(`/Resource/${id}`, {
           credentials: 'include'
         });
-        setActiveMedia(media);
-        setMedia(media);
+        setActiveResource(resource);
+        setResource(resource);
       } catch (error) {
-        setError(error instanceof Error ? error.message : 'Failed to fetch media item');
+        setError(error instanceof Error ? error.message : 'Failed to fetch resource');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchMediaItem();
+    fetchResourceItem();
   }, [id]);
 
   const handleAddSection = async () => {
-    if (!activeMedia) return;
+    if (!activeResource) return;
 
     const newSection: SectionType = {
       id: crypto.randomUUID(),
-      title: 'Untitled Section',
-      number: activeMedia.sections.length + 1,
-      markers: []
+      resourceId: activeResource.id,
+      name: 'Untitled Section',
+      orderNum: activeResource.sections.length + 1,
+      markers: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     try {
       setLoading(true);
-      await apiPost<SectionType>(`/media/${activeMedia.id}/sections`, newSection, {
+      await apiPost<SectionType>(`/resource/${activeResource.id}/sections`, newSection, {
         credentials: 'include'
       });
 
-      const updatedMedia = {
-        ...activeMedia,
-        sections: [...activeMedia.sections, newSection]
+      const updatedResource = {
+        ...activeResource,
+        sections: [...activeResource.sections, newSection]
       };
-      setActiveMedia(updatedMedia);
-      setMedia(updatedMedia);
+      setActiveResource(updatedResource);
+      setResource(updatedResource);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to add section');
     } finally {
@@ -75,25 +78,25 @@ export default function MediaViewer() {
     }
   };
 
-  const handleUpdateSectionTitle = async (sectionId: string, title: string) => {
-    if (!activeMedia) return;
+  const handleUpdateSectionTitle = async (sectionId: string, name: string) => {
+    if (!activeResource) return;
 
     try {
       setLoading(true);
-      await apiPut<SectionType>(`/media/${activeMedia.id}/sections/${sectionId}`, { title }, {
+      await apiPut<SectionType>(`/resource/${activeResource.id}/sections/${sectionId}`, { name }, {
         credentials: 'include'
       });
 
-      const updatedMedia = {
-        ...activeMedia,
-        sections: activeMedia.sections.map(section => 
+      const updatedResource = {
+        ...activeResource,
+        sections: activeResource.sections.map(section => 
           section.id === sectionId 
-            ? { ...section, title }
+            ? { ...section, name }
             : section
         )
       };
-      setActiveMedia(updatedMedia);
-      setMedia(updatedMedia);
+      setActiveResource(updatedResource);
+      setResource(updatedResource);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to update section');
     } finally {
@@ -101,25 +104,31 @@ export default function MediaViewer() {
     }
   };
 
-  const handleAddMarker = async (sectionId: string, newMarker: Marker) => {
-    if (!activeMedia) return;
+  const handleAddMarker = async (sectionId: string, newMarkerData: Omit<Marker, 'id'>) => {
+    if (!activeResource) return;
+
+    const newMarker: Marker = {
+      ...newMarkerData,
+      id: crypto.randomUUID(),
+      sectionId
+    };
 
     try {
       setLoading(true);
-      await apiPost<Marker>(`/media/${activeMedia.id}/sections/${sectionId}/markers`, newMarker, {
+      await apiPost<Marker>(`/resource/${activeResource.id}/sections/${sectionId}/markers`, newMarker, {
         credentials: 'include'
       });
 
-      const updatedMedia = {
-        ...activeMedia,
-        sections: activeMedia.sections.map(section =>
+      const updatedResource = {
+        ...activeResource,
+        sections: activeResource.sections.map(section =>
           section.id === sectionId
             ? { ...section, markers: [...section.markers, newMarker] }
             : section
         )
       };
-      setActiveMedia(updatedMedia);
-      setMedia(updatedMedia);
+      setActiveResource(updatedResource);
+      setResource(updatedResource);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to add marker');
     } finally {
@@ -128,20 +137,20 @@ export default function MediaViewer() {
   };
 
   const handleDeleteSection = async (sectionId: string) => {
-    if (!activeMedia) return;
+    if (!activeResource) return;
 
     try {
       setLoading(true);
-      await apiDelete(`/media/${activeMedia.id}/sections/${sectionId}`, {
+      await apiDelete(`/resource/${activeResource.id}/sections/${sectionId}`, {
         credentials: 'include'
       });
 
-      const updatedMedia = {
-        ...activeMedia,
-        sections: activeMedia.sections.filter(section => section.id !== sectionId)
+      const updatedResource = {
+        ...activeResource,
+        sections: activeResource.sections.filter(section => section.id !== sectionId)
       };
-      setActiveMedia(updatedMedia);
-      setMedia(updatedMedia);
+      setActiveResource(updatedResource);
+      setResource(updatedResource);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete section');
     } finally {
@@ -150,18 +159,18 @@ export default function MediaViewer() {
   };
 
   const handleDeleteMarker = async (sectionId: string, markerId: string) => {
-    if (!activeMedia) return;
+    if (!activeResource) return;
 
     try {
       setLoading(true);
-      await apiDelete(`/media/${activeMedia.id}/sections/${sectionId}/markers/${markerId}`, {
+      await apiDelete(`/resource/${activeResource.id}/sections/${sectionId}/markers/${markerId}`, {
         credentials: 'include'
       });
 
       deleteMarker(sectionId, markerId);
-      const updatedMedia = {
-        ...activeMedia,
-        sections: activeMedia.sections.map(section =>
+      const updatedResource = {
+        ...activeResource,
+        sections: activeResource.sections.map(section =>
           section.id === sectionId
             ? {
                 ...section,
@@ -170,8 +179,8 @@ export default function MediaViewer() {
             : section
         )
       };
-      setActiveMedia(updatedMedia);
-      setMedia(updatedMedia);
+      setActiveResource(updatedResource);
+      setResource(updatedResource);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete marker');
     } finally {
@@ -180,20 +189,20 @@ export default function MediaViewer() {
   };
 
   const handleUpdateMarker = async (sectionId: string, marker: Marker) => {
-    if (!activeMedia) return;
+    if (!activeResource) return;
 
     try {
       setLoading(true);
       const response = await apiPut<Marker>(
-        `/media/${activeMedia.id}/sections/${sectionId}/markers/${marker.id}`,
+        `/resource/${activeResource.id}/sections/${sectionId}/markers/${marker.id}`,
         marker,
         { credentials: 'include' }
       );
 
       updateMarker(sectionId, response);
-      const updatedMedia = {
-        ...activeMedia,
-        sections: activeMedia.sections.map(section =>
+      const updatedResource = {
+        ...activeResource,
+        sections: activeResource.sections.map(section =>
           section.id === sectionId
             ? {
                 ...section,
@@ -204,8 +213,8 @@ export default function MediaViewer() {
             : section
         )
       };
-      setActiveMedia(updatedMedia);
-      setMedia(updatedMedia);
+      setActiveResource(updatedResource);
+      setResource(updatedResource);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to update marker');
     } finally {
@@ -213,11 +222,11 @@ export default function MediaViewer() {
     }
   };
 
-  // Sort sections by number
+  // Sort sections by orderNum
   const sortedSections = React.useMemo(() => {
-    if (!activeMedia) return [];
-    return [...activeMedia.sections].sort((a, b) => a.number - b.number);
-  }, [activeMedia?.sections]);
+    if (!activeResource) return [];
+    return [...activeResource.sections].sort((a, b) => a.orderNum - b.orderNum);
+  }, [activeResource?.sections]);
 
   if (state.isLoading) {
     return (
@@ -227,11 +236,11 @@ export default function MediaViewer() {
     );
   }
 
-  if (!activeMedia) {
+  if (!activeResource) {
     return (
       <div className="container mx-auto py-8">
         <div className="text-center">
-          <p className="text-red-500">{state.error || 'Media item not found'}</p>
+          <p className="text-red-500">{state.error || 'Resource item not found'}</p>
           <Button onClick={() => navigate('/library')} className="mt-4">
             Return to Library
           </Button>
@@ -244,10 +253,10 @@ export default function MediaViewer() {
     <div className="container mx-auto py-8">
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-2">
-          <h1 className="text-3xl font-bold">{activeMedia.name}</h1>
-          {activeMedia.sourceUrl && (
+          <h1 className="text-3xl font-bold">{activeResource.name}</h1>
+          {activeResource.sourceUrl && (
             <a
-              href={activeMedia.sourceUrl}
+              href={activeResource.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
@@ -267,7 +276,7 @@ export default function MediaViewer() {
                 <polyline points="15 3 21 3 21 9" />
                 <line x1="10" y1="14" x2="21" y2="3" />
               </svg>
-              {activeMedia.type === 'book' ? 'Open Book Link' : 'Listen to Podcast'}
+              {activeResource.type === 'book' ? 'Open Book Link' : 'Listen to Podcast'}
             </a>
           )}
           <div className="ml-auto">
@@ -283,8 +292,8 @@ export default function MediaViewer() {
             </Button>
           </div>
         </div>
-        {activeMedia.author && (
-          <p className="text-xl text-gray-600">{activeMedia.author}</p>
+        {activeResource.author && (
+          <p className="text-xl text-gray-600">{activeResource.author}</p>
         )}
       </div>
 
@@ -294,8 +303,8 @@ export default function MediaViewer() {
           value={openSections}
           onValueChange={(value) => {
             // For articles, prevent sections from being collapsed
-            if (activeMedia?.type === 'article') {
-              const allSectionIds = activeMedia.sections.map(section => section.id);
+            if (activeResource?.type === 'article') {
+              const allSectionIds = activeResource.sections.map(section => section.id);
               setOpenSections(allSectionIds);
             } else {
               setOpenSections(value);
@@ -305,18 +314,21 @@ export default function MediaViewer() {
           {sortedSections.map(section => (
             <Section
               key={section.id}
-              section={section}
-              mediaType={activeMedia.type}
-              onUpdateTitle={handleUpdateSectionTitle}
-              onAddMarker={handleAddMarker}
-              onDeleteSection={handleDeleteSection}
-              onDeleteMarker={handleDeleteMarker}
-              onUpdateMarker={handleUpdateMarker}
+              id={section.id}
+              name={section.name}
+              orderNum={section.orderNum}
+              markers={section.markers}
+              resourceType={activeResource.type}
+              onAddMarker={(marker) => handleAddMarker(section.id, marker)}
+              onDeleteMarker={(markerId) => handleDeleteMarker(section.id, markerId)}
+              onUpdateMarker={(marker) => handleUpdateMarker(section.id, marker)}
+              onUpdateName={(name) => handleUpdateSectionTitle(section.id, name)}
+              onDeleteSection={() => handleDeleteSection(section.id)}
             />
           ))}
         </Accordion>
 
-        {activeMedia.type !== 'article' && (
+        {activeResource.type !== 'article' && (
           <>
             <Button
               onClick={handleAddSection}
@@ -327,7 +339,7 @@ export default function MediaViewer() {
               {state.isLoading ? 'Adding...' : '+ Add Section'}
             </Button>
 
-            {activeMedia.sections.length === 0 && (
+            {activeResource.sections.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-gray-500 mb-4">No sections yet</p>
                 <Button

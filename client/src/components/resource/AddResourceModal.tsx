@@ -50,24 +50,31 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
         throw new Error('Name is required');
       }
 
-      // Create new Resource item
+      const resourceId = uuidv4();
+      
+      // Construct the new media item
       const newResource = {
-        id: uuidv4(),
-        name: formData.name.trim(),
+        id: resourceId,
+        name: formData.name,
         type: formData.type,
-        author: formData.author?.trim(),
-        sourceUrl: formData.sourceUrl?.trim(),
+        author: formData.author || undefined,
+        sourceUrl: formData.sourceUrl || undefined,
         sections: [
           {
             id: uuidv4(),
-            title: formData.initialSection.trim() || 'Untitled Section',
-            number: 1,
+            resourceId: resourceId,
+            name: formData.initialSection.trim() || 'Untitled Section',
+            orderNum: 1,
             markers: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           }
         ],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
       // Send request to API
-      const createdResource = await apiPost<ResourceItem>('/Resource', newResource);
+      const createdResource = await apiPost<Resource>('/Resource', newResource);
       createResource(createdResource);
       onOpenChange(false);
       
