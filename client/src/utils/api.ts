@@ -6,7 +6,7 @@ interface ApiConfig extends RequestInit {
 }
 
 async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = `${API_BASE_URL}${endpoint.startsWith('/api') ? endpoint : '/api' + endpoint}`;
   
   const headers = {
     'Content-Type': 'application/json',
