@@ -1,113 +1,51 @@
 import React from 'react';
-import { Marker, MediaType, NoteType } from '../../types';
-import { Button } from '@/components/ui/button';
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Textarea } from '../ui/textarea';
+import { Marker, MarkerType, ResourceType } from '../../types';
 
 interface EditMarkerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateMarker: (marker: Marker) => void;
   marker: Marker;
-  mediaType: MediaType;
-  sectionNumber?: number;  // Added for audio hour context
+  resourceType: ResourceType;
+  sectionNumber?: number;
 }
 
-export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, mediaType, sectionNumber }: EditMarkerModalProps) {
+export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, resourceType, sectionNumber }: EditMarkerModalProps) {
   const [position, setPosition] = React.useState(marker.position);
-  const [type, setType] = React.useState<NoteType>(marker.type);
-  const [error, setError] = React.useState<string>('');
+  const [quote, setQuote] = React.useState(marker.quote);
+  const [markerText, setMarkerText] = React.useState(marker.marker);
+  const [type, setType] = React.useState<MarkerType>(marker.type);
 
-  const noteTypes = [
-    { value: 'general', label: 'General Note' },
-    { value: 'concept', label: 'Core Concept' },
-    { value: 'question', label: 'Question/Clarification' },
+  const markerTypes = [
+    { value: 'concept', label: 'Concept' },
+    { value: 'question', label: 'Question' },
     { value: 'summary', label: 'Summary' }
-  ] as const;
+  ];
 
-  const validatePosition = (value: string) => {
-    if (mediaType === 'book' || mediaType === 'article') {
-      // Only allow positive numbers for books
-      // Check if value contains any non-digit characters
-      if (!/^\d+$/.test(value)) {
-        setError('Please enter only numbers');
-        return false;
-      }
-      const pageNum = parseInt(value);
-      if (pageNum < 1) {
-        setError('Please enter a valid page number');
-        return false;
-      }
-    } else {
-      // For audio, only allow minutes (0-59)
-      const minute = parseInt(value);
-      if (isNaN(minute) || minute < 0 || minute > 59 || value.includes('.')) {
-        setError('Please enter a valid minute (0-59)');
-        return false;
-      }
-    }
-    setError('');
-    return true;
-  };
-
-  const handlePositionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPosition(value);
-    validatePosition(value);
-  };
-  const [quote, setQuote] = React.useState(marker.quote || '');
-  const [note, setNote] = React.useState(marker.note);
-
-  // Reset form when modal opens with new marker
   React.useEffect(() => {
-    setPosition(marker.position);
-    setQuote(marker.quote || '');
-    setNote(marker.note);
-    setType(marker.type);
-  }, [marker]);
+    if (isOpen) {
+      setPosition(marker.position);
+      setQuote(marker.quote);
+      setMarkerText(marker.marker);
+      setType(marker.type);
+    }
+  }, [isOpen, marker]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validatePosition(position)) {
-      return;
-    }
-
-    const updatedMarker: Marker = {
+    onUpdateMarker({
       ...marker,
       position,
-      quote: quote || undefined,
-      note,
-      type,
-      dateUpdated: new Date().toISOString()
-    };
-
-    onUpdateMarker(updatedMarker);
-    handleClose();
-  };
-
-  const handleClose = () => {
-    setPosition(marker.position);
-    setQuote(marker.quote || '');
-    setNote(marker.note);
-    setType(marker.type);
-    setError('');
+      quote,
+      marker: markerText,
+      type
+    });
     onClose();
   };
 
@@ -117,85 +55,75 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
         <DialogHeader>
           <DialogTitle>Edit Marker</DialogTitle>
         </DialogHeader>
-        
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid w-full gap-1.5">
+          <div className="space-y-2">
             <Label htmlFor="position">
-              {mediaType === 'book' || mediaType === 'article' ? 'Page Number' : 'Timestamp'}
-              <span className="text-black">*</span>
+              {resourceType === 'book' || resourceType === 'article' ? 'Page Number' : 'Timestamp'}
             </Label>
-            <div>
-              {mediaType === 'podcast' && sectionNumber !== undefined && (
-                <span className="block text-sm text-gray-500 mb-1">
-                  Hour {sectionNumber}
-                </span>
-              )}
-              <Input
-                id="position"
-                value={position}
-                onChange={handlePositionChange}
-                placeholder={mediaType === 'book' || mediaType === 'article'
-                  ? "Enter page number (e.g., 42)"
-                  : "Enter minute (0-59)"
-                }
-                required
-              />
-            </div>
-            {error && (
-              <p className="text-sm text-red-500 mt-1">{error}</p>
-            )}
+            <Input
+              id="position"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              placeholder={resourceType === 'book' || resourceType === 'article' ? 'Enter page number' : 'Enter timestamp (e.g. 1:23:45)'}
+            />
           </div>
 
-          <div className="grid w-full gap-1.5">
-            <Label htmlFor="type">Note Type</Label>
-            <Select defaultValue={type} onValueChange={(value: NoteType) => setType(value)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
+          {resourceType === 'podcast' && sectionNumber !== undefined && (
+            <div className="space-y-2">
+              <Label htmlFor="section">Section</Label>
+              <Input
+                id="section"
+                value={sectionNumber}
+                disabled
+                className="bg-gray-50"
+              />
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="quote">Quote</Label>
+            <Textarea
+              id="quote"
+              value={quote}
+              onChange={(e) => setQuote(e.target.value)}
+              placeholder="Enter the text you want to quote"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="type">Type</Label>
+            <Select value={type} onValueChange={(value: MarkerType) => setType(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select marker type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectGroup>
-                  {noteTypes.map(noteType => (
-                    <SelectItem key={noteType.value} value={noteType.value}>
-                      {noteType.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
+                {markerTypes.map(markerType => (
+                  <SelectItem key={markerType.value} value={markerType.value}>
+                    {markerType.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="grid w-full gap-1.5">
-            <Label htmlFor="quote">Quote (optional)</Label>
-            <Input
-              id="quote"
-              value={quote}
-              onChange={(e) => setQuote(e.target.value)}
-              placeholder="Enter text from the book or audio"
-            />
-          </div>
-
-          <div className="grid w-full gap-1.5">
-            <Label htmlFor="note">
-              Note
-              <span className="text-black">*</span>
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="marker">Marker</Label>
             <Textarea
-              id="note"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Type your note here"
-              required
+              id="marker"
+              value={markerText}
+              onChange={(e) => setMarkerText(e.target.value)}
+              placeholder="Type your marker here"
             />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit">
-              Update Marker
+              Save Changes
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

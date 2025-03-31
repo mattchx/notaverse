@@ -4,25 +4,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMediaOperations } from "@/contexts/MediaContext";
-import { MediaItem, MediaType } from "@/types";
+import { useResourceOperations } from "@/contexts/ResourceContext";
+import { Resource, ResourceType } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
 
-interface AddMediaModalProps {
+interface AddResourceModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 interface FormData {
   name: string;
-  type: MediaType;
+  type: ResourceType;
   author?: string;
   sourceUrl?: string;
   initialSection: string;
 }
 
-export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
-  const { createMedia, setLoading, setError } = useMediaOperations();
+export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) {
+  const { createResource, setLoading, setError } = useResourceOperations();
   const [formData, setFormData] = React.useState<FormData>({
     name: '',
     type: 'book',
@@ -50,8 +50,8 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         throw new Error('Name is required');
       }
 
-      // Create new media item
-      const newMedia = {
+      // Create new Resource item
+      const newResource = {
         id: uuidv4(),
         name: formData.name.trim(),
         type: formData.type,
@@ -67,8 +67,8 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         ],
       };
       // Send request to API
-      const createdMedia = await apiPost<MediaItem>('/media', newMedia);
-      createMedia(createdMedia);
+      const createdResource = await apiPost<ResourceItem>('/Resource', newResource);
+      createResource(createdResource);
       onOpenChange(false);
       
       // Reset form
@@ -80,7 +80,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
         initialSection: '',
       });
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to create media item');
+      setError(error instanceof Error ? error.message : 'Failed to create Resource item');
     } finally {
       setIsSubmitting(false);
       setLoading(false);
@@ -91,7 +91,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add New Media Item</DialogTitle>
+          <DialogTitle>Add New Resource Item</DialogTitle>
           <DialogDescription>
             Add a new book, podcast, article, or course to your library. Required fields are marked with an asterisk (*).
           </DialogDescription>
@@ -107,7 +107,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              placeholder="Enter media name"
+              placeholder="Enter Resource name"
               required
               minLength={2}
               maxLength={100}
@@ -183,7 +183,7 @@ export function AddMediaModal({ open, onOpenChange }: AddMediaModalProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Adding...' : 'Add Media Item'}
+              {isSubmitting ? 'Adding...' : 'Add Resource Item'}
             </Button>
           </DialogFooter>
         </form>

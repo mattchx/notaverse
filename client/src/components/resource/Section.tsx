@@ -1,276 +1,126 @@
 import React from 'react';
-import { Section as SectionType, Marker, MediaType } from '../../types';
-import { Button } from '@/components/ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { Button } from '../ui/button';
+import { Marker, ResourceType } from '../../types';
+import MarkerCard from './MarkerCard';
 import MarkerModal from './MarkerModal';
 import EditMarkerModal from './EditMarkerModal';
-import MarkerCard from './MarkerCard';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from '@/components/ui/accordion';
 
 interface SectionProps {
-  section: SectionType;
-  mediaType: MediaType;
-  onUpdateTitle: (sectionId: string, title: string) => void;
-  onAddMarker?: (sectionId: string, marker: Marker) => void;
-  onDeleteSection?: (sectionId: string) => void;
-  onDeleteMarker?: (sectionId: string, markerId: string) => void;
-  onUpdateMarker?: (sectionId: string, marker: Marker) => void;
+  id: string;
+  name: string;
+  orderNum: number;
+  markers: Marker[];
+  resourceType: ResourceType;
+  onAddMarker: (marker: Omit<Marker, 'id'>) => void;
+  onUpdateMarker: (marker: Marker) => void;
+  onDeleteMarker: (markerId: string) => void;
 }
 
 export default function Section({
-  section,
-  mediaType,
-  onUpdateTitle,
+  id,
+  name,
+  orderNum,
+  markers,
+  resourceType,
   onAddMarker,
-  onDeleteSection,
-  onDeleteMarker,
-  onUpdateMarker
+  onUpdateMarker,
+  onDeleteMarker
 }: SectionProps) {
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [title, setTitle] = React.useState(section.title);
-  const [deleteSectionDialog, setDeleteSectionDialog] = React.useState(false);
-  const [deleteMarkerDialog, setDeleteMarkerDialog] = React.useState<string | null>(null);
-  const [editingMarker, setEditingMarker] = React.useState<Marker | null>(null);
-
-  const handleTitleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onUpdateTitle(section.id, title);
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
-    setTitle(section.title);
-    setIsEditing(false);
-  };
-
-  const handleAddMarker = (marker: Marker) => {
-    onAddMarker?.(section.id, marker);
-  };
-
-  const getSectionPrefix = () => {
-    switch (mediaType) {
-      case 'book':
-        return 'Chapter';
-      case 'podcast':
-        return 'Hour';
-      case 'article':
-        return 'Section';
-    }
-  };
-
-  // For articles, we want to keep the accordion always open
-  React.useEffect(() => {
-    if (mediaType === 'article') {
-      const accordionItem = document.querySelector(`[data-state][value="${section.id}"]`);
-      if (accordionItem) {
-        accordionItem.setAttribute('data-state', 'open');
-      }
-    }
-  }, [mediaType, section.id]);
+  const [isAddingMarker, setIsAddingMarker] = React.useState(false);
+  const [markerToEdit, setMarkerToEdit] = React.useState<Marker | null>(null);
 
   const sortedMarkers = React.useMemo(() => {
-    return [...section.markers].sort((a, b) => parseInt(a.position) - parseInt(b.position));
-  }, [section.markers]);
+    return [...markers].sort((a, b) => {
+      if (resourceType === 'book' || resourceType === 'article') {
+        // For books and articles, sort by page number
+        const aNum = parseInt(a.position);
+        const bNum = parseInt(b.position);
+        return aNum - bNum;
+      } else {
+        // For audio/video, sort by timestamp
+        return a.position.localeCompare(b.position);
+      }
+    });
+  }, [markers, resourceType]);
+
+  const handleAddMarker = (marker: Omit<Marker, 'id'>) => {
+    onAddMarker({
+      ...marker,
+      sectionId: id
+    });
+    setIsAddingMarker(false);
+  };
+
+  const handleUpdateMarker = (marker: Marker) => {
+    onUpdateMarker(marker);
+    setMarkerToEdit(null);
+  };
+
+  const handleDeleteMarker = (markerId: string) => {
+    onDeleteMarker(markerId);
+  };
 
   return (
-    <AccordionItem
-      value={section.id}
-      className={`border rounded-lg transition-colors ${mediaType === 'article' ? 'bg-white' : 'hover:bg-gray-50/50'} group`}
-      data-media-type={mediaType}
-    >
-      <AccordionTrigger
-        className={`px-4 hover:no-underline hover:bg-transparent ${mediaType === 'article' && 'hidden'} cursor-pointer`}
-        title={mediaType === 'article' ? undefined : "Click to expand/collapse"}
-        disabled={mediaType === 'article'}
-      >
-        <div className="flex items-center gap-2 flex-1">
-          <h2 className="text-xl font-semibold">
-            {getSectionPrefix()} {section.number}
-          </h2>
-          {isEditing ? (
-            <form onSubmit={handleTitleSubmit} className="flex items-center gap-2 flex-1" onClick={e => e.stopPropagation()}>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="flex-1"
-                placeholder="Enter section title"
-                autoFocus
-              />
-              <Button type="submit" size="sm">Save</Button>
-              <Button type="button" variant="outline" size="sm" onClick={handleCancel}>
-                Cancel
-              </Button>
-            </form>
-          ) : (
-            <div className="flex items-center gap-2 flex-1">
-              <span className="text-gray-600">- {section.title}</span>
-              <span className="text-gray-400 text-sm ml-2">
-                ({section.markers.length} marker{section.markers.length !== 1 ? 's' : ''})
-              </span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      height="24"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle cx="12" cy="12" r="1" />
-                      <circle cx="12" cy="5" r="1" />
-                      <circle cx="12" cy="19" r="1" />
-                    </svg>
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setDeleteSectionDialog(true)}
-                    className="text-red-600"
-                  >
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          )}
-        </div>
-        {section.start && (
-          <p className="text-sm text-gray-500 mt-1" onClick={e => e.stopPropagation()}>
-            Starts at: {section.start}
-          </p>
-        )}
-      </AccordionTrigger>
-
-      <AccordionContent className={`px-4 ${mediaType === 'article' && 'pt-4'}`}>
-        <div className="space-y-4">
+    <Accordion type="single" collapsible className="w-full">
+      <AccordionItem value={id}>
+        <AccordionTrigger
+          className={`px-4 hover:no-underline hover:bg-transparent ${resourceType === 'article' && 'hidden'} cursor-pointer`}
+          title={resourceType === 'article' ? undefined : "Click to expand/collapse"}
+          disabled={resourceType === 'article'}
+        >
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{name}</span>
+            {resourceType === 'podcast' && (
+              <span className="text-sm text-gray-500">Hour {orderNum}</span>
+            )}
+          </div>
+        </AccordionTrigger>
+        <AccordionContent className={`px-4 ${resourceType === 'article' && 'pt-4'}`}>
           <div className="space-y-4">
-            {sortedMarkers.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">Click the button below to add your first marker.</p>
-            ) : (
-              sortedMarkers.map(marker => (
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Markers</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAddingMarker(true)}
+              >
+                Add Marker
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {sortedMarkers.map((marker) => (
                 <MarkerCard
                   key={marker.id}
                   marker={marker}
-                  mediaType={mediaType}
-                  sectionNumber={section.number}
-                  onEdit={setEditingMarker}
-                  onDelete={setDeleteMarkerDialog}
+                  resourceType={resourceType}
+                  sectionNumber={orderNum}
+                  onEdit={() => setMarkerToEdit(marker)}
+                  onDelete={() => handleDeleteMarker(marker.id)}
                 />
-              ))
-            )}
+              ))}
+            </div>
           </div>
+        </AccordionContent>
+      </AccordionItem>
 
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            variant="default"
-            className="w-full bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200"
-          >
-            + Add Marker
-          </Button>
+      <MarkerModal
+        isOpen={isAddingMarker}
+        onClose={() => setIsAddingMarker(false)}
+        onAddMarker={handleAddMarker}
+        resourceType={resourceType}
+        sectionNumber={orderNum}
+      />
 
-          <MarkerModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onAddMarker={handleAddMarker}
-            mediaType={mediaType}
-            sectionNumber={section.number}
-          />
-        </div>
-      </AccordionContent>
-
-      <Dialog open={deleteSectionDialog} onOpenChange={setDeleteSectionDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Section</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this section? This action cannot be undone.
-              All markers in this section will also be deleted.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteSectionDialog(false)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                onDeleteSection?.(section.id);
-                setDeleteSectionDialog(false);
-              }}
-            >
-              Delete Section
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Marker Dialog */}
-      <Dialog open={!!deleteMarkerDialog} onOpenChange={() => setDeleteMarkerDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Marker</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this marker? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteMarkerDialog(null)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (deleteMarkerDialog) {
-                  onDeleteMarker?.(section.id, deleteMarkerDialog);
-                  setDeleteMarkerDialog(null);
-                }
-              }}
-            >
-              Delete Marker
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Marker Modal */}
-      {editingMarker && (
-        <EditMarkerModal
-          isOpen={!!editingMarker}
-          onClose={() => setEditingMarker(null)}
-          onUpdateMarker={(updatedMarker) => {
-            onUpdateMarker?.(section.id, updatedMarker);
-            setEditingMarker(null);
-          }}
-          marker={editingMarker}
-          mediaType={mediaType}
-          sectionNumber={section.number}
-        />
-      )}
-    </AccordionItem>
+      <EditMarkerModal
+        isOpen={!!markerToEdit}
+        onClose={() => setMarkerToEdit(null)}
+        onUpdateMarker={handleUpdateMarker}
+        marker={markerToEdit!}
+        resourceType={resourceType}
+        sectionNumber={orderNum}
+      />
+    </Accordion>
   );
 }

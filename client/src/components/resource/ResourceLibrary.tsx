@@ -1,340 +1,164 @@
-/** Table view for managing media items with sorting and actions */
-import React, { useEffect, useState } from 'react';
-import { ArrowUpDown, Trash2, Edit } from 'lucide-react';
-import { useNavigate } from 'react-router';
-import { AddMediaModal } from './AddMediaModal';
-import { EditMediaModal } from './EditMediaModal';
-import { Button } from '@/components/ui/button';
-import { MediaItem } from '@/types';
-import { useMedia, useMediaOperations } from '@/contexts/MediaContext';
-import { get as apiGet, del as apiDelete } from '@/utils/api';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+/** Table view for managing resources with sorting and actions */
+import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useContent } from '../../contexts/ContentContext';
+import { Resource } from '../../types';
+import { apiDelete, apiGet } from '../../lib/api';
+import { Button } from '../ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { EditResourceModal } from './EditResourceModal';
+import { DeleteDialog } from '../ui/delete-dialog';
 
-/** Configuration type for column sorting */
-type SortConfig = {
-  key: keyof MediaItem;
-  direction: 'asc' | 'desc';
-} | null;
-
-/** @returns Table interface for viewing and managing media items */
-export default function MediaLibrary() {
+/** @returns Table interface for viewing and managing resources */
+export default function ResourceLibrary() {
   const navigate = useNavigate();
-  const { state } = useMedia();
-  const { setMediaList, setLoading, setError, deleteMedia } = useMediaOperations();
-  const [open, setOpen] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [mediaToDelete, setMediaToDelete] = useState<MediaItem | null>(null);
-  const [mediaToEdit, setMediaToEdit] = useState<MediaItem | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+  const { state, setError } = useContent();
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Resource; direction: 'asc' | 'desc' } | null>(null);
+  const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
+  const [resourceToEdit, setResourceToEdit] = useState<Resource | null>(null);
+  const [resourceList, setResourceList] = useState<Resource[]>([]);
 
-  /** Memoized sorted items based on current sort configuration */
-  const sortedItems = React.useMemo(() => {
-    if (!sortConfig) return state.mediaItems;
+  const sortedItems = useMemo(() => {
+    if (!sortConfig) return state.resources;
 
-    return [...state.mediaItems].sort((a, b) => {
-      const aValue = a[sortConfig.key];
-      const bValue = b[sortConfig.key];
-
-      if (aValue === bValue) return 0;
-      
-      const multiplier = sortConfig.direction === 'asc' ? 1 : -1;
-      
-      if (aValue === undefined || aValue === null) return 1 * multiplier;
-      if (bValue === undefined || bValue === null) return -1 * multiplier;
-      
-      return aValue < bValue ? -1 * multiplier : 1 * multiplier;
-    });
-  }, [state.mediaItems, sortConfig]);
-
-  /** Cycles sort direction: null -> asc -> desc -> null */
-  const toggleSort = (key: keyof MediaItem) => {
-    setSortConfig(current => {
-      if (current?.key !== key) {
-        return { key, direction: 'asc' };
+    return [...state.resources].sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
       }
-      
-      if (current.direction === 'asc') {
-        return { key, direction: 'desc' };
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
       }
-      
-      return null;
+      return 0;
     });
-  };
+  }, [state.resources, sortConfig]);
 
-  /** Deletes media item and updates UI optimistically */
+  /** Deletes resource and updates UI optimistically */
   const handleDelete = async () => {
-    if (!mediaToDelete) return;
-    
-    const idToDelete = mediaToDelete.id;
-    
-    // Close dialog first
-    setShowDeleteDialog(false);
-    setMediaToDelete(null);
-    
+    if (!resourceToDelete) return;
+
+    const idToDelete = resourceToDelete.id;
+    setResourceList(prev => prev.filter(item => item.id !== idToDelete));
+
     try {
-      // Delete from server - ignoring return since it's a 204
-      await apiDelete(`/media/${idToDelete}`, {
-        credentials: 'include'
+      await apiDelete(`/resources/${idToDelete}`, {
+        onSuccess: () => {
+          setResourceToDelete(null);
+        },
       });
-      
-      // Update local state
-      deleteMedia(idToDelete);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to delete media item');
+      setError(error instanceof Error ? error.message : 'Failed to delete resource');
     }
   };
 
-  /** Shows delete confirmation dialog and prevents navigation */
-  const confirmDelete = (e: React.MouseEvent, mediaItem: MediaItem) => {
-    e.stopPropagation(); // Prevent navigation
-    setMediaToDelete(mediaItem);
-    setShowDeleteDialog(true);
+  const confirmDelete = (e: React.MouseEvent, resource: Resource) => {
+    e.stopPropagation();
+    setResourceToDelete(resource);
   };
 
-  useEffect(() => {
-    async function fetchMedia() {
-      setLoading(true);
-      try {
-        const media = await apiGet<MediaItem[]>('/media');
-        setMediaList(media);
-      } catch (error) {
-        setError(error instanceof Error ? error.message : 'Failed to fetch media items');
-      } finally {
-        setLoading(false);
-      }
+  const fetchResources = async () => {
+    try {
+      const resources = await apiGet<Resource[]>('/resources');
+      setResourceList(resources);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to fetch resources');
     }
-
-    fetchMedia();
-  }, []);
-
-  /** Navigates to media item detail view */
-  const handleCardClick = (mediaItem: MediaItem) => {
-    navigate(`/library/item/${mediaItem.id}`);
   };
 
-  if (state.isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
+  /** Navigates to resource detail view */
+  const handleCardClick = (resource: Resource) => {
+    navigate(`/library/item/${resource.id}`);
+  };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Media Library</h1>
-        <Button onClick={() => setOpen(true)}>Add Media</Button>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Resource Library</h2>
+        <Button onClick={() => setResourceToEdit({} as Resource)}>Add Resource</Button>
       </div>
 
-      {state.error && (
-        <div className="text-red-500 mb-4">
-          {state.error}
-        </div>
-      )}
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => toggleSort('name')}
-                  className="h-8 px-2 hover:bg-transparent"
-                >
-                  Name
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => toggleSort('author')}
-                  className="h-8 px-2 hover:bg-transparent"
-                >
-                  Author
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => toggleSort('type')}
-                  className="h-8 px-2 hover:bg-transparent"
-                >
-                  Type
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead>Sections</TableHead>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => toggleSort('sourceUrl')}
-                  className="h-8 px-2 hover:bg-transparent"
-                >
-                  Source URL
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-              <TableHead className="w-24">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedItems.map((mediaItem) => (
-              <TableRow
-                key={mediaItem.id}
-                onClick={() => handleCardClick(mediaItem)}
-                className="cursor-pointer hover:bg-muted/50"
-              >
-                <TableCell className="font-medium">{mediaItem.name}</TableCell>
-                <TableCell>{mediaItem.author || '-'}</TableCell>
-                <TableCell className="capitalize">{mediaItem.type}</TableCell>
-                <TableCell>{mediaItem.sections.length}</TableCell>
-                <TableCell>
-                  {mediaItem.sourceUrl ? (
-                    <a
-                      href={mediaItem.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                        <polyline points="15 3 21 3 21 9" />
-                        <line x1="10" y1="14" x2="21" y2="3" />
-                      </svg>
-                      {new URL(mediaItem.sourceUrl).hostname}
-                    </a>
-                  ) : (
-                    '-'
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMediaToEdit(mediaItem);
-                        setShowEditDialog(true);
-                      }}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        confirmDelete(e, mediaItem);
-                      }}
-                      className="h-8 w-8 p-0 hover:text-red-500"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {state.mediaItems.length === 0 && !state.isLoading && (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Author</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Sections</TableHead>
-                <TableHead>Source URL</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center">
-                  <p className="text-gray-500 mb-4">No media items in your library</p>
-                  <Button onClick={() => setOpen(true)}>
-                    Add Your First Media
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Author</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Sections</TableHead>
+            <TableHead>Source</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {sortedItems.map((resource) => (
+            <TableRow
+              key={resource.id}
+              onClick={() => handleCardClick(resource)}
+              className="cursor-pointer hover:bg-gray-50"
+            >
+              <TableCell className="font-medium">{resource.name}</TableCell>
+              <TableCell>{resource.author || '-'}</TableCell>
+              <TableCell className="capitalize">{resource.type}</TableCell>
+              <TableCell>{resource.sections.length}</TableCell>
+              <TableCell>
+                {resource.sourceUrl ? (
+                  <a
+                    href={resource.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {new URL(resource.sourceUrl).hostname}
+                  </a>
+                ) : (
+                  '-'
+                )}
+              </TableCell>
+              <TableCell>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setResourceToEdit(resource);
+                    }}
+                  >
+                    Edit
                   </Button>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => confirmDelete(e, resource)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {state.resources.length === 0 && !state.isLoading && (
+        <div className="text-center py-8">
+          <p className="text-gray-500 mb-4">No resources in your library</p>
+          <Button onClick={() => setResourceToEdit({} as Resource)}>Add Your First Resource</Button>
         </div>
       )}
 
-      <Dialog
-        open={showDeleteDialog}
-        onOpenChange={(open) => {
-          setShowDeleteDialog(open);
-          if (!open) setMediaToDelete(null);
-        }}
+      <DeleteDialog
+        isOpen={!!resourceToDelete}
+        onClose={() => setResourceToDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Resource"
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Media</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{mediaToDelete?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={state.isLoading}>
-              {state.isLoading ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        Are you sure you want to delete "{resourceToDelete?.name}"? This action cannot be undone.
+      </DeleteDialog>
 
-      <AddMediaModal
-        open={open}
-        onOpenChange={setOpen}
-      />
-
-      <EditMediaModal
-        open={showEditDialog}
-        onOpenChange={(open) => {
-          setShowEditDialog(open);
-          if (!open) setMediaToEdit(null);
-        }}
-        mediaItem={mediaToEdit}
+      <EditResourceModal
+        open={!!resourceToEdit}
+        onOpenChange={(open) => !open && setResourceToEdit(null)}
+        resource={resourceToEdit}
       />
     </div>
   );

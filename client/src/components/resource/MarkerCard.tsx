@@ -1,20 +1,19 @@
 import React from 'react';
-import { Marker, MediaType, NoteType } from '../../types';
+import { Marker, ResourceType, MarkerType } from '../../types';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+} from '../ui/dropdown-menu';
+import { Button } from '../ui/button';
 import {
   Lightbulb,
   HelpCircle,
-  FileText,
-  Bookmark
+  FileText
 } from 'lucide-react';
 
-const typeConfig: Record<NoteType, { color: string; icon: React.ReactNode; label: string }> = {
+const typeConfig: Record<MarkerType, { color: string; icon: React.ReactNode; label: string }> = {
   concept: {
     color: 'bg-blue-100 text-blue-800 border-blue-200',
     icon: <Lightbulb className="w-4 h-4" />,
@@ -29,17 +28,12 @@ const typeConfig: Record<NoteType, { color: string; icon: React.ReactNode; label
     color: 'bg-green-100 text-green-800 border-green-200',
     icon: <FileText className="w-4 h-4" />,
     label: 'Summary'
-  },
-  general: {
-    color: 'bg-gray-100 text-gray-800 border-gray-200',
-    icon: <Bookmark className="w-4 h-4" />,
-    label: 'Note'
   }
 };
 
 interface MarkerCardProps {
   marker: Marker;
-  mediaType: MediaType;
+  resourceType: ResourceType;
   sectionNumber: number;
   onEdit: (marker: Marker) => void;
   onDelete: (markerId: string) => void;
@@ -47,7 +41,7 @@ interface MarkerCardProps {
 
 export default function MarkerCard({
   marker,
-  mediaType,
+  resourceType,
   sectionNumber,
   onEdit,
   onDelete,
@@ -57,7 +51,7 @@ export default function MarkerCard({
       <div className="flex justify-between items-start">
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-gray-600">
-            {mediaType === 'book' || mediaType === 'article'
+            {resourceType === 'book' || resourceType === 'article'
               ? `Page: ${marker.position}`
               : `Timestamp: ${sectionNumber}:${marker.position.padStart(2, '0')}`}
           </span>
@@ -103,23 +97,21 @@ export default function MarkerCard({
       </div>
 
       <div className="mt-4 space-y-2">
-
-
         {marker.quote && (
           <blockquote className="pl-4 border-l-2 border-gray-300 text-gray-600 italic">
             "{marker.quote}"
           </blockquote>
         )}
 
-        <p className="text-gray-800 font-semibold">{marker.note}</p>
+        <p className="text-gray-800 font-semibold">{marker.marker}</p>
       </div>
 
-      {marker.dateCreated && (
+      {marker.createdAt && (
         <div className="mt-4 text-xs text-gray-400">
-          Created: {new Date(marker.dateCreated).toLocaleDateString()}
-          {marker.dateUpdated && (
+          Created: {new Date(marker.createdAt).toLocaleDateString()}
+          {marker.updatedAt && (
             <span className="ml-2">
-              • Updated: {new Date(marker.dateUpdated).toLocaleDateString()}
+              • Updated: {new Date(marker.updatedAt).toLocaleDateString()}
             </span>
           )}
         </div>

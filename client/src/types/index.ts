@@ -2,38 +2,46 @@ export type MediaType = 'podcast' | 'book' | 'article' | 'course'
 
 export type NoteType = 'general' | 'concept' | 'question' | 'summary'
 
-export interface MediaItem {
-  id: string
-  name: string
-  author?: string
-  sourceUrl?: string
-  sections: Section[]
-  type: MediaType
+export type ResourceType = 'book' | 'article' | 'podcast' | 'video';
+
+export interface Resource {
+  id: string;
+  name: string;
+  type: ResourceType;
+  author?: string;
+  sourceUrl?: string;
+  sections: Section[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Section {
-  id: string
-  title: string     // Changed from name
-  number: number    // Changed from order
-  start?: string    // page number or timestamp
-  markers: Marker[]
+  id: string;
+  resourceId: string;
+  name: string;
+  orderNum: number;
+  markers: Marker[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-// page number or timestamp
 export interface Marker {
-  id: string
-  position: string
-  order: number // Position in the sequence of markers within a section
-  quote?: string // (optional) lines from a book or snippet of audio
-  note: string // thought or comment
-  type: NoteType // categorization of the note
-  dateCreated?: string
-  dateUpdated?: string
+  id: string;
+  sectionId: string;
+  position: string;
+  orderNum: number;
+  quote: string;
+  marker: string; // thought or comment
+  type: MarkerType; // categorization of the marker
+  createdAt: string;
+  updatedAt: string;
 }
+
+export type MarkerType = 'concept' | 'question' | 'summary';
 
 // Helper type for active content state
 export interface ContentState {
-  activeContent: MediaItem | null;
+  activeContent: Resource | null;
   activeSection: Section | null;
   isLoading: boolean;
   error: string | null;
@@ -41,7 +49,7 @@ export interface ContentState {
 
 // Context action types
 export type ContentAction =
-  | { type: 'SET_CONTENT'; payload: MediaItem }
+  | { type: 'SET_CONTENT'; payload: Resource }
   | { type: 'SET_SECTION'; payload: Section }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string }
