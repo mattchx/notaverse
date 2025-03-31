@@ -2,7 +2,6 @@ import express from 'express';
 import { corsConfig } from './config/cors.js';
 import { sessionConfig } from './config/session.js';
 import { authRouter } from './routes/auth.js';
-import { noteRouter } from './routes/notes.js';
 import resourceRouter from './routes/resources.js';
 import { markerRouter } from './routes/markers.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -19,7 +18,6 @@ app.use(sessionConfig);
 app.use('/api/auth', authRouter);
 app.use('/api/resources', resourceRouter);
 app.use('/api/markers', markerRouter);
-app.use('/api/notes', noteRouter);
 
 // Error handling
 app.use(errorHandler);
