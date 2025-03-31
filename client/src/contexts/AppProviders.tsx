@@ -1,5 +1,5 @@
 import React from 'react';
-import { MediaProvider, useMedia, useMediaOperations } from './MediaContext';
+import { ResourceProvider, useResource, useResourceOperations } from './ResourceContext';
 import { NoteProvider, useNotes, useNoteOperations } from './NoteContext';
 import { NotificationProvider, useNotifications } from './NotificationContext';
 
@@ -10,26 +10,26 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <NotificationProvider>
-      <MediaProvider>
+      <ResourceProvider>
         <NoteProvider>
           {children}
         </NoteProvider>
-      </MediaProvider>
+      </ResourceProvider>
     </NotificationProvider>
   );
 }
 
 // Export a combined hook for accessing all contexts
 export function useAppState() {
-  const { state: mediaState } = useMedia();
+  const { state: resourceState } = useResource();
   const { state: noteState } = useNotes();
-  const mediaOps = useMediaOperations();
+  const resourceOps = useResourceOperations();
   const noteOps = useNoteOperations();
   const notifications = useNotifications();
 
   return {
     state: {
-      media: mediaState,
+      resource: resourceState,
       notes: noteState,
       notifications: {
         list: notifications.notifications,
@@ -37,7 +37,7 @@ export function useAppState() {
       },
     },
     operations: {
-      media: mediaOps,
+      resource: resourceOps,
       notes: noteOps,
       notifications: {
         add: notifications.addNotification,

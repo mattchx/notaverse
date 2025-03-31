@@ -1,4 +1,4 @@
-export type MediaType = 'podcast' | 'book' | 'article' | 'course'
+export type ResourceType = 'podcast' | 'book' | 'article' | 'course'
 
 export type NoteType = 'general' | 'concept' | 'question' | 'summary'
 
