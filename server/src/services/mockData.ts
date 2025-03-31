@@ -1,59 +1,52 @@
-import { Resource, Clip, Note, CreateResourceDTO, CreateClipDTO, CreateNoteDTO } from '../types/index.js';
+import { Resource, Section, Marker, Note, CreateResourceDTO, CreateMarkerDTO, CreateNoteDTO } from '../types/resource.js';
 
 const resources: Resource[] = [
   {
     id: "r1",
+    userId: "u1",
+    name: "The Pragmatic Programmer",
     type: "book",
-    title: "The Pragmatic Programmer",
     author: "Dave Thomas, Andy Hunt",
-    content: "The Pragmatic Programmer is a software development book that explores the core principles of writing clean, maintainable code...",
-    dateCreated: new Date("2024-02-20").toISOString(),
-    dateUpdated: new Date("2024-02-20").toISOString()
+    sections: [],
+    createdAt: new Date("2024-02-20"),
+    updatedAt: new Date("2024-02-20")
   },
   {
     id: "r2",
+    userId: "u1",
+    name: "The Future of Web Development",
     type: "article",
-    title: "The Future of Web Development",
     author: "Tech Magazine",
-    content: "Web development is evolving rapidly with new frameworks and tools. In this article, we explore the latest trends...",
-    dateCreated: new Date("2024-02-21").toISOString(),
-    dateUpdated: new Date("2024-02-21").toISOString()
-  },
-  {
-    id: "r3",
-    type: "podcast",
-    title: "Syntax.fm - TypeScript Tips",
-    author: "Wes Bos & Scott Tolinski",
-    content: "In this episode, we dive deep into TypeScript best practices and tips that will make you a more effective developer...",
-    dateCreated: new Date("2024-02-22").toISOString(),
-    dateUpdated: new Date("2024-02-22").toISOString()
+    sections: [],
+    createdAt: new Date("2024-02-21"),
+    updatedAt: new Date("2024-02-21")
   }
 ];
 
-const clips: Clip[] = [
+const markers: Marker[] = [
   {
-    id: "c1",
-    resourceId: "r1",
-    type: "quote",
-    content: "You can't write perfect software. Did that hurt? It shouldn't. Accept it as an axiom of life.",
-    dateCreated: new Date("2024-02-20").toISOString(),
-    dateUpdated: new Date("2024-02-20").toISOString()
+    id: "m1",
+    sectionId: "s1",
+    userId: "u1",
+    position: "p1",
+    order: 1,
+    orderNum: 1,
+    note: "Great reminder about accepting imperfection in software development",
+    type: "general",
+    createdAt: new Date("2024-02-20"),
+    updatedAt: new Date("2024-02-20")
   },
   {
-    id: "c2",
-    resourceId: "r1",
-    type: "highlight",
-    content: "DRY - Don't Repeat Yourself",
-    dateCreated: new Date("2024-02-20").toISOString(),
-    dateUpdated: new Date("2024-02-20").toISOString()
-  },
-  {
-    id: "c3",
-    resourceId: "r2",
-    type: "quote",
-    content: "Web development is evolving rapidly with new frameworks and tools.",
-    dateCreated: new Date("2024-02-21").toISOString(),
-    dateUpdated: new Date("2024-02-21").toISOString()
+    id: "m2",
+    sectionId: "s1",
+    userId: "u1",
+    position: "p2",
+    order: 2,
+    orderNum: 2,
+    note: "Core principle of software development that helps reduce maintenance",
+    type: "concept",
+    createdAt: new Date("2024-02-20"),
+    updatedAt: new Date("2024-02-20")
   }
 ];
 
@@ -61,26 +54,10 @@ const notes: Note[] = [
   {
     id: "n1",
     resourceId: "r1",
-    clipId: "c1",
-    content: "Great reminder about accepting imperfection in software development",
-    dateCreated: new Date("2024-02-20").toISOString(),
-    dateUpdated: new Date("2024-02-20").toISOString()
-  },
-  {
-    id: "n2",
-    resourceId: "r1",
-    clipId: "c2",
-    content: "Core principle of software development that helps reduce maintenance",
-    dateCreated: new Date("2024-02-20").toISOString(),
-    dateUpdated: new Date("2024-02-20").toISOString()
-  },
-  {
-    id: "n3",
-    resourceId: "r2",
-    clipId: null,
+    userId: "u1",
     content: "Need to research more about the latest web development trends mentioned",
-    dateCreated: new Date("2024-02-21").toISOString(),
-    dateUpdated: new Date("2024-02-21").toISOString()
+    createdAt: new Date("2024-02-21"),
+    updatedAt: new Date("2024-02-21")
   }
 ];
 
@@ -90,7 +67,7 @@ function generateId(): string {
 
 export class MockDataService {
   private resources: Resource[] = resources;
-  private clips: Clip[] = clips;
+  private markers: Marker[] = markers;
   private notes: Note[] = notes;
 
   // Resource methods
@@ -103,40 +80,52 @@ export class MockDataService {
   }
 
   async createResource(data: CreateResourceDTO): Promise<Resource> {
-    const now = new Date().toISOString();
+    const now = new Date();
+    const sections: Section[] = data.sections.map(sectionData => ({
+      ...sectionData,
+      id: sectionData.id || generateId(),
+      markers: [],
+      createdAt: now,
+      updatedAt: now
+    }));
+
     const newResource: Resource = {
       ...data,
       id: data.id || generateId(),
-      dateCreated: now,
-      dateUpdated: now,
+      sections,
+      createdAt: now,
+      updatedAt: now,
     };
     this.resources.push(newResource);
     return newResource;
   }
 
-  // Clip methods
-  async getClips(): Promise<Clip[]> {
-    return [...this.clips];
+  // Marker methods
+  async getMarkers(): Promise<Marker[]> {
+    return [...this.markers];
   }
 
-  async getClipsByResourceId(resourceId: string): Promise<Clip[]> {
-    return this.clips.filter(c => c.resourceId === resourceId);
+  async getMarkersBySectionId(sectionId: string): Promise<Marker[]> {
+    return this.markers.filter(m => m.sectionId === sectionId);
   }
 
-  async getClipById(id: string): Promise<Clip | undefined> {
-    return this.clips.find(c => c.id === id);
+  async getMarkerById(id: string): Promise<Marker | undefined> {
+    return this.markers.find(m => m.id === id);
   }
 
-  async createClip(data: CreateClipDTO): Promise<Clip> {
-    const now = new Date().toISOString();
-    const newClip: Clip = {
+  async createMarker(data: CreateMarkerDTO): Promise<Marker> {
+    const now = new Date();
+    const newMarker: Marker = {
       ...data,
       id: data.id || generateId(),
-      dateCreated: now,
-      dateUpdated: now,
+      orderNum: data.order, // Map order to orderNum
+      createdAt: now,
+      updatedAt: now,
+      dateCreated: now.toISOString(),
+      dateUpdated: now.toISOString(),
     };
-    this.clips.push(newClip);
-    return newClip;
+    this.markers.push(newMarker);
+    return newMarker;
   }
 
   // Note methods
@@ -148,8 +137,8 @@ export class MockDataService {
     return this.notes.filter(n => n.resourceId === resourceId);
   }
 
-  async getNotesByClipId(clipId: string): Promise<Note[]> {
-    return this.notes.filter(n => n.clipId === clipId);
+  async getNotesByMarkerId(markerId: string): Promise<Note[]> {
+    return this.notes.filter(n => n.markerId === markerId);
   }
 
   async getNoteById(id: string): Promise<Note | undefined> {
@@ -157,15 +146,24 @@ export class MockDataService {
   }
 
   async createNote(data: CreateNoteDTO): Promise<Note> {
-    const now = new Date().toISOString();
+    const now = new Date();
     const newNote: Note = {
       ...data,
       id: data.id || generateId(),
-      dateCreated: now,
-      dateUpdated: now,
+      createdAt: now,
+      updatedAt: now,
     };
     this.notes.push(newNote);
     return newNote;
+  }
+
+  // Section methods
+  async getSectionById(id: string): Promise<Section | undefined> {
+    for (const resource of this.resources) {
+      const section = resource.sections.find(s => s.id === id);
+      if (section) return section;
+    }
+    return undefined;
   }
 }
 

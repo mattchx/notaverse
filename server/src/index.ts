@@ -2,10 +2,9 @@ import express from 'express';
 import { corsConfig } from './config/cors.js';
 import { sessionConfig } from './config/session.js';
 import { authRouter } from './routes/auth.js';
-import { router as resourceRouter } from './routes/resources.js';
-import { router as clipRouter } from './routes/clips.js';
-import { router as noteRouter } from './routes/notes.js';
-import mediaRouter from './routes/media.js';
+import { noteRouter } from './routes/notes.js';
+import resourceRouter from './routes/resources.js';
+import { markerRouter } from './routes/markers.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { env } from './config/env.js';
 
@@ -19,9 +18,8 @@ app.use(sessionConfig);
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/resources', resourceRouter);
-app.use('/api/clips', clipRouter);
+app.use('/api/markers', markerRouter);
 app.use('/api/notes', noteRouter);
-app.use('/api/media', mediaRouter);
 
 // Error handling
 app.use(errorHandler);

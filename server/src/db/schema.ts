@@ -12,8 +12,8 @@ export const users = sqliteTable('users', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
-// Media items table
-export const mediaItems = sqliteTable('media_items', {
+// Resources table
+export const resources = sqliteTable('resources', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull().references(() => users.id),
   name: text('name').notNull(),
@@ -28,7 +28,7 @@ export const mediaItems = sqliteTable('media_items', {
 // Sections table
 export const sections = sqliteTable('sections', {
   id: text('id').primaryKey(),
-  mediaId: text('media_id').notNull().references(() => mediaItems.id, { onDelete: 'cascade' }),
+  resourceId: text('resource_id').notNull().references(() => resources.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   number: integer('number').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -59,22 +59,22 @@ export const sessions = sqliteTable('sessions', {
 
 // Define relationships
 export const usersRelations = relations(users, ({ many }) => ({
-  mediaItems: many(mediaItems),
+  resources: many(resources),
   markers: many(markers)
 }));
 
-export const mediaItemsRelations = relations(mediaItems, ({ one, many }) => ({
+export const resourcesRelations = relations(resources, ({ one, many }) => ({
   user: one(users, {
-    fields: [mediaItems.userId],
+    fields: [resources.userId],
     references: [users.id],
   }),
   sections: many(sections),
 }));
 
 export const sectionsRelations = relations(sections, ({ one, many }) => ({
-  mediaItem: one(mediaItems, {
-    fields: [sections.mediaId],
-    references: [mediaItems.id],
+  resource: one(resources, {
+    fields: [sections.resourceId],
+    references: [resources.id],
   }),
   markers: many(markers),
 }));
@@ -99,13 +99,13 @@ export const drizzleMigrations = sqliteTable('__drizzle_migrations', {
 
 export const schema = {
   users,
-  mediaItems,
+  resources,
   sections,
   markers,
   sessions,
   drizzleMigrations,
   usersRelations,
-  mediaItemsRelations,
+  resourcesRelations,
   sectionsRelations,
   markersRelations,
 };

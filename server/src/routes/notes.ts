@@ -1,12 +1,13 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { mockDataService } from '../services/mockData.js';
 import { ApiError } from '../middleware/errorHandler.js';
-import { ApiResponse, Note, CreateNoteDTO } from '../types/index.js';
+import { ApiResponse } from '../types/index.js';
+import { Note, CreateNoteDTO } from '../types/resource.js';
 
-export const router = Router();
+export const noteRouter = Router();
 
 // Get all notes
-router.get('/', async (req, res) => {
+noteRouter.get('/', async (req: Request, res: Response) => {
   const notes = await mockDataService.getNotes();
   const response: ApiResponse<Note[]> = {
     success: true,
@@ -16,7 +17,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get note by ID
-router.get('/:id', async (req, res, next) => {
+noteRouter.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const note = await mockDataService.getNoteById(req.params.id);
     
@@ -35,9 +36,16 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Create new note
-router.post('/', async (req, res, next) => {
+noteRouter.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const noteData: CreateNoteDTO = req.body;
+    const noteData = req.body;
+    
+    if (!req.session.userId) {
+      throw new ApiError(401, 'User not logged in');
+    }
+    
+    // Add userId to noteData
+    noteData.userId = req.session.userId;
     
     // Verify resource exists
     const resource = await mockDataService.getResourceById(noteData.resourceId);
@@ -45,15 +53,17 @@ router.post('/', async (req, res, next) => {
       throw new ApiError(404, 'Resource not found');
     }
 
-    // Verify clip exists if clipId is provided
-    if (noteData.clipId) {
-      const clip = await mockDataService.getClipById(noteData.clipId);
-      if (!clip) {
-        throw new ApiError(404, 'Clip not found');
+    // Verify marker exists if markerId is provided
+    if (noteData.markerId) {
+      const marker = await mockDataService.getMarkerById(noteData.markerId);
+      if (!marker) {
+        throw new ApiError(404, 'Marker not found');
       }
-      // Verify clip belongs to the specified resource
-      if (clip.resourceId !== noteData.resourceId) {
-        throw new ApiError(400, 'Clip does not belong to the specified resource');
+      
+      // Get section to verify resource relationship
+      const section = await mockDataService.getSectionById(marker.sectionId);
+      if (!section || section.resourceId !== noteData.resourceId) {
+        throw new ApiError(400, 'Marker does not belong to the specified resource');
       }
     }
 
@@ -70,7 +80,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // Get notes by resource ID
-router.get('/resource/:resourceId', async (req, res, next) => {
+noteRouter.get('/resource/:resourceId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const notes = await mockDataService.getNotesByResourceId(req.params.resourceId);
     
@@ -84,10 +94,10 @@ router.get('/resource/:resourceId', async (req, res, next) => {
   }
 });
 
-// Get notes by clip ID
-router.get('/clip/:clipId', async (req, res, next) => {
+// Get notes by marker ID
+noteRouter.get('/marker/:markerId', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const notes = await mockDataService.getNotesByClipId(req.params.clipId);
+    const notes = await mockDataService.getNotesByMarkerId(req.params.markerId);
     
     const response: ApiResponse<Note[]> = {
       success: true,
