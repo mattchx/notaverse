@@ -31,12 +31,11 @@ export default function ResourceViewer() {
     async function fetchResourceItem() {
       try {
         setLoading(true);
-        const resource = await apiGet<Resource>(`/Resource/${id}`, {
-          credentials: 'include'
-        });
+        const resource = await apiGet<Resource>(`/resources/${id}`);
         setActiveResource(resource);
         setResource(resource);
       } catch (error) {
+        console.error('Resource fetch error:', error);
         setError(error instanceof Error ? error.message : 'Failed to fetch resource');
       } finally {
         setLoading(false);
@@ -61,9 +60,7 @@ export default function ResourceViewer() {
 
     try {
       setLoading(true);
-      await apiPost<SectionType>(`/resource/${activeResource.id}/sections`, newSection, {
-        credentials: 'include'
-      });
+      await apiPost<SectionType>(`/resources/${activeResource.id}/sections`, newSection);
 
       const updatedResource = {
         ...activeResource,
@@ -72,6 +69,7 @@ export default function ResourceViewer() {
       setActiveResource(updatedResource);
       setResource(updatedResource);
     } catch (error) {
+      console.error('Add section error:', error);
       setError(error instanceof Error ? error.message : 'Failed to add section');
     } finally {
       setLoading(false);
@@ -83,9 +81,7 @@ export default function ResourceViewer() {
 
     try {
       setLoading(true);
-      await apiPut<SectionType>(`/resource/${activeResource.id}/sections/${sectionId}`, { name }, {
-        credentials: 'include'
-      });
+      await apiPut<SectionType>(`/resources/${activeResource.id}/sections/${sectionId}`, { name });
 
       const updatedResource = {
         ...activeResource,
@@ -98,6 +94,7 @@ export default function ResourceViewer() {
       setActiveResource(updatedResource);
       setResource(updatedResource);
     } catch (error) {
+      console.error('Update section error:', error);
       setError(error instanceof Error ? error.message : 'Failed to update section');
     } finally {
       setLoading(false);
@@ -115,9 +112,7 @@ export default function ResourceViewer() {
 
     try {
       setLoading(true);
-      await apiPost<Marker>(`/resource/${activeResource.id}/sections/${sectionId}/markers`, newMarker, {
-        credentials: 'include'
-      });
+      await apiPost<Marker>(`/resources/${activeResource.id}/sections/${sectionId}/markers`, newMarker);
 
       const updatedResource = {
         ...activeResource,
@@ -130,6 +125,7 @@ export default function ResourceViewer() {
       setActiveResource(updatedResource);
       setResource(updatedResource);
     } catch (error) {
+      console.error('Add marker error:', error);
       setError(error instanceof Error ? error.message : 'Failed to add marker');
     } finally {
       setLoading(false);
@@ -141,9 +137,7 @@ export default function ResourceViewer() {
 
     try {
       setLoading(true);
-      await apiDelete(`/resource/${activeResource.id}/sections/${sectionId}`, {
-        credentials: 'include'
-      });
+      await apiDelete(`/resources/${activeResource.id}/sections/${sectionId}`);
 
       const updatedResource = {
         ...activeResource,
@@ -152,6 +146,7 @@ export default function ResourceViewer() {
       setActiveResource(updatedResource);
       setResource(updatedResource);
     } catch (error) {
+      console.error('Delete section error:', error);
       setError(error instanceof Error ? error.message : 'Failed to delete section');
     } finally {
       setLoading(false);
@@ -163,9 +158,7 @@ export default function ResourceViewer() {
 
     try {
       setLoading(true);
-      await apiDelete(`/resource/${activeResource.id}/sections/${sectionId}/markers/${markerId}`, {
-        credentials: 'include'
-      });
+      await apiDelete(`/resources/${activeResource.id}/sections/${sectionId}/markers/${markerId}`);
 
       deleteMarker(sectionId, markerId);
       const updatedResource = {
@@ -182,6 +175,7 @@ export default function ResourceViewer() {
       setActiveResource(updatedResource);
       setResource(updatedResource);
     } catch (error) {
+      console.error('Delete marker error:', error);
       setError(error instanceof Error ? error.message : 'Failed to delete marker');
     } finally {
       setLoading(false);
@@ -194,9 +188,8 @@ export default function ResourceViewer() {
     try {
       setLoading(true);
       const response = await apiPut<Marker>(
-        `/resource/${activeResource.id}/sections/${sectionId}/markers/${marker.id}`,
-        marker,
-        { credentials: 'include' }
+        `/resources/${activeResource.id}/sections/${sectionId}/markers/${marker.id}`,
+        marker
       );
 
       updateMarker(sectionId, response);
@@ -216,6 +209,7 @@ export default function ResourceViewer() {
       setActiveResource(updatedResource);
       setResource(updatedResource);
     } catch (error) {
+      console.error('Update marker error:', error);
       setError(error instanceof Error ? error.message : 'Failed to update marker');
     } finally {
       setLoading(false);

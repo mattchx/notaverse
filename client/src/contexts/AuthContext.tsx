@@ -38,12 +38,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkAuth = async () => {
     setIsLoading(true);
     try {
-      const data = await apiGet<{ user: User }>('/auth/me', {
-        credentials: 'include',
-      });
+      const data = await apiGet<{ user: User }>('/auth/me');
       setIsAuthenticated(true);
       setUser(data.user);
-    } catch {
+    } catch (error) {
+      console.error('Auth check error:', error);
       setIsAuthenticated(false);
       setUser(null);
     } finally {
