@@ -7,6 +7,7 @@ import { get as apiGet, del as apiDelete } from '../../utils/api';
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { EditResourceModal } from './EditResourceModal';
+import { AddResourceModal } from './AddResourceModal';
 
 import { 
   Dialog, 
@@ -54,6 +55,7 @@ export default function ResourceLibrary() {
   const [sortConfig, setSortConfig] = useState<{ key: keyof Resource; direction: 'asc' | 'desc' } | null>(null);
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [resourceToEdit, setResourceToEdit] = useState<Resource | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
 
   // Fetch resources when component mounts
   useEffect(() => {
@@ -123,7 +125,7 @@ export default function ResourceLibrary() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Resource Library</h2>
-        <Button onClick={() => setResourceToEdit({} as Resource)}>Add Resource</Button>
+        <Button onClick={() => setIsAddModalOpen(true)}>Add Resource</Button>
       </div>
 
       <Table>
@@ -198,7 +200,7 @@ export default function ResourceLibrary() {
       {state.resources.length === 0 && !state.isLoading && (
         <div className="text-center py-8">
           <p className="text-gray-500 mb-4">No resources in your library</p>
-          <Button onClick={() => setResourceToEdit({} as Resource)}>Add Your First Resource</Button>
+          <Button onClick={() => setIsAddModalOpen(true)}>Add Your First Resource</Button>
         </div>
       )}
 
@@ -215,6 +217,11 @@ export default function ResourceLibrary() {
         open={!!resourceToEdit}
         onOpenChange={(open: boolean) => !open && setResourceToEdit(null)}
         resource={resourceToEdit}
+      />
+
+      <AddResourceModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
       />
     </div>
   );
