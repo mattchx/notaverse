@@ -19,7 +19,7 @@ export default function Login() {
 
   const handleSubmit = async (credentials: { email: string; password: string }) => {
     try {
-      const data = await api.post<LoginResponse>('/api/auth/login', credentials);
+      const data = await api.post<LoginResponse>('/auth/login', credentials);
       setIsAuthenticated(true);
       setUser(data.user);
 

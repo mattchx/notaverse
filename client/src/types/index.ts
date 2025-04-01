@@ -2,8 +2,6 @@ export type ResourceType = 'podcast' | 'book' | 'article' | 'course'
 
 export type NoteType = 'general' | 'concept' | 'question' | 'summary'
 
-export type ResourceType = 'book' | 'article' | 'podcast' | 'video';
-
 export interface Resource {
   id: string;
   name: string;

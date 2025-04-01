@@ -22,7 +22,7 @@ export default function Register() {
     confirmPassword: string;
   }) => {
     try {
-      const data = await api.post<RegisterResponse>('/api/auth/register', credentials);
+      const data = await api.post<RegisterResponse>('/auth/register', credentials);
       setIsAuthenticated(true);
       setUser(data.user);
 
