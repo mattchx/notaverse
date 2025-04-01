@@ -11,16 +11,16 @@ interface EditMarkerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateMarker: (marker: Marker) => void;
-  marker: Marker;
+  marker: Marker | null;
   resourceType: ResourceType;
   sectionNumber?: number;
 }
 
 export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, resourceType, sectionNumber }: EditMarkerModalProps) {
-  const [position, setPosition] = React.useState(marker.position);
-  const [quote, setQuote] = React.useState(marker.quote);
-  const [markerText, setMarkerText] = React.useState(marker.marker);
-  const [type, setType] = React.useState<MarkerType>(marker.type);
+  const [position, setPosition] = React.useState(marker?.position || '');
+  const [quote, setQuote] = React.useState(marker?.quote || '');
+  const [markerText, setMarkerText] = React.useState(marker?.marker || '');
+  const [type, setType] = React.useState<MarkerType>(marker?.type || 'concept');
 
   const markerTypes = [
     { value: 'concept', label: 'Concept' },
@@ -29,7 +29,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
   ];
 
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && marker) {
       setPosition(marker.position);
       setQuote(marker.quote);
       setMarkerText(marker.marker);
@@ -39,6 +39,8 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!marker) return;
+    
     onUpdateMarker({
       ...marker,
       position,
@@ -48,6 +50,10 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
     });
     onClose();
   };
+
+  if (!marker) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

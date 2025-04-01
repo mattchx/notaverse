@@ -6,12 +6,20 @@ interface ApiConfig extends RequestInit {
 }
 
 async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint.startsWith('/api') ? endpoint : '/api' + endpoint}`;
+  // Ensure endpoint starts with a slash
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
+  // Always prepend /api if not already there
+  const apiPath = normalizedEndpoint.startsWith('/api') ? normalizedEndpoint : `/api${normalizedEndpoint}`;
+  
+  const url = `${API_BASE_URL}${apiPath}`;
   
   const headers = {
     'Content-Type': 'application/json',
     ...config.headers,
   };
+
+  console.log(`API Request: ${url}`);
 
   const response = await fetch(url, {
     ...config,
@@ -20,7 +28,9 @@ async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(response.statusText);
+    const errorText = await response.text();
+    console.error(`API Error (${response.status}): ${errorText}`);
+    throw new Error(response.statusText || errorText);
   }
 
   // Handle empty responses (like 204 No Content)

@@ -118,7 +118,7 @@ export default function ResourceLibrary() {
 
   /** Navigates to resource detail view */
   const handleCardClick = (resource: Resource) => {
-    navigate(`/library/item/${resource.id}`);
+    navigate(`/resources/${resource.id}`);
   };
 
   return (

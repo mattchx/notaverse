@@ -122,7 +122,7 @@ export default function Section({
             {!isEditingName && onUpdateName && onDeleteSection && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <div className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground">
                     <svg
                       className="h-4 w-4"
                       fill="none"
@@ -140,7 +140,7 @@ export default function Section({
                       <circle cx="12" cy="19" r="1" />
                     </svg>
                     <span className="sr-only">Actions</span>
-                  </Button>
+                  </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setIsEditingName(true)}>
@@ -198,7 +198,7 @@ export default function Section({
         isOpen={!!markerToEdit}
         onClose={() => setMarkerToEdit(null)}
         onUpdateMarker={handleUpdateMarker}
-        marker={markerToEdit!}
+        marker={markerToEdit}
         resourceType={resourceType}
         sectionNumber={orderNum}
       />

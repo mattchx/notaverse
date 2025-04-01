@@ -29,6 +29,9 @@ function App() {
                   {/* Resource management routes */}
                   <Route path="/library" element={<ProtectedRoute><ResourceLibrary /></ProtectedRoute>} />
                   <Route path="/library/item/:id" element={<ProtectedRoute><ResourceViewer /></ProtectedRoute>} />
+                  {/* Alternative resource paths that match API structure */}
+                  <Route path="/resources" element={<ProtectedRoute><ResourceLibrary /></ProtectedRoute>} />
+                  <Route path="/resources/:id" element={<ProtectedRoute><ResourceViewer /></ProtectedRoute>} />
                 </Routes>
               </div>
             </BrowserRouter>

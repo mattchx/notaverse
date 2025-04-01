@@ -72,7 +72,7 @@ export function EditResourceModal({ open, onOpenChange, resource }: EditResource
       };
 
       // Send request to API
-      const result = await apiPut<Resource>(`/resource/${resource.id}`, updatedResource);
+      const result = await apiPut<Resource>(`/resources/${resource.id}`, updatedResource);
       updateResource(result);
       onOpenChange(false);
     } catch (error) {
