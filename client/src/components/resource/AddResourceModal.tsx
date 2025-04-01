@@ -63,8 +63,8 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
           {
             id: uuidv4(),
             resourceId: resourceId,
-            name: formData.initialSection.trim() || 'Untitled Section',
-            orderNum: 1,
+            title: formData.initialSection.trim() || 'Untitled Section',
+            number: 1,
             markers: [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -74,7 +74,7 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
         updatedAt: new Date().toISOString()
       };
       // Send request to API
-      const createdResource = await apiPost<Resource>('/Resource', newResource);
+      const createdResource = await apiPost<Resource>('/resources', newResource);
       createResource(createdResource);
       onOpenChange(false);
       
@@ -87,7 +87,16 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
         initialSection: '',
       });
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to create Resource item');
+      console.error('Error creating resource:', error);
+      if (error instanceof Error) {
+        if (error.message === 'Unauthorized') {
+          setError('You must be logged in to add resources. Please login and try again.');
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setError('Failed to create resource');
+      }
     } finally {
       setIsSubmitting(false);
       setLoading(false);
