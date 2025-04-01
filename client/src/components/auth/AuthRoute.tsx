@@ -9,9 +9,22 @@ interface AuthRouteProps {
 const AuthRoute = ({ children }: AuthRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show nothing while checking auth
+  // Show loading indicator while checking auth
   if (isLoading) {
-    return null;
+    return (
+      <div className="max-w-md mx-auto mt-10">
+        {/* Skeleton loader for login/register forms */}
+        <div className="animate-pulse">
+          <div className="h-10 bg-gray-200 rounded w-1/2 mx-auto mb-6"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto mb-8"></div>
+          <div className="space-y-4">
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded"></div>
+            <div className="h-12 bg-gray-200 rounded mt-6"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (isAuthenticated) {
