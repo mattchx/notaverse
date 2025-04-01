@@ -111,7 +111,7 @@ export default function Section({
                 </form>
               ) : (
                 <>
-                  <span className="font-medium">{name}</span>
+                  <span className="font-medium">{name || 'Untitled Section'}</span>
                   {resourceType === 'podcast' && (
                     <span className="text-sm text-gray-500">Hour {orderNum}</span>
                   )}

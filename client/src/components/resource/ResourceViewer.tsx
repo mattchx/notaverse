@@ -24,6 +24,14 @@ export default function ResourceViewer() {
     }
   }, [activeResource]);
 
+  // Ensure defaultOpen behavior works properly
+  React.useEffect(() => {
+    if (activeResource && openSections.length === 0 && activeResource.sections.length > 0) {
+      // By default, open the first section
+      setOpenSections([activeResource.sections[0].id]);
+    }
+  }, [activeResource, openSections]);
+
   // Fetch Resource item data
   React.useEffect(() => {
     if (!id) return;
@@ -296,12 +304,20 @@ export default function ResourceViewer() {
           type="multiple"
           value={openSections}
           onValueChange={(value) => {
-            // For articles, prevent sections from being collapsed
-            if (activeResource?.type === 'article') {
-              const allSectionIds = activeResource.sections.map(section => section.id);
-              setOpenSections(allSectionIds);
-            } else {
-              setOpenSections(value);
+            try {
+              // For articles, prevent sections from being collapsed
+              if (activeResource?.type === 'article') {
+                const allSectionIds = activeResource.sections.map(section => section.id);
+                setOpenSections(allSectionIds);
+              } else {
+                setOpenSections(value);
+              }
+            } catch (error) {
+              console.error('Error updating accordion state:', error);
+              // Fallback to a safe state
+              if (activeResource?.sections.length) {
+                setOpenSections([activeResource.sections[0].id]);
+              }
             }
           }}
         >

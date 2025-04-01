@@ -52,13 +52,22 @@ export default function MarkerCard({
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-gray-600">
             {resourceType === 'book' || resourceType === 'article'
-              ? `Page: ${marker.position}`
-              : `Timestamp: ${sectionNumber}:${marker.position.padStart(2, '0')}`}
+              ? `Page: ${marker.position || 'N/A'}`
+              : resourceType === 'podcast'
+                ? `Timestamp: ${sectionNumber}:${marker.position ? marker.position.padStart(2, '0') : '00'}`
+                : `Timestamp: ${marker.position || '00:00'}`}
           </span>
-          <div className={`flex items-center gap-1 px-2 py-1 rounded border ${typeConfig[marker.type].color}`}>
-            {typeConfig[marker.type].icon}
-            <span className="text-xs font-medium">{typeConfig[marker.type].label}</span>
-          </div>
+          {marker.type && typeConfig[marker.type] ? (
+            <div className={`flex items-center gap-1 px-2 py-1 rounded border ${typeConfig[marker.type].color}`}>
+              {typeConfig[marker.type].icon}
+              <span className="text-xs font-medium">{typeConfig[marker.type].label}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 px-2 py-1 rounded border bg-gray-100 text-gray-800 border-gray-200">
+              <FileText className="w-4 h-4" />
+              <span className="text-xs font-medium">Note</span>
+            </div>
+          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
