@@ -8,6 +8,43 @@ import MarkerModal from './MarkerModal';
 import EditMarkerModal from './EditMarkerModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
+// Function to generate section title based on resource type
+const getSectionTitle = (name: string, orderNum: number | undefined, resourceType: ResourceType): string | null => {
+  // Handle undefined orderNum with a default value of 1
+  const sectionNumber = orderNum ?? 1;
+  
+  switch (resourceType) {
+    case 'book':
+      return `Chapter ${sectionNumber}: ${name}`;
+    case 'podcast':
+      return `Hour ${sectionNumber}: ${name}`;
+    case 'course':
+      return `Module ${sectionNumber}: ${name}`;
+    case 'article':
+      // Articles don't need section titles
+      return null;
+    default:
+      return name;
+  }
+};
+
+// Function to get the prefix for a section title (e.g., "Chapter 1: ")
+const getSectionPrefix = (orderNum: number | undefined, resourceType: ResourceType): string => {
+  // Handle undefined orderNum with a default value of 1
+  const sectionNumber = orderNum ?? 1;
+  
+  switch (resourceType) {
+    case 'book':
+      return `Chapter ${sectionNumber}: `;
+    case 'podcast':
+      return `Hour ${sectionNumber}: `;
+    case 'course':
+      return `Module ${sectionNumber}: `;
+    default:
+      return '';
+  }
+};
+
 interface SectionProps {
   id: string;
   name: string;
@@ -37,6 +74,9 @@ export default function Section({
   const [markerToEdit, setMarkerToEdit] = React.useState<Marker | null>(null);
   const [isEditingName, setIsEditingName] = React.useState(false);
   const [sectionName, setSectionName] = React.useState(name);
+
+  // Get section title based on resource type
+  const sectionTitle = getSectionTitle(name, orderNum, resourceType);
 
   const sortedMarkers = React.useMemo(() => {
     return [...markers].sort((a, b) => {
@@ -89,32 +129,36 @@ export default function Section({
             <div className="flex items-center gap-2">
               {isEditingName ? (
                 <form onSubmit={handleNameSubmit} onClick={(e) => e.stopPropagation()}>
-                  <Input
-                    value={sectionName}
-                    onChange={(e) => setSectionName(e.target.value)}
-                    className="w-64"
-                    autoFocus
-                  />
-                  <Button type="submit" size="sm" className="ml-2">Save</Button>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    className="ml-2"
-                    onClick={() => {
-                      setSectionName(name);
-                      setIsEditingName(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {/* Display fixed section prefix */}
+                    {resourceType !== 'article' && (
+                      <span className="font-medium">{getSectionPrefix(orderNum, resourceType)}</span>
+                    )}
+                    <Input
+                      value={sectionName}
+                      onChange={(e) => setSectionName(e.target.value)}
+                      className="w-64"
+                      autoFocus
+                    />
+                    <Button type="submit" size="sm">Save</Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSectionName(name);
+                        setIsEditingName(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </form>
               ) : (
                 <>
-                  <span className="font-medium">{name || 'Untitled Section'}</span>
-                  {resourceType === 'podcast' && (
-                    <span className="text-sm text-gray-500">Hour {orderNum}</span>
-                  )}
+                  <span className="font-medium">
+                    {sectionTitle || name || 'Untitled Section'}
+                  </span>
                 </>
               )}
             </div>
@@ -158,6 +202,13 @@ export default function Section({
           </div>
         </AccordionTrigger>
         <AccordionContent className={`px-4 ${resourceType === 'article' && 'pt-4'}`}>
+          {/* Display section title for articles at the top of content area */}
+          {resourceType === 'article' && (
+            <div className="mb-4">
+              <h2 className="text-xl font-bold">{name || 'Untitled Section'}</h2>
+            </div>
+          )}
+          
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Markers</h3>
