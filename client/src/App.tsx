@@ -1,8 +1,7 @@
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import Home from './pages/Home';
 import Register from './pages/Register';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
 import { AuthProvider } from "./contexts/AuthContext";
 import { AppProviders } from "./contexts/AppProviders";
 import { ResourceProvider } from "./contexts/ResourceContext";
@@ -25,7 +24,7 @@ function App() {
                   <Route path="/" element={<AuthRoute><Home /></AuthRoute>} />
                   <Route path="/register" element={<AuthRoute><Register /></AuthRoute>} />
                   <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
-                  <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                  <Route path="/dashboard" element={<ProtectedRoute><Navigate to="/library" replace /></ProtectedRoute>} />
                   {/* Resource management routes */}
                   <Route path="/library" element={<ProtectedRoute><ResourceLibrary /></ProtectedRoute>} />
                   <Route path="/library/item/:id" element={<ProtectedRoute><ResourceViewer /></ProtectedRoute>} />

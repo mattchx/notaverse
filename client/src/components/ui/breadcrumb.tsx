@@ -59,11 +59,11 @@ export function useBreadcrumbs() {
       
       // Map route segments to readable labels
       switch (segment) {
-        case 'dashboard':
-          breadcrumbs.push({ label: 'Dashboard', href: currentPath });
-          break;
         case 'library':
-          breadcrumbs.push({ label: 'Media Library', href: currentPath });
+          breadcrumbs.push({ label: 'Library', href: currentPath });
+          break;
+        case 'resources':
+          breadcrumbs.push({ label: 'Library', href: currentPath });
           break;
         case 'register':
           breadcrumbs.push({ label: 'Register', href: currentPath });
@@ -78,12 +78,15 @@ export function useBreadcrumbs() {
           breadcrumbs.push({ label: 'Settings', href: currentPath });
           break;
         case 'item':
-          breadcrumbs.push({ label: 'Item', href: currentPath });
+          breadcrumbs.push({ label: 'Resource', href: currentPath });
           break;
         default:
           // If it's an ID parameter (e.g., in /library/item/:id), don't add it
           if (!segment.match(/^[0-9a-f-]+$/)) {
             breadcrumbs.push({ label: segment, href: currentPath });
+          } else if (pathSegments[0] === 'resources' && pathSegments.length === 2) {
+            // For /resources/:id route
+            breadcrumbs.push({ label: 'Resource', href: currentPath });
           }
       }
     });

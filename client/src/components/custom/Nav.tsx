@@ -17,8 +17,8 @@ export default function Nav() {
         <div className="flex items-center gap-6">
           {!isAuthPage && <div className="text-2xl font-bold">Notaverse</div>}
           {isAuthenticated && (
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              Dashboard
+            <Button variant="ghost" onClick={() => navigate('/library')}>
+              Resource Library
             </Button>
           )}
         </div>
