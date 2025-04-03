@@ -238,12 +238,7 @@ export default function Section({
       {/* Content Area */}
       {(internalOpen || resourceType === 'article') && (
         <div className={`px-4 py-4 ${resourceType === 'article' && 'pt-4'}`}>
-          {/* Display section title for articles at the top of content area */}
-          {resourceType === 'article' && (
-            <div className="mb-4">
-              <h2 className="text-xl font-bold">{title || 'Untitled Section'}</h2>
-            </div>
-          )}
+          {/* Remove section title display for articles */}
           
           <div className="space-y-4">
             <div className="flex justify-between items-center">
