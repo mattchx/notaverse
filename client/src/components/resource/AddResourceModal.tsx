@@ -50,6 +50,12 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
         throw new Error('Name is required');
       }
 
+      // Process URL if provided (add http:// if missing)
+      let processedUrl = formData.sourceUrl?.trim() || undefined;
+      if (processedUrl && !processedUrl.match(/^https?:\/\//i)) {
+        processedUrl = `http://${processedUrl}`;
+      }
+
       const resourceId = uuidv4();
       
       // Construct the new media item
@@ -58,7 +64,7 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
         name: formData.name,
         type: formData.type,
         author: formData.author || undefined,
-        sourceUrl: formData.sourceUrl || undefined,
+        sourceUrl: processedUrl,
         sections: [
           {
             id: uuidv4(),
@@ -168,10 +174,10 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
               name="sourceUrl"
               value={formData.sourceUrl}
               onChange={handleInputChange}
-              type="url"
-              placeholder="Enter source URL (e.g., podcast URL, book storage location)"
+              placeholder="Enter source URL (e.g., example.com)"
               maxLength={500}
             />
+            <p className="text-xs text-gray-500">URL will be automatically formatted with http:// if not specified</p>
           </div>
 
           <div className="space-y-2">

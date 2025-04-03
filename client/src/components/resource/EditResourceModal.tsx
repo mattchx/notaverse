@@ -62,13 +62,19 @@ export function EditResourceModal({ open, onOpenChange, resource }: EditResource
         throw new Error('Name is required');
       }
 
+      // Process URL if provided (add http:// if missing)
+      let processedUrl = formData.sourceUrl?.trim() || undefined;
+      if (processedUrl && !processedUrl.match(/^https?:\/\//i)) {
+        processedUrl = `http://${processedUrl}`;
+      }
+
       // Create updated resource item
       const updatedResource = {
         ...resource,
         name: formData.name.trim(),
         type: formData.type,
         author: formData.author?.trim(),
-        sourceUrl: formData.sourceUrl?.trim(),
+        sourceUrl: processedUrl,
       };
 
       // Send request to API
@@ -150,10 +156,10 @@ export function EditResourceModal({ open, onOpenChange, resource }: EditResource
               name="sourceUrl"
               value={formData.sourceUrl}
               onChange={handleInputChange}
-              type="url"
-              placeholder="Enter source URL (e.g., podcast URL, book storage location)"
+              placeholder="Enter source URL (e.g., example.com)"
               maxLength={500}
             />
+            <p className="text-xs text-gray-500">URL will be automatically formatted with http:// if not specified</p>
           </div>
 
           <DialogFooter>
