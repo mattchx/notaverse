@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -18,7 +18,7 @@ interface MarkerModalProps {
 export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType, sectionNumber }: MarkerModalProps) {
   const [position, setPosition] = React.useState('');
   const [quote, setQuote] = React.useState('');
-  const [markerText, setMarkerText] = React.useState('');
+  const [noteText, setNoteText] = React.useState('');
   const [type, setType] = React.useState<MarkerType>('concept');
 
   const markerTypes = [
@@ -31,7 +31,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType
     if (isOpen) {
       setPosition('');
       setQuote('');
-      setMarkerText('');
+      setNoteText('');
       setType('concept');
     }
   }, [isOpen]);
@@ -41,7 +41,7 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType
     onAddMarker({
       position,
       quote,
-      marker: markerText,
+      note: noteText,
       type,
       orderNum: 0, // This will be set by the backend
       sectionId: '', // This will be set by the parent component
@@ -56,6 +56,9 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Marker</DialogTitle>
+          <DialogDescription>
+            Create a new marker for this section
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -109,12 +112,12 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="marker">Marker</Label>
+            <Label htmlFor="note">Note</Label>
             <Textarea
-              id="marker"
-              value={markerText}
-              onChange={(e) => setMarkerText(e.target.value)}
-              placeholder="Type your marker here"
+              id="note"
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Type your note here"
             />
           </div>
 

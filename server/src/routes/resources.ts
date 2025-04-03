@@ -70,7 +70,6 @@ resourceRouter.get('/:id', async (req: Request, res: Response) => {
         ...section,
         markers: section.markers.map(marker => ({
           ...marker,
-          order: marker.orderNum,
           dateCreated: new Date(Number(marker.createdAt)),
           dateUpdated: new Date(Number(marker.updatedAt))
         }))
@@ -138,7 +137,7 @@ resourceRouter.post('/', async (req: Request, res: Response) => {
               sectionId: section.id,
               userId: userId,
               position: marker.position,
-              orderNum: marker.order,
+              orderNum: marker.orderNum,
               quote: marker.quote ?? null,
               note: marker.note,
               type: marker.type ?? 'general',
@@ -176,7 +175,6 @@ resourceRouter.post('/', async (req: Request, res: Response) => {
         ...section,
         markers: section.markers.map(marker => ({
           ...marker,
-          order: marker.orderNum,
           dateCreated: new Date(Number(marker.createdAt)),
           dateUpdated: new Date(Number(marker.updatedAt))
         }))
@@ -320,7 +318,7 @@ resourceRouter.post('/:resourceId/sections/:sectionId/markers', async (req: Requ
         sectionId: sectionId,
         userId: userId,
         position: marker.position,
-        orderNum: marker.order,
+        orderNum: marker.orderNum,
         quote: marker.quote ?? null,
         note: marker.note,
         type: marker.type ?? 'general',
@@ -592,7 +590,7 @@ resourceRouter.put('/:resourceId/sections/:sectionId/markers/:markerId', async (
     res.json({
       id: result.id,
       position: result.position,
-      order: result.orderNum,
+      orderNum: result.orderNum,
       quote: result.quote,
       note: result.note,
       dateCreated: new Date(Number(result.createdAt)).toISOString(),

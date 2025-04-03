@@ -26,11 +26,12 @@ export interface Section {
 export interface Marker {
   id: string;
   sectionId: string;
+  userId?: string;
   position: string;
   orderNum: number;
   quote: string;
-  marker: string; // thought or comment
-  type: MarkerType; // categorization of the marker
+  note: string;
+  type: MarkerType;
   createdAt: string;
   updatedAt: string;
 }

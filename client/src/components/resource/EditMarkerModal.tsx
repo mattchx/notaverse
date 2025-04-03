@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -19,7 +19,7 @@ interface EditMarkerModalProps {
 export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, resourceType, sectionNumber }: EditMarkerModalProps) {
   const [position, setPosition] = React.useState(marker?.position || '');
   const [quote, setQuote] = React.useState(marker?.quote || '');
-  const [markerText, setMarkerText] = React.useState(marker?.marker || '');
+  const [noteText, setNoteText] = React.useState(marker?.note || '');
   const [type, setType] = React.useState<MarkerType>(marker?.type || 'concept');
 
   const markerTypes = [
@@ -32,7 +32,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
     if (isOpen && marker) {
       setPosition(marker.position);
       setQuote(marker.quote);
-      setMarkerText(marker.marker);
+      setNoteText(marker.note);
       setType(marker.type);
     }
   }, [isOpen, marker]);
@@ -45,7 +45,7 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
       ...marker,
       position,
       quote,
-      marker: markerText,
+      note: noteText,
       type
     });
     onClose();
@@ -60,6 +60,9 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Marker</DialogTitle>
+          <DialogDescription>
+            Modify your existing marker
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -113,12 +116,12 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="marker">Marker</Label>
+            <Label htmlFor="note">Note</Label>
             <Textarea
-              id="marker"
-              value={markerText}
-              onChange={(e) => setMarkerText(e.target.value)}
-              placeholder="Type your marker here"
+              id="note"
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Type your note here"
             />
           </div>
 
