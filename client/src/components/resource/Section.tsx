@@ -56,6 +56,7 @@ interface SectionProps {
   onDeleteMarker: (markerId: string) => void;
   onUpdateName?: (name: string) => void;
   onDeleteSection?: () => void;
+  isSingleSection?: boolean;
 }
 
 export default function Section({
@@ -68,7 +69,8 @@ export default function Section({
   onUpdateMarker,
   onDeleteMarker,
   onUpdateName,
-  onDeleteSection
+  onDeleteSection,
+  isSingleSection = false
 }: SectionProps) {
   const [isAddingMarker, setIsAddingMarker] = React.useState(false);
   const [markerToEdit, setMarkerToEdit] = React.useState<Marker | null>(null);
@@ -118,7 +120,12 @@ export default function Section({
   };
 
   return (
-    <Accordion type="single" collapsible className="w-full">
+    <Accordion 
+      type="single" 
+      collapsible={resourceType !== 'article'} 
+      defaultValue={isSingleSection ? id : undefined}
+      className="w-full"
+    >
       <AccordionItem value={id}>
         <AccordionTrigger
           className={`px-4 hover:no-underline hover:bg-transparent ${resourceType === 'article' && 'hidden'} cursor-pointer`}
@@ -222,16 +229,29 @@ export default function Section({
             </div>
 
             <div className="space-y-4">
-              {sortedMarkers.map((marker) => (
-                <MarkerCard
-                  key={marker.id}
-                  marker={marker}
-                  resourceType={resourceType}
-                  sectionNumber={orderNum}
-                  onEdit={() => setMarkerToEdit(marker)}
-                  onDelete={() => handleDeleteMarker(marker.id)}
-                />
-              ))}
+              {sortedMarkers.length > 0 ? (
+                sortedMarkers.map((marker) => (
+                  <MarkerCard
+                    key={marker.id}
+                    marker={marker}
+                    resourceType={resourceType}
+                    sectionNumber={orderNum}
+                    onEdit={() => setMarkerToEdit(marker)}
+                    onDelete={() => handleDeleteMarker(marker.id)}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-4 border border-dashed border-gray-300 rounded-md">
+                  <p className="text-gray-500 mb-2">You have no markers.</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsAddingMarker(true)}
+                  >
+                    Click to add your first marker
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </AccordionContent>

@@ -20,17 +20,12 @@ export default function ResourceViewer() {
     if (activeResource) {
       if (activeResource.type === 'article' || activeResource.sections.length === 1) {
         setOpenSections(activeResource.sections.map(section => section.id));
+      } else {
+        // Close all sections by default when there are multiple sections
+        setOpenSections([]);
       }
     }
   }, [activeResource]);
-
-  // Ensure defaultOpen behavior works properly
-  React.useEffect(() => {
-    if (activeResource && openSections.length === 0 && activeResource.sections.length > 0) {
-      // By default, open the first section
-      setOpenSections([activeResource.sections[0].id]);
-    }
-  }, [activeResource, openSections]);
 
   // Fetch Resource item data
   React.useEffect(() => {
@@ -334,6 +329,7 @@ export default function ResourceViewer() {
               onUpdateMarker={(marker) => handleUpdateMarker(section.id, marker)}
               onUpdateName={(name) => handleUpdateSectionTitle(section.id, name)}
               onDeleteSection={() => handleDeleteSection(section.id)}
+              isSingleSection={activeResource.sections.length === 1}
             />
           ))}
         </Accordion>
