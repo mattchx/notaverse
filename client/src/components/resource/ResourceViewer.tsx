@@ -242,6 +242,12 @@ export default function ResourceViewer() {
   const handleDeleteMarker = async (sectionId: string, markerId: string) => {
     if (!activeResource) return;
 
+    // Ensure section stays open after deletion
+    setLastAddedSectionId(sectionId);
+    setOpenSections(prev => 
+      prev.includes(sectionId) ? prev : [...prev, sectionId]
+    );
+
     try {
       setLoading(true);
       await apiDelete(`/resources/${activeResource.id}/sections/${sectionId}/markers/${markerId}`);
