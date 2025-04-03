@@ -5,6 +5,7 @@ import { Marker, ResourceType } from '../../types';
 import MarkerCard from './MarkerCard';
 import MarkerModal from './MarkerModal';
 import EditMarkerModal from './EditMarkerModal';
+import InlineMarkerEditor from './InlineMarkerEditor';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 // Function to generate section title based on resource type
@@ -79,6 +80,11 @@ export default function Section({
   const [sectionTitle, setSectionTitle] = React.useState(title);
   const [internalOpen, setInternalOpen] = React.useState(isOpen);
   
+  // New state for inline editing
+  const [isInlineAddingMarker, setIsInlineAddingMarker] = React.useState(false);
+  const [inlineMarkerToEdit, setInlineMarkerToEdit] = React.useState<Marker | null>(null);
+  const [useInlineEditing, setUseInlineEditing] = React.useState(true);
+  
   // Sync internal state with prop
   React.useEffect(() => {
     setInternalOpen(isOpen);
@@ -107,11 +113,24 @@ export default function Section({
       sectionId: id
     });
     setIsAddingMarker(false);
+    setIsInlineAddingMarker(false);
   };
 
   const handleUpdateMarker = (marker: Marker) => {
     onUpdateMarker(marker);
     setMarkerToEdit(null);
+    setInlineMarkerToEdit(null);
+  };
+  
+  // Create a handler that can handle both Marker and Omit<Marker, 'id'>
+  const handleSaveMarker = (marker: Marker | Omit<Marker, 'id'>) => {
+    if ('id' in marker) {
+      // It's a Marker, so update
+      handleUpdateMarker(marker);
+    } else {
+      // It's a new marker
+      handleAddMarker(marker);
+    }
   };
 
   const handleDeleteMarker = (markerId: string) => {
@@ -213,6 +232,14 @@ export default function Section({
                 }}>
                   Edit Title
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUseInlineEditing(!useInlineEditing);
+                  }}
+                >
+                  {useInlineEditing ? 'Use Modal Editing' : 'Use Inline Editing'}
+                </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -243,26 +270,61 @@ export default function Section({
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold">Markers</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsAddingMarker(true)}
-              >
-                Add Marker
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (useInlineEditing) {
+                      setIsInlineAddingMarker(true);
+                    } else {
+                      setIsAddingMarker(true);
+                    }
+                  }}
+                >
+                  Add Marker
+                </Button>
+              </div>
             </div>
+
+            {/* Inline add marker editor */}
+            {isInlineAddingMarker && (
+              <InlineMarkerEditor
+                resourceType={resourceType}
+                sectionId={id}
+                onSave={handleSaveMarker}
+                onCancel={() => setIsInlineAddingMarker(false)}
+              />
+            )}
 
             <div className="space-y-4">
               {sortedMarkers.length > 0 ? (
                 sortedMarkers.map((marker) => (
-                  <MarkerCard
-                    key={marker.id}
-                    marker={marker}
-                    resourceType={resourceType}
-                    sectionNumber={number}
-                    onEdit={() => setMarkerToEdit(marker)}
-                    onDelete={() => handleDeleteMarker(marker.id)}
-                  />
+                  <React.Fragment key={marker.id}>
+                    {inlineMarkerToEdit && inlineMarkerToEdit.id === marker.id ? (
+                      <InlineMarkerEditor
+                        marker={marker}
+                        resourceType={resourceType}
+                        sectionId={id}
+                        onSave={handleSaveMarker}
+                        onCancel={() => setInlineMarkerToEdit(null)}
+                      />
+                    ) : (
+                      <MarkerCard
+                        marker={marker}
+                        resourceType={resourceType}
+                        sectionNumber={number}
+                        onEdit={() => {
+                          if (useInlineEditing) {
+                            setInlineMarkerToEdit(marker);
+                          } else {
+                            setMarkerToEdit(marker);
+                          }
+                        }}
+                        onDelete={() => handleDeleteMarker(marker.id)}
+                      />
+                    )}
+                  </React.Fragment>
                 ))
               ) : (
                 <div className="text-center py-4 border border-dashed border-gray-300 rounded-md">
@@ -270,7 +332,13 @@ export default function Section({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setIsAddingMarker(true)}
+                    onClick={() => {
+                      if (useInlineEditing) {
+                        setIsInlineAddingMarker(true);
+                      } else {
+                        setIsAddingMarker(true);
+                      }
+                    }}
                   >
                     Click to add your first marker
                   </Button>
@@ -281,10 +349,11 @@ export default function Section({
         </div>
       )}
 
+      {/* Keep existing modals as fallback */}
       <MarkerModal
         isOpen={isAddingMarker}
         onClose={() => setIsAddingMarker(false)}
-        onAddMarker={handleAddMarker}
+        onAddMarker={handleSaveMarker}
         resourceType={resourceType}
         sectionNumber={number}
         sectionId={id}
@@ -293,7 +362,7 @@ export default function Section({
       <EditMarkerModal
         isOpen={!!markerToEdit}
         onClose={() => setMarkerToEdit(null)}
-        onUpdateMarker={handleUpdateMarker}
+        onUpdateMarker={handleSaveMarker}
         marker={markerToEdit}
         resourceType={resourceType}
         sectionNumber={number}

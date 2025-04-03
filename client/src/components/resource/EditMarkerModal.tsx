@@ -10,7 +10,7 @@ import { Marker, MarkerType, ResourceType } from '../../types';
 interface EditMarkerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpdateMarker: (marker: Marker) => void;
+  onUpdateMarker: (marker: Marker | Omit<Marker, 'id'>) => void;
   marker: Marker | null;
   resourceType: ResourceType;
   sectionNumber?: number;
