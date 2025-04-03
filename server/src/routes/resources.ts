@@ -573,6 +573,7 @@ resourceRouter.put('/:resourceId/sections/:sectionId/markers/:markerId', async (
           position: updates.position,
           quote: updates.quote ?? null,
           note: updates.note,
+          type: updates.type,
           updatedAt: new Date(now)
         })
         .where(eq(markers.id, markerId));
@@ -593,6 +594,7 @@ resourceRouter.put('/:resourceId/sections/:sectionId/markers/:markerId', async (
       orderNum: result.orderNum,
       quote: result.quote,
       note: result.note,
+      type: result.type,
       dateCreated: new Date(Number(result.createdAt)).toISOString(),
       dateUpdated: new Date(now).toISOString()
     });

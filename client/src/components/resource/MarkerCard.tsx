@@ -112,7 +112,7 @@ export default function MarkerCard({
           </blockquote>
         )}
 
-        <p className="text-gray-800 font-semibold">{marker.marker}</p>
+        <p className="text-gray-800 font-semibold">{marker.note}</p>
       </div>
 
       {marker.createdAt && (

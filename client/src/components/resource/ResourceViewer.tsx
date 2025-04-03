@@ -285,9 +285,17 @@ export default function ResourceViewer() {
 
     try {
       setLoading(true);
+      // Make sure we send all required marker fields including type
+      const markerData = {
+        position: marker.position,
+        quote: marker.quote,
+        note: marker.note,
+        type: marker.type
+      };
+      
       const response = await apiPut<Marker>(
         `/resources/${activeResource.id}/sections/${sectionId}/markers/${marker.id}`,
-        marker
+        markerData
       );
 
       updateMarker(sectionId, response);
@@ -346,6 +354,9 @@ export default function ResourceViewer() {
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-2">
           <h1 className="text-3xl font-bold">{activeResource.name}</h1>
+          <span className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-800 capitalize">
+            {activeResource.type}
+          </span>
           {activeResource.sourceUrl && (
             <a
               href={activeResource.sourceUrl}
