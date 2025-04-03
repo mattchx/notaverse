@@ -1,5 +1,4 @@
 import React from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Marker, ResourceType } from '../../types';
@@ -57,6 +56,7 @@ interface SectionProps {
   onUpdateTitle?: (title: string) => void;
   onDeleteSection?: () => void;
   isOpen?: boolean;
+  onToggle?: (id: string, isOpen: boolean) => void;
 }
 
 export default function Section({
@@ -70,12 +70,19 @@ export default function Section({
   onDeleteMarker,
   onUpdateTitle,
   onDeleteSection,
-  isOpen = false
+  isOpen = false,
+  onToggle
 }: SectionProps) {
   const [isAddingMarker, setIsAddingMarker] = React.useState(false);
   const [markerToEdit, setMarkerToEdit] = React.useState<Marker | null>(null);
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [sectionTitle, setSectionTitle] = React.useState(title);
+  const [internalOpen, setInternalOpen] = React.useState(isOpen);
+  
+  // Sync internal state with prop
+  React.useEffect(() => {
+    setInternalOpen(isOpen);
+  }, [isOpen]);
 
   // Get section title based on resource type
   const formattedTitle = getSectionTitle(title, number, resourceType);
@@ -119,97 +126,118 @@ export default function Section({
     }
   };
 
+  const handleToggle = () => {
+    if (resourceType === 'article') return;
+    
+    const newState = !internalOpen;
+    setInternalOpen(newState);
+    
+    // Notify parent component about the toggle
+    if (onToggle) {
+      onToggle(id, newState);
+    }
+  };
+
   return (
-    <Accordion 
-      type="single" 
-      collapsible={resourceType !== 'article'} 
-      defaultValue={isOpen ? id : undefined}
-      value={isOpen ? id : undefined}
-      className="w-full"
-    >
-      <AccordionItem value={id}>
-        <AccordionTrigger
-          className={`px-4 hover:no-underline hover:bg-transparent ${resourceType === 'article' && 'hidden'} cursor-pointer`}
-          title={resourceType === 'article' ? undefined : "Click to expand/collapse"}
-          disabled={resourceType === 'article'}
-        >
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              {isEditingTitle ? (
-                <form onSubmit={handleTitleSubmit} onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center gap-2">
-                    {/* Display fixed section prefix */}
-                    {resourceType !== 'article' && (
-                      <span className="font-medium">{getSectionPrefix(number, resourceType)}</span>
-                    )}
-                    <Input
-                      value={sectionTitle}
-                      onChange={(e) => setSectionTitle(e.target.value)}
-                      className="w-64"
-                      autoFocus
-                    />
-                    <Button type="submit" size="sm">Save</Button>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSectionTitle(title);
-                        setIsEditingTitle(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <span className="font-medium">
-                    {formattedTitle || title || 'Untitled Section'}
-                  </span>
-                </>
-              )}
-            </div>
-            
-            {!isEditingTitle && onUpdateTitle && onDeleteSection && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                  <div className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground">
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      height="24"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle cx="12" cy="12" r="1" />
-                      <circle cx="12" cy="5" r="1" />
-                      <circle cx="12" cy="19" r="1" />
-                    </svg>
-                    <span className="sr-only">Actions</span>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
-                    Edit Title
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={onDeleteSection}
-                    className="text-red-600"
+    <div className="w-full border rounded-md mb-2">
+      <div 
+        className={`px-4 py-3 flex items-center justify-between w-full cursor-pointer hover:bg-gray-50 ${resourceType === 'article' && 'hidden'}`}
+        onClick={handleToggle}
+      >
+        <div className="flex items-center gap-2">
+          {isEditingTitle ? (
+            <form onSubmit={handleTitleSubmit} onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2">
+                {/* Display fixed section prefix */}
+                {resourceType !== 'article' && (
+                  <span className="font-medium">{getSectionPrefix(number, resourceType)}</span>
+                )}
+                <Input
+                  value={sectionTitle}
+                  onChange={(e) => setSectionTitle(e.target.value)}
+                  className="w-64"
+                  autoFocus
+                />
+                <Button type="submit" size="sm">Save</Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSectionTitle(title);
+                    setIsEditingTitle(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <span className="font-medium">
+                {formattedTitle || title || 'Untitled Section'}
+              </span>
+            </>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {!isEditingTitle && onUpdateTitle && onDeleteSection && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <div className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    height="24"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    Delete Section
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                    <circle cx="12" cy="12" r="1" />
+                    <circle cx="12" cy="5" r="1" />
+                    <circle cx="12" cy="19" r="1" />
+                  </svg>
+                  <span className="sr-only">Actions</span>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  setIsEditingTitle(true);
+                }}>
+                  Edit Title
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteSection();
+                  }}
+                  className="text-red-600"
+                >
+                  Delete Section
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          
+          {/* Chevron indicator */}
+          <div className={`transition-transform duration-200 ${internalOpen ? 'transform rotate-180' : ''}`}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </div>
-        </AccordionTrigger>
-        <AccordionContent className={`px-4 ${resourceType === 'article' && 'pt-4'}`}>
+        </div>
+      </div>
+      
+      {/* Content Area */}
+      {(internalOpen || resourceType === 'article') && (
+        <div className={`px-4 py-4 ${resourceType === 'article' && 'pt-4'}`}>
           {/* Display section title for articles at the top of content area */}
           {resourceType === 'article' && (
             <div className="mb-4">
@@ -255,8 +283,8 @@ export default function Section({
               )}
             </div>
           </div>
-        </AccordionContent>
-      </AccordionItem>
+        </div>
+      )}
 
       <MarkerModal
         isOpen={isAddingMarker}
@@ -276,6 +304,6 @@ export default function Section({
         sectionNumber={number}
         sectionId={id}
       />
-    </Accordion>
+    </div>
   );
 }

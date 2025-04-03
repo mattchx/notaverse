@@ -5,7 +5,6 @@ import { Resource, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
 import Section from './Section';
 import { useResource, useResourceOperations } from '@/contexts/ResourceContext';
-import { Accordion } from '@/components/ui/accordion';
 
 export default function ResourceViewer() {
   const { id } = useParams();
@@ -40,33 +39,35 @@ export default function ResourceViewer() {
     }
   }, []);
 
-  // Keep all sections open for articles or single sections
+  // Keep all sections open for articles only
   React.useEffect(() => {
     if (activeResource) {
-      if (activeResource.type === 'article' || activeResource.sections.length === 1) {
+      if (activeResource.type === 'article') {
+        // Keep all sections open for articles only
         setOpenSections(activeResource.sections.map(section => section.id));
-      } else {
-        // Close all sections by default when there are multiple sections
-        setOpenSections([]);
+      } else if (activeResource.sections.length === 1 && openSections.length === 0) {
+        // For single section resources, default to open initially
+        const sectionId = activeResource.sections[0].id;
+        setOpenSections([sectionId]);
       }
     }
   }, [activeResource]);
 
-  // Keep section open when a marker is added
+  // Update section state when a marker is added
   React.useEffect(() => {
     if (lastAddedSectionId) {
-      console.log("Ensuring section stays open:", lastAddedSectionId);
+      console.log("Ensuring section is in open sections:", lastAddedSectionId);
       setOpenSections(prev => {
         if (!prev.includes(lastAddedSectionId)) {
           return [...prev, lastAddedSectionId];
         }
         return prev;
       });
-      
+
       // Clear last added section after a delay
       const timer = setTimeout(() => {
         setLastAddedSectionId(null);
-      }, 500);
+      }, 100);
       
       return () => clearTimeout(timer);
     }
@@ -158,7 +159,7 @@ export default function ResourceViewer() {
   const handleAddMarker = async (sectionId: string, newMarkerData: Omit<Marker, 'id'>) => {
     if (!activeResource) return;
 
-    // Immediately mark this section as the last active section
+    // Mark this section as the last active section
     setLastAddedSectionId(sectionId);
     
     // Make sure section is in openSections
@@ -242,7 +243,7 @@ export default function ResourceViewer() {
   const handleDeleteMarker = async (sectionId: string, markerId: string) => {
     if (!activeResource) return;
 
-    // Ensure section stays open after deletion
+    // Ensure section is in openSections
     setLastAddedSectionId(sectionId);
     setOpenSections(prev => 
       prev.includes(sectionId) ? prev : [...prev, sectionId]
@@ -277,7 +278,7 @@ export default function ResourceViewer() {
   const handleUpdateMarker = async (sectionId: string, marker: Marker) => {
     if (!activeResource) return;
 
-    // Ensure section stays open
+    // Ensure section is in openSections
     setLastAddedSectionId(sectionId);
     setOpenSections(prev => 
       prev.includes(sectionId) ? prev : [...prev, sectionId]
@@ -327,6 +328,16 @@ export default function ResourceViewer() {
     if (!activeResource) return [];
     return [...activeResource.sections].sort((a, b) => a.number - b.number);
   }, [activeResource?.sections]);
+
+  const handleSectionToggle = (sectionId: string, isOpen: boolean) => {
+    if (isOpen) {
+      // Add section to open sections
+      setOpenSections(prev => [...prev, sectionId]);
+    } else {
+      // Remove section from open sections
+      setOpenSections(prev => prev.filter(id => id !== sectionId));
+    }
+  };
 
   if (state.isLoading) {
     return (
@@ -401,30 +412,7 @@ export default function ResourceViewer() {
       </div>
 
       <div className="space-y-6">
-        <Accordion
-          type="multiple"
-          value={openSections}
-          onValueChange={(value) => {
-            try {
-              // For articles, prevent sections from being collapsed
-              if (activeResource?.type === 'article') {
-                const allSectionIds = activeResource.sections.map(section => section.id);
-                setOpenSections(allSectionIds);
-              } else if (lastAddedSectionId && !value.includes(lastAddedSectionId)) {
-                // Keep section open if we just added a marker to it
-                setOpenSections([...value, lastAddedSectionId]);
-              } else {
-                setOpenSections(value);
-              }
-            } catch (error) {
-              console.error('Error updating accordion state:', error);
-              // Fallback to a safe state
-              if (activeResource?.sections.length) {
-                setOpenSections([activeResource.sections[0].id]);
-              }
-            }
-          }}
-        >
+        <div className="space-y-2">
           {sortedSections.map(section => (
             <Section
               key={section.id}
@@ -438,10 +426,11 @@ export default function ResourceViewer() {
               onUpdateMarker={(marker) => handleUpdateMarker(section.id, marker)}
               onUpdateTitle={(title) => handleUpdateSectionTitle(section.id, title)}
               onDeleteSection={() => handleDeleteSection(section.id)}
-              isOpen={openSections.includes(section.id) || section.id === lastAddedSectionId}
+              isOpen={openSections.includes(section.id)}
+              onToggle={handleSectionToggle}
             />
           ))}
-        </Accordion>
+        </div>
 
         {activeResource.type !== 'article' && (
           <>
