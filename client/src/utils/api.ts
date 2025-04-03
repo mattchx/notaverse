@@ -1,5 +1,5 @@
 // API utility functions
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3002';
+import env from '../lib/env';
 
 interface ApiConfig extends RequestInit {
   headers?: Record<string, string>;
@@ -10,11 +10,21 @@ function hasCookies() {
   return document.cookie.length > 0;
 }
 
-// Log cookie status
-console.log('🍪 Initial cookie status:', {
+// Logger utility that only logs in debug mode
+const logger = {
+  log: (message: string, data?: unknown) => {
+    if (env.DEBUG) console.log(message, data);
+  },
+  error: (message: string, data?: unknown) => {
+    if (env.DEBUG) console.error(message, data);
+  }
+};
+
+// Log cookie status in debug mode
+logger.log('🍪 Initial cookie status:', {
   hasCookies: hasCookies(),
   cookies: document.cookie || 'No cookies found',
-  sameOrigin: window.location.origin === API_BASE_URL
+  sameOrigin: window.location.origin === env.API_BASE_URL
 });
 
 async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
@@ -24,7 +34,7 @@ async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
   // Always prepend /api if not already there
   const apiPath = normalizedEndpoint.startsWith('/api') ? normalizedEndpoint : `/api${normalizedEndpoint}`;
   
-  const url = `${API_BASE_URL}${apiPath}`;
+  const url = `${env.API_BASE_URL}${apiPath}`;
   
   const headers = {
     'Content-Type': 'application/json',
@@ -38,7 +48,7 @@ async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
     credentials: 'include', // Always send cookies with requests
   };
 
-  console.log(`🌐 API Request: ${url}`, { 
+  logger.log(`🌐 API Request: ${url}`, { 
     method: finalConfig.method || 'GET',
     credentials: finalConfig.credentials,
     headers: finalConfig.headers
@@ -49,14 +59,14 @@ async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
   // Check for Set-Cookie header in response
   const setCookieHeader = response.headers.get('set-cookie');
   
-  console.log(`🍪 Cookie status after request:`, {
+  logger.log(`🍪 Cookie status after request:`, {
     setCookieHeader: setCookieHeader ? 'Present' : 'Not present',
     cookies: document.cookie || 'No cookies found'
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error(`❌ API Error (${response.status}): ${errorText}`);
+    logger.error(`❌ API Error (${response.status}): ${errorText}`);
     throw new Error(response.statusText || errorText);
   }
 
@@ -66,7 +76,7 @@ async function api<T>(endpoint: string, config: ApiConfig = {}): Promise<T> {
   }
 
   const data = await response.json();
-  console.log(`✅ API Response: ${url}`, data);
+  logger.log(`✅ API Response: ${url}`, data);
   return data;
 }
 
