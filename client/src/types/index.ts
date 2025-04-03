@@ -16,8 +16,8 @@ export interface Resource {
 export interface Section {
   id: string;
   resourceId: string;
-  name: string;
-  orderNum: number;
+  title: string;
+  number: number;
   markers: Marker[];
   createdAt: string;
   updatedAt: string;

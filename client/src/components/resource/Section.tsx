@@ -9,29 +9,29 @@ import EditMarkerModal from './EditMarkerModal';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 // Function to generate section title based on resource type
-const getSectionTitle = (name: string, orderNum: number | undefined, resourceType: ResourceType): string | null => {
-  // Handle undefined orderNum with a default value of 1
-  const sectionNumber = orderNum ?? 1;
+const getSectionTitle = (title: string, number: number | undefined, resourceType: ResourceType): string | null => {
+  // number is the sequential section number
+  const sectionNumber = number ?? 1;
   
   switch (resourceType) {
     case 'book':
-      return `Chapter ${sectionNumber}: ${name}`;
+      return `Chapter ${sectionNumber}: ${title}`;
     case 'podcast':
-      return `Hour ${sectionNumber}: ${name}`;
+      return `Hour ${sectionNumber}: ${title}`;
     case 'course':
-      return `Module ${sectionNumber}: ${name}`;
+      return `Module ${sectionNumber}: ${title}`;
     case 'article':
       // Articles don't need section titles
       return null;
     default:
-      return name;
+      return title;
   }
 };
 
 // Function to get the prefix for a section title (e.g., "Chapter 1: ")
-const getSectionPrefix = (orderNum: number | undefined, resourceType: ResourceType): string => {
-  // Handle undefined orderNum with a default value of 1
-  const sectionNumber = orderNum ?? 1;
+const getSectionPrefix = (number: number | undefined, resourceType: ResourceType): string => {
+  // number is the sequential section number
+  const sectionNumber = number ?? 1;
   
   switch (resourceType) {
     case 'book':
@@ -47,38 +47,38 @@ const getSectionPrefix = (orderNum: number | undefined, resourceType: ResourceTy
 
 interface SectionProps {
   id: string;
-  name: string;
-  orderNum: number;
+  title: string;
+  number: number;
   markers: Marker[];
   resourceType: ResourceType;
   onAddMarker: (marker: Omit<Marker, 'id'>) => void;
   onUpdateMarker: (marker: Marker) => void;
   onDeleteMarker: (markerId: string) => void;
-  onUpdateName?: (name: string) => void;
+  onUpdateTitle?: (title: string) => void;
   onDeleteSection?: () => void;
   isSingleSection?: boolean;
 }
 
 export default function Section({
   id,
-  name,
-  orderNum,
+  title,
+  number,
   markers,
   resourceType,
   onAddMarker,
   onUpdateMarker,
   onDeleteMarker,
-  onUpdateName,
+  onUpdateTitle,
   onDeleteSection,
   isSingleSection = false
 }: SectionProps) {
   const [isAddingMarker, setIsAddingMarker] = React.useState(false);
   const [markerToEdit, setMarkerToEdit] = React.useState<Marker | null>(null);
-  const [isEditingName, setIsEditingName] = React.useState(false);
-  const [sectionName, setSectionName] = React.useState(name);
+  const [isEditingTitle, setIsEditingTitle] = React.useState(false);
+  const [sectionTitle, setSectionTitle] = React.useState(title);
 
   // Get section title based on resource type
-  const sectionTitle = getSectionTitle(name, orderNum, resourceType);
+  const formattedTitle = getSectionTitle(title, number, resourceType);
 
   const sortedMarkers = React.useMemo(() => {
     return [...markers].sort((a, b) => {
@@ -111,11 +111,11 @@ export default function Section({
     onDeleteMarker(markerId);
   };
 
-  const handleNameSubmit = (e: React.FormEvent) => {
+  const handleTitleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onUpdateName && sectionName.trim()) {
-      onUpdateName(sectionName);
-      setIsEditingName(false);
+    if (onUpdateTitle && sectionTitle.trim()) {
+      onUpdateTitle(sectionTitle);
+      setIsEditingTitle(false);
     }
   };
 
@@ -134,16 +134,16 @@ export default function Section({
         >
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              {isEditingName ? (
-                <form onSubmit={handleNameSubmit} onClick={(e) => e.stopPropagation()}>
+              {isEditingTitle ? (
+                <form onSubmit={handleTitleSubmit} onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     {/* Display fixed section prefix */}
                     {resourceType !== 'article' && (
-                      <span className="font-medium">{getSectionPrefix(orderNum, resourceType)}</span>
+                      <span className="font-medium">{getSectionPrefix(number, resourceType)}</span>
                     )}
                     <Input
-                      value={sectionName}
-                      onChange={(e) => setSectionName(e.target.value)}
+                      value={sectionTitle}
+                      onChange={(e) => setSectionTitle(e.target.value)}
                       className="w-64"
                       autoFocus
                     />
@@ -153,8 +153,8 @@ export default function Section({
                       variant="outline" 
                       size="sm"
                       onClick={() => {
-                        setSectionName(name);
-                        setIsEditingName(false);
+                        setSectionTitle(title);
+                        setIsEditingTitle(false);
                       }}
                     >
                       Cancel
@@ -164,13 +164,13 @@ export default function Section({
               ) : (
                 <>
                   <span className="font-medium">
-                    {sectionTitle || name || 'Untitled Section'}
+                    {formattedTitle || title || 'Untitled Section'}
                   </span>
                 </>
               )}
             </div>
             
-            {!isEditingName && onUpdateName && onDeleteSection && (
+            {!isEditingTitle && onUpdateTitle && onDeleteSection && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                   <div className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground">
@@ -194,8 +194,8 @@ export default function Section({
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditingName(true)}>
-                    Edit Name
+                  <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
+                    Edit Title
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={onDeleteSection}
@@ -212,7 +212,7 @@ export default function Section({
           {/* Display section title for articles at the top of content area */}
           {resourceType === 'article' && (
             <div className="mb-4">
-              <h2 className="text-xl font-bold">{name || 'Untitled Section'}</h2>
+              <h2 className="text-xl font-bold">{title || 'Untitled Section'}</h2>
             </div>
           )}
           
@@ -235,7 +235,7 @@ export default function Section({
                     key={marker.id}
                     marker={marker}
                     resourceType={resourceType}
-                    sectionNumber={orderNum}
+                    sectionNumber={number}
                     onEdit={() => setMarkerToEdit(marker)}
                     onDelete={() => handleDeleteMarker(marker.id)}
                   />
@@ -262,7 +262,7 @@ export default function Section({
         onClose={() => setIsAddingMarker(false)}
         onAddMarker={handleAddMarker}
         resourceType={resourceType}
-        sectionNumber={orderNum}
+        sectionNumber={number}
       />
 
       <EditMarkerModal
@@ -271,7 +271,7 @@ export default function Section({
         onUpdateMarker={handleUpdateMarker}
         marker={markerToEdit}
         resourceType={resourceType}
-        sectionNumber={orderNum}
+        sectionNumber={number}
       />
     </Accordion>
   );

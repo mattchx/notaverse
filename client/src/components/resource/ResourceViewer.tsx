@@ -51,11 +51,16 @@ export default function ResourceViewer() {
   const handleAddSection = async () => {
     if (!activeResource) return;
 
+    // Get the next order number based on existing sections
+    const nextNumber = activeResource.sections.length > 0 
+      ? Math.max(...activeResource.sections.map(s => s.number)) + 1 
+      : 1;
+
     const newSection: SectionType = {
       id: crypto.randomUUID(),
       resourceId: activeResource.id,
-      name: 'Untitled Section',
-      orderNum: activeResource.sections.length + 1,
+      title: 'Untitled Section',
+      number: nextNumber,
       markers: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -79,18 +84,18 @@ export default function ResourceViewer() {
     }
   };
 
-  const handleUpdateSectionTitle = async (sectionId: string, name: string) => {
+  const handleUpdateSectionTitle = async (sectionId: string, title: string) => {
     if (!activeResource) return;
 
     try {
       setLoading(true);
-      await apiPut<SectionType>(`/resources/${activeResource.id}/sections/${sectionId}`, { name });
+      await apiPut<SectionType>(`/resources/${activeResource.id}/sections/${sectionId}`, { title });
 
       const updatedResource = {
         ...activeResource,
         sections: activeResource.sections.map(section => 
           section.id === sectionId 
-            ? { ...section, name }
+            ? { ...section, title }
             : section
         )
       };
@@ -142,10 +147,34 @@ export default function ResourceViewer() {
       setLoading(true);
       await apiDelete(`/resources/${activeResource.id}/sections/${sectionId}`);
 
+      // Get the deleted section's number
+      const deletedSection = activeResource.sections.find(s => s.id === sectionId);
+      if (!deletedSection) {
+        throw new Error('Section not found');
+      }
+      
+      const deletedNumber = deletedSection.number;
+      
+      // Filter out the deleted section
+      const remainingSections = activeResource.sections.filter(section => section.id !== sectionId);
+      
+      // Adjust number for sections that come after the deleted section
+      const reorderedSections = remainingSections.map(section => {
+        if (section.number > deletedNumber) {
+          // Decrease the number for sections that were after the deleted one
+          return {
+            ...section,
+            number: section.number - 1
+          };
+        }
+        return section;
+      });
+
       const updatedResource = {
         ...activeResource,
-        sections: activeResource.sections.filter(section => section.id !== sectionId)
+        sections: reorderedSections
       };
+      
       setActiveResource(updatedResource);
       setResource(updatedResource);
     } catch (error) {
@@ -219,10 +248,10 @@ export default function ResourceViewer() {
     }
   };
 
-  // Sort sections by orderNum
+  // Sort sections by number
   const sortedSections = React.useMemo(() => {
     if (!activeResource) return [];
-    return [...activeResource.sections].sort((a, b) => a.orderNum - b.orderNum);
+    return [...activeResource.sections].sort((a, b) => a.number - b.number);
   }, [activeResource?.sections]);
 
   if (state.isLoading) {
@@ -320,14 +349,14 @@ export default function ResourceViewer() {
             <Section
               key={section.id}
               id={section.id}
-              name={section.name}
-              orderNum={section.orderNum}
+              title={section.title}
+              number={section.number}
               markers={section.markers}
               resourceType={activeResource.type}
               onAddMarker={(marker) => handleAddMarker(section.id, marker)}
               onDeleteMarker={(markerId) => handleDeleteMarker(section.id, markerId)}
               onUpdateMarker={(marker) => handleUpdateMarker(section.id, marker)}
-              onUpdateName={(name) => handleUpdateSectionTitle(section.id, name)}
+              onUpdateTitle={(title) => handleUpdateSectionTitle(section.id, title)}
               onDeleteSection={() => handleDeleteSection(section.id)}
               isSingleSection={activeResource.sections.length === 1}
             />

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { and, eq, desc, asc, inArray } from 'drizzle-orm';
+import { and, eq, desc, asc, inArray, gt } from 'drizzle-orm';
 import { SessionData } from 'express-session';
 
 import { db, schema } from '../db/config.js';
@@ -240,6 +240,10 @@ resourceRouter.put('/:resourceId/sections/:sectionId', async (req: Request, res:
     const { resourceId, sectionId } = req.params;
     const { title } = req.body;
     const now = Date.now();
+    
+    if (!title) {
+      return res.status(400).json({ error: 'Missing title' });
+    }
 
     const result = await db.transaction(async (tx) => {
       // Verify section exists and belongs to the resource
@@ -480,25 +484,47 @@ resourceRouter.delete('/:resourceId/sections/:sectionId', async (req: Request, r
     const { resourceId, sectionId } = req.params;
 
     const result = await db.transaction(async (tx) => {
-      // Verify section exists and belongs to the resource
-      const section = await tx.query.sections.findFirst({
+      // 1. Get the section to verify it exists and to get its number
+      const sectionToDelete = await tx.query.sections.findFirst({
         where: and(
           eq(sections.id, sectionId),
           eq(sections.resourceId, resourceId)
-        )
+        ),
+        columns: { 
+          id: true,
+          number: true
+        }
       });
 
-      if (!section) {
+      if (!sectionToDelete) {
         return false;
       }
 
-      // Delete all markers in this section first
-      await tx.delete(markers)
-        .where(eq(markers.sectionId, sectionId));
+      const deletedSectionNumber = sectionToDelete.number;
 
-      // Then delete the section
+      // 2. Delete the section
       await tx.delete(sections)
         .where(eq(sections.id, sectionId));
+
+      // 3. Reorder the remaining sections
+      // Get all sections with higher numbers
+      const laterSections = await tx.query.sections.findMany({
+        where: and(
+          eq(sections.resourceId, resourceId),
+          gt(sections.number, deletedSectionNumber)
+        ),
+        columns: {
+          id: true,
+          number: true
+        }
+      });
+
+      // Update each section with a new number (decrement by 1)
+      for (const section of laterSections) {
+        await tx.update(sections)
+          .set({ number: section.number - 1 })
+          .where(eq(sections.id, section.id));
+      }
 
       return true;
     });
