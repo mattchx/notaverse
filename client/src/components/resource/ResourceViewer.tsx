@@ -12,8 +12,33 @@ export default function ResourceViewer() {
   const navigate = useNavigate();
   const { state } = useResource();
   const { setResource, setLoading, setError, deleteMarker, updateMarker } = useResourceOperations();
+  
+  // Resource state
   const [activeResource, setActiveResource] = React.useState<Resource | null>(null);
+  
+  // Accordion state management
   const [openSections, setOpenSections] = React.useState<string[]>([]);
+  const [lastAddedSectionId, setLastAddedSectionId] = React.useState<string | null>(null);
+
+  // Check localStorage for any sections that should be opened (from marker operations)
+  React.useEffect(() => {
+    // One-time check for localStorage on component mount
+    const activeSectionId = localStorage.getItem('active_section');
+    if (activeSectionId) {
+      console.log("Found active section in localStorage:", activeSectionId);
+      
+      // Update openSections to include this section
+      setOpenSections(prev => {
+        if (!prev.includes(activeSectionId)) {
+          return [...prev, activeSectionId];
+        }
+        return prev;
+      });
+      
+      // Clear localStorage
+      localStorage.removeItem('active_section');
+    }
+  }, []);
 
   // Keep all sections open for articles or single sections
   React.useEffect(() => {
@@ -26,6 +51,26 @@ export default function ResourceViewer() {
       }
     }
   }, [activeResource]);
+
+  // Keep section open when a marker is added
+  React.useEffect(() => {
+    if (lastAddedSectionId) {
+      console.log("Ensuring section stays open:", lastAddedSectionId);
+      setOpenSections(prev => {
+        if (!prev.includes(lastAddedSectionId)) {
+          return [...prev, lastAddedSectionId];
+        }
+        return prev;
+      });
+      
+      // Clear last added section after a delay
+      const timer = setTimeout(() => {
+        setLastAddedSectionId(null);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [lastAddedSectionId]);
 
   // Fetch Resource item data
   React.useEffect(() => {
@@ -76,6 +121,7 @@ export default function ResourceViewer() {
       };
       setActiveResource(updatedResource);
       setResource(updatedResource);
+      setLastAddedSectionId(newSection.id);
     } catch (error) {
       console.error('Add section error:', error);
       setError(error instanceof Error ? error.message : 'Failed to add section');
@@ -112,6 +158,14 @@ export default function ResourceViewer() {
   const handleAddMarker = async (sectionId: string, newMarkerData: Omit<Marker, 'id'>) => {
     if (!activeResource) return;
 
+    // Immediately mark this section as the last active section
+    setLastAddedSectionId(sectionId);
+    
+    // Make sure section is in openSections
+    setOpenSections(prev => 
+      prev.includes(sectionId) ? prev : [...prev, sectionId]
+    );
+    
     const newMarker: Marker = {
       ...newMarkerData,
       id: crypto.randomUUID(),
@@ -216,6 +270,12 @@ export default function ResourceViewer() {
 
   const handleUpdateMarker = async (sectionId: string, marker: Marker) => {
     if (!activeResource) return;
+
+    // Ensure section stays open
+    setLastAddedSectionId(sectionId);
+    setOpenSections(prev => 
+      prev.includes(sectionId) ? prev : [...prev, sectionId]
+    );
 
     try {
       setLoading(true);
@@ -333,6 +393,9 @@ export default function ResourceViewer() {
               if (activeResource?.type === 'article') {
                 const allSectionIds = activeResource.sections.map(section => section.id);
                 setOpenSections(allSectionIds);
+              } else if (lastAddedSectionId && !value.includes(lastAddedSectionId)) {
+                // Keep section open if we just added a marker to it
+                setOpenSections([...value, lastAddedSectionId]);
               } else {
                 setOpenSections(value);
               }
@@ -358,7 +421,7 @@ export default function ResourceViewer() {
               onUpdateMarker={(marker) => handleUpdateMarker(section.id, marker)}
               onUpdateTitle={(title) => handleUpdateSectionTitle(section.id, title)}
               onDeleteSection={() => handleDeleteSection(section.id)}
-              isSingleSection={activeResource.sections.length === 1}
+              isOpen={openSections.includes(section.id) || section.id === lastAddedSectionId}
             />
           ))}
         </Accordion>

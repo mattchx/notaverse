@@ -13,9 +13,10 @@ interface MarkerModalProps {
   onAddMarker: (marker: Omit<Marker, 'id'>) => void;
   resourceType: ResourceType;
   sectionNumber?: number;
+  sectionId: string;
 }
 
-export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType, sectionNumber }: MarkerModalProps) {
+export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType, sectionNumber, sectionId }: MarkerModalProps) {
   const [position, setPosition] = React.useState('');
   const [quote, setQuote] = React.useState('');
   const [noteText, setNoteText] = React.useState('');
@@ -38,6 +39,10 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    localStorage.setItem('active_section', sectionId);
+    
     onAddMarker({
       position,
       quote,
@@ -49,6 +54,8 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType
       updatedAt: new Date().toISOString()
     });
     onClose();
+    
+    return false;
   };
 
   return (
@@ -125,7 +132,14 @@ export default function MarkerModal({ isOpen, onClose, onAddMarker, resourceType
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button 
+              type="button" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSubmit(e);
+              }}
+            >
               Add Marker
             </Button>
           </div>

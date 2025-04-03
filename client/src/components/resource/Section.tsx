@@ -56,7 +56,7 @@ interface SectionProps {
   onDeleteMarker: (markerId: string) => void;
   onUpdateTitle?: (title: string) => void;
   onDeleteSection?: () => void;
-  isSingleSection?: boolean;
+  isOpen?: boolean;
 }
 
 export default function Section({
@@ -70,7 +70,7 @@ export default function Section({
   onDeleteMarker,
   onUpdateTitle,
   onDeleteSection,
-  isSingleSection = false
+  isOpen = false
 }: SectionProps) {
   const [isAddingMarker, setIsAddingMarker] = React.useState(false);
   const [markerToEdit, setMarkerToEdit] = React.useState<Marker | null>(null);
@@ -123,7 +123,8 @@ export default function Section({
     <Accordion 
       type="single" 
       collapsible={resourceType !== 'article'} 
-      defaultValue={isSingleSection ? id : undefined}
+      defaultValue={isOpen ? id : undefined}
+      value={isOpen ? id : undefined}
       className="w-full"
     >
       <AccordionItem value={id}>
@@ -263,6 +264,7 @@ export default function Section({
         onAddMarker={handleAddMarker}
         resourceType={resourceType}
         sectionNumber={number}
+        sectionId={id}
       />
 
       <EditMarkerModal
@@ -272,6 +274,7 @@ export default function Section({
         marker={markerToEdit}
         resourceType={resourceType}
         sectionNumber={number}
+        sectionId={id}
       />
     </Accordion>
   );

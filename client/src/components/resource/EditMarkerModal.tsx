@@ -14,9 +14,18 @@ interface EditMarkerModalProps {
   marker: Marker | null;
   resourceType: ResourceType;
   sectionNumber?: number;
+  sectionId?: string;
 }
 
-export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marker, resourceType, sectionNumber }: EditMarkerModalProps) {
+export default function EditMarkerModal({ 
+  isOpen, 
+  onClose, 
+  onUpdateMarker, 
+  marker, 
+  resourceType, 
+  sectionNumber,
+  sectionId 
+}: EditMarkerModalProps) {
   const [position, setPosition] = React.useState(marker?.position || '');
   const [quote, setQuote] = React.useState(marker?.quote || '');
   const [noteText, setNoteText] = React.useState(marker?.note || '');
@@ -39,7 +48,14 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!marker) return;
+    e.stopPropagation();
+    
+    if (!marker) return false;
+    
+    // Store the section ID in localStorage
+    if (sectionId) {
+      localStorage.setItem('active_section', sectionId);
+    }
     
     onUpdateMarker({
       ...marker,
@@ -49,6 +65,8 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
       type
     });
     onClose();
+    
+    return false;
   };
 
   if (!marker) {
@@ -129,7 +147,14 @@ export default function EditMarkerModal({ isOpen, onClose, onUpdateMarker, marke
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button 
+              type="button" 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSubmit(e);
+              }}
+            >
               Save Changes
             </Button>
           </div>
