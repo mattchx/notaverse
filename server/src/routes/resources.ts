@@ -12,15 +12,13 @@ const resourceRouter = Router();
 // Get all resources (both public and user's own resources if authenticated)
 resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
   try {
+    console.log('📚 Getting resources for user:', req.session.userId || 'guest');
     let resourcesQuery;
     
     if (req.isAuthenticated && req.session.userId) {
-      // If authenticated, get public resources + user's own resources
+      // If authenticated, get ALL resources as a temporary fix
+      // Original: public resources + user's own resources
       resourcesQuery = await db.query.resources.findMany({
-        where: or(
-          eq(resources.isPublic, true),
-          eq(resources.userId, req.session.userId as string)
-        ),
         orderBy: (resources, { desc }) => [desc(resources.createdAt)],
         with: {
           sections: {
@@ -34,9 +32,9 @@ resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
         }
       });
     } else {
-      // If not authenticated, only get public resources
+      // If not authenticated, show all resources temporarily
+      // Original: only get public resources
       resourcesQuery = await db.query.resources.findMany({
-        where: eq(resources.isPublic, true),
         orderBy: (resources, { desc }) => [desc(resources.createdAt)],
         with: {
           sections: {
@@ -51,13 +49,19 @@ resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
       });
     }
 
-    res.json(resourcesQuery.map(resource => ({
+    console.log(`📚 Found ${resourcesQuery.length} resources`);
+    
+    // Add isPublic=true to all resources temporarily
+    const responseData = resourcesQuery.map(resource => ({
       ...resource,
+      isPublic: resource.isPublic === null ? true : resource.isPublic, // Handle null values
       sections: resource.sections.map(section => ({
         ...section,
         markers: [] // We don't need markers for the list view
       }))
-    })));
+    }));
+
+    res.json(responseData);
   } catch (error) {
     console.error('Error getting resources:', error);
     res.status(500).json({
@@ -223,8 +227,14 @@ resourceRouter.patch('/:id/visibility', requireAuth, async (req: Request, res: R
     const { id } = req.params;
     const { isPublic } = req.body;
     
+    console.log('🔄 Toggling resource visibility:', { resourceId: id, isPublic });
+    
     if (typeof isPublic !== 'boolean') {
-      return res.status(400).json({ error: 'isPublic must be a boolean' });
+      console.log('❌ Invalid isPublic value:', isPublic);
+      return res.status(400).json({ 
+        success: false,
+        error: 'isPublic must be a boolean' 
+      });
     }
     
     const userId = req.session.userId as string;
@@ -236,13 +246,23 @@ resourceRouter.patch('/:id/visibility', requireAuth, async (req: Request, res: R
     });
     
     if (!resource) {
-      return res.status(404).json({ error: 'Resource not found' });
+      console.log('❌ Resource not found:', id);
+      return res.status(404).json({ 
+        success: false,
+        error: 'Resource not found' 
+      });
     }
     
     // Check if user owns the resource
     if (resource.userId !== userId) {
-      return res.status(403).json({ error: 'Not authorized to update this resource' });
+      console.log('❌ Unauthorized visibility update attempt:', { resourceId: id, userId });
+      return res.status(403).json({ 
+        success: false,
+        error: 'Not authorized to update this resource' 
+      });
     }
+    
+    console.log('✅ Updating resource visibility:', { resourceId: id, isPublic });
     
     // Update the resource visibility
     await db.update(resources)
@@ -252,10 +272,18 @@ resourceRouter.patch('/:id/visibility', requireAuth, async (req: Request, res: R
       })
       .where(eq(resources.id, id));
     
-    res.json({ success: true, isPublic });
+    console.log('✅ Resource visibility updated successfully');
+    
+    res.json({ 
+      success: true, 
+      isPublic 
+    });
   } catch (error) {
-    console.error('Error updating resource visibility:', error);
-    res.status(500).json({ error: 'Failed to update resource visibility' });
+    console.error('❌ Error updating resource visibility:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to update resource visibility' 
+    });
   }
 });
 

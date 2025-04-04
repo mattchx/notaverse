@@ -14,6 +14,7 @@ import {
   AvatarFallback,
   AvatarImage
 } from '../ui/avatar';
+import { get, post, put, del } from '../../utils/api';
 
 interface Comment {
   id: string;
@@ -25,6 +26,16 @@ interface Comment {
     name?: string;
     avatarUrl?: string;
   };
+}
+
+interface CommentsResponse {
+  success: boolean;
+  data: Comment[];
+}
+
+interface CommentResponse {
+  success: boolean;
+  data: Comment;
 }
 
 interface CommentsSectionProps {
@@ -43,12 +54,8 @@ export function CommentsSection({ markerId }: CommentsSectionProps) {
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const response = await fetch(`/api/comments/marker/${markerId}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch comments');
-        }
-        const data = await response.json();
-        setComments(data.data || []);
+        const response = await get<CommentsResponse>(`/comments/marker/${markerId}`);
+        setComments(response.data || []);
       } catch (error) {
         console.error('Error fetching comments:', error);
       }
@@ -64,23 +71,13 @@ export function CommentsSection({ markerId }: CommentsSectionProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/comments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          markerId,
-          content: newComment.trim(),
-        }),
+      const response = await post<CommentResponse>('/comments', {
+        markerId,
+        content: newComment.trim(),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to add comment');
-      }
-
-      const data = await response.json();
-      setComments([...comments, data.data]);
+      
+      // Add the new comment to the list
+      setComments([...comments, response.data]);
       setNewComment('');
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -95,24 +92,13 @@ export function CommentsSection({ markerId }: CommentsSectionProps) {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/comments/${commentId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: editContent.trim(),
-        }),
+      const response = await put<CommentResponse>(`/comments/${commentId}`, {
+        content: editContent.trim(),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update comment');
-      }
-
-      const data = await response.json();
+      
       setComments(
         comments.map((comment) =>
-          comment.id === commentId ? data.data : comment
+          comment.id === commentId ? response.data : comment
         )
       );
       setEditingCommentId(null);
@@ -130,14 +116,7 @@ export function CommentsSection({ markerId }: CommentsSectionProps) {
     }
 
     try {
-      const response = await fetch(`/api/comments/${commentId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete comment');
-      }
-
+      await del(`/comments/${commentId}`);
       setComments(comments.filter((comment) => comment.id !== commentId));
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -157,8 +136,11 @@ export function CommentsSection({ markerId }: CommentsSectionProps) {
   };
 
   // Generate initials for avatar fallback
-  const getInitials = (name: string = 'Anonymous User') => {
-    return name
+  const getInitials = (name: string | null | undefined) => {
+    // Use a default name if name is null or undefined
+    const userName = name || 'Anonymous User';
+    
+    return userName
       .split(' ')
       .map((n) => n[0])
       .join('')

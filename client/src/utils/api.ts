@@ -100,6 +100,14 @@ export async function put<T>(endpoint: string, data: unknown, config?: ApiConfig
   });
 }
 
+export async function patch<T>(endpoint: string, data: unknown, config?: ApiConfig): Promise<T> {
+  return api<T>(endpoint, {
+    ...config,
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
 export async function del<T>(endpoint: string, config?: ApiConfig): Promise<T> {
   return api<T>(endpoint, { ...config, method: 'DELETE' });
 }
@@ -108,5 +116,6 @@ export default {
   get,
   post,
   put,
+  patch,
   delete: del,
 };

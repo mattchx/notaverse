@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { patch } from '../../utils/api';
 
 interface VisibilityToggleProps {
   resourceId: string;
   initialIsPublic: boolean;
   onVisibilityChange?: (isPublic: boolean) => void;
+}
+
+interface VisibilityResponse {
+  success: boolean;
+  isPublic: boolean;
 }
 
 export function VisibilityToggle({ 
@@ -19,19 +25,10 @@ export function VisibilityToggle({
   const toggleVisibility = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/resources/${resourceId}/visibility`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ isPublic: !isPublic })
+      const data = await patch<VisibilityResponse>(`/resources/${resourceId}/visibility`, { 
+        isPublic: !isPublic
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update visibility');
-      }
-
-      const data = await response.json();
+      
       setIsPublic(data.isPublic);
       
       if (onVisibilityChange) {

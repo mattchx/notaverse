@@ -20,6 +20,7 @@ const createCommentSchema = z.object({
 commentRouter.get('/marker/:markerId', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { markerId } = req.params;
+    console.log('🔍 Fetching comments for marker:', markerId);
     
     // Check if marker exists
     const marker = await db.query.markers.findFirst({
@@ -27,6 +28,7 @@ commentRouter.get('/marker/:markerId', optionalAuth, async (req: Request, res: R
     });
     
     if (!marker) {
+      console.log('❌ Marker not found:', markerId);
       throw new ApiError(404, 'Marker not found');
     }
     
@@ -45,6 +47,8 @@ commentRouter.get('/marker/:markerId', optionalAuth, async (req: Request, res: R
       orderBy: comments.createdAt
     });
     
+    console.log(`✅ Found ${markerComments.length} comments for marker ${markerId}`);
+    
     const response: ApiResponse<Comment[]> = {
       success: true,
       data: markerComments as Comment[]
@@ -59,9 +63,11 @@ commentRouter.get('/marker/:markerId', optionalAuth, async (req: Request, res: R
 // Create a comment for a marker
 commentRouter.post('/', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log('📝 Creating new comment:', req.body);
     const result = createCommentSchema.safeParse(req.body);
     
     if (!result.success) {
+      console.log('❌ Comment validation failed:', result.error.issues);
       return res.status(400).json({
         success: false,
         error: 'Validation Error',
@@ -77,6 +83,7 @@ commentRouter.post('/', requireAuth, async (req: Request, res: Response, next: N
     });
     
     if (!marker) {
+      console.log('❌ Marker not found when creating comment:', markerId);
       throw new ApiError(404, 'Marker not found');
     }
     
@@ -92,6 +99,8 @@ commentRouter.post('/', requireAuth, async (req: Request, res: Response, next: N
       createdAt: new Date(),
       updatedAt: new Date()
     }).returning();
+    
+    console.log('✅ Comment created successfully:', newComment[0].id);
     
     // Fetch the comment with user info
     const commentWithUser = await db.query.comments.findFirst({
@@ -114,6 +123,7 @@ commentRouter.post('/', requireAuth, async (req: Request, res: Response, next: N
     
     res.status(201).json(response);
   } catch (error) {
+    console.error('❌ Error creating comment:', error);
     next(error);
   }
 });
