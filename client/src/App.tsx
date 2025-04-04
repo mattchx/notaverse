@@ -10,6 +10,7 @@ import AuthRoute from "./components/auth/AuthRoute";
 import Nav from "./components/custom/Nav";
 import ResourceLibrary from "./components/resource/ResourceLibrary";
 import ResourceViewer from "./components/resource/ResourceViewer";
+import PublicResourceLibrary from "./components/resource/PublicResourceLibrary";
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
                   {/* Resource management routes */}
                   <Route path="/library" element={<ProtectedRoute><ResourceLibrary /></ProtectedRoute>} />
                   <Route path="/library/item/:id" element={<ProtectedRoute><ResourceViewer /></ProtectedRoute>} />
+                  {/* Public resource discovery */}
+                  <Route path="/discover" element={<PublicResourceLibrary />} />
                   {/* Alternative resource paths that match API structure */}
                   <Route path="/resources" element={<ProtectedRoute><ResourceLibrary /></ProtectedRoute>} />
                   <Route path="/resources/:id" element={<ProtectedRoute><ResourceViewer /></ProtectedRoute>} />

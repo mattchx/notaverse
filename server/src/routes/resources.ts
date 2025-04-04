@@ -71,6 +71,55 @@ resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
   }
 });
 
+// Get all public resources for the discovery feed
+resourceRouter.get('/public', async (req: Request, res: Response) => {
+  try {
+    console.log('📚 Getting all public resources for discovery feed');
+    
+    // Fetch all public resources
+    const publicResources = await db.query.resources.findMany({
+      where: eq(resources.isPublic, true),
+      orderBy: (resources, { desc }) => [desc(resources.createdAt)],
+      with: {
+        sections: {
+          orderBy: (sections, { asc }) => [asc(sections.number)],
+          columns: {
+            id: true,
+            title: true,
+            number: true,
+          }
+        },
+        user: {
+          columns: {
+            id: true,
+            email: true,
+            name: true
+          }
+        }
+      }
+    });
+    
+    console.log(`📚 Found ${publicResources.length} public resources`);
+    
+    // Format the response data
+    const responseData = publicResources.map(resource => ({
+      ...resource,
+      sections: resource.sections.map(section => ({
+        ...section,
+        markers: [] // We don't need markers for the list view
+      }))
+    }));
+    
+    res.json(responseData);
+  } catch (error) {
+    console.error('Error getting public resources:', error);
+    res.status(500).json({
+      error: 'Failed to get public resources',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Get single resource with sections and markers
 resourceRouter.get('/:id', optionalAuth, async (req: Request, res: Response) => {
   try {

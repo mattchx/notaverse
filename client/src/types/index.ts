@@ -2,6 +2,12 @@ export type ResourceType = 'podcast' | 'book' | 'article' | 'course'
 
 export type NoteType = 'general' | 'concept' | 'question' | 'summary'
 
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
+
 export interface Resource {
   id: string;
   name: string;
@@ -13,6 +19,7 @@ export interface Resource {
   sections: Section[];
   createdAt: string;
   updatedAt: string;
+  user?: User;
 }
 
 export interface Section {
