@@ -1,31 +1,57 @@
 import { Router, Request, Response } from 'express';
-import { and, eq, desc, asc, inArray, gt } from 'drizzle-orm';
+import { and, eq, desc, asc, inArray, gt, or } from 'drizzle-orm';
 import { SessionData } from 'express-session';
 
 import { db, schema } from '../db/config.js';
 import { resources, sections, markers } from '../db/schema.js';
 import { Resource, Section } from '../types/resource.js';
+import { requireAuth, optionalAuth } from '../middleware/auth.js';
 
 const resourceRouter = Router();
 
-// Get all resources
-resourceRouter.get('/', async (req: Request, res: Response) => {
+// Get all resources (both public and user's own resources if authenticated)
+resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
   try {
-    const allResources = await db.query.resources.findMany({
-      orderBy: (resources, { desc }) => [desc(resources.createdAt)],
-      with: {
-        sections: {
-          orderBy: (sections, { asc }) => [asc(sections.number)],
-          columns: {
-            id: true,
-            title: true,
-            number: true,
+    let resourcesQuery;
+    
+    if (req.isAuthenticated && req.session.userId) {
+      // If authenticated, get public resources + user's own resources
+      resourcesQuery = await db.query.resources.findMany({
+        where: or(
+          eq(resources.isPublic, true),
+          eq(resources.userId, req.session.userId as string)
+        ),
+        orderBy: (resources, { desc }) => [desc(resources.createdAt)],
+        with: {
+          sections: {
+            orderBy: (sections, { asc }) => [asc(sections.number)],
+            columns: {
+              id: true,
+              title: true,
+              number: true,
+            }
           }
         }
-      }
-    });
+      });
+    } else {
+      // If not authenticated, only get public resources
+      resourcesQuery = await db.query.resources.findMany({
+        where: eq(resources.isPublic, true),
+        orderBy: (resources, { desc }) => [desc(resources.createdAt)],
+        with: {
+          sections: {
+            orderBy: (sections, { asc }) => [asc(sections.number)],
+            columns: {
+              id: true,
+              title: true,
+              number: true,
+            }
+          }
+        }
+      });
+    }
 
-    res.json(allResources.map(resource => ({
+    res.json(resourcesQuery.map(resource => ({
       ...resource,
       sections: resource.sections.map(section => ({
         ...section,
@@ -42,10 +68,11 @@ resourceRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // Get single resource with sections and markers
-resourceRouter.get('/:id', async (req: Request, res: Response) => {
+resourceRouter.get('/:id', optionalAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
+    // Get the resource
     const resource = await db.query.resources.findFirst({
       where: eq(resources.id, id),
       with: {
@@ -64,8 +91,14 @@ resourceRouter.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Resource not found' });
     }
 
+    // If resource is not public and user is not the owner, reject
+    if (!resource.isPublic && (!req.isAuthenticated || req.session.userId !== resource.userId)) {
+      return res.status(403).json({ error: 'You do not have permission to view this resource' });
+    }
+
     res.json({
       ...resource,
+      isOwner: req.isAuthenticated && req.session.userId === resource.userId,
       sections: resource.sections.map(section => ({
         ...section,
         markers: section.markers.map(marker => ({
@@ -82,7 +115,7 @@ resourceRouter.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Create new resource
-resourceRouter.post('/', async (req: Request, res: Response) => {
+resourceRouter.post('/', requireAuth, async (req: Request, res: Response) => {
   try {
     const newResource: Resource = req.body;
     const now = Date.now();
@@ -98,11 +131,7 @@ resourceRouter.post('/', async (req: Request, res: Response) => {
     }
 
     // Check user authentication
-    if (!req.session.userId) {
-      return res.status(401).json({ error: 'User not logged in' });
-    }
-
-    const userId = req.session.userId;
+    const userId = req.session.userId as string;
 
     // Use a transaction for atomic operation
     const result = await db.transaction(async (tx) => {
@@ -113,6 +142,7 @@ resourceRouter.post('/', async (req: Request, res: Response) => {
         type: newResource.type,
         author: newResource.author ?? null,
         sourceUrl: newResource.sourceUrl ?? null,
+        isPublic: newResource.isPublic ?? false,
         createdAt: new Date(now),
         updatedAt: new Date(now),
         userId: userId,
@@ -171,6 +201,7 @@ resourceRouter.post('/', async (req: Request, res: Response) => {
     // Transform response to match expected format
     res.status(201).json({
       ...result,
+      isOwner: true,
       sections: result.sections.map(section => ({
         ...section,
         markers: section.markers.map(marker => ({
@@ -183,6 +214,48 @@ resourceRouter.post('/', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error creating resource:', error);
     res.status(500).json({ error: 'Failed to create resource' });
+  }
+});
+
+// Toggle resource public/private status
+resourceRouter.patch('/:id/visibility', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { isPublic } = req.body;
+    
+    if (typeof isPublic !== 'boolean') {
+      return res.status(400).json({ error: 'isPublic must be a boolean' });
+    }
+    
+    const userId = req.session.userId as string;
+    
+    // Find the resource
+    const resource = await db.query.resources.findFirst({
+      where: eq(resources.id, id),
+      columns: { id: true, userId: true }
+    });
+    
+    if (!resource) {
+      return res.status(404).json({ error: 'Resource not found' });
+    }
+    
+    // Check if user owns the resource
+    if (resource.userId !== userId) {
+      return res.status(403).json({ error: 'Not authorized to update this resource' });
+    }
+    
+    // Update the resource visibility
+    await db.update(resources)
+      .set({ 
+        isPublic, 
+        updatedAt: new Date() 
+      })
+      .where(eq(resources.id, id));
+    
+    res.json({ success: true, isPublic });
+  } catch (error) {
+    console.error('Error updating resource visibility:', error);
+    res.status(500).json({ error: 'Failed to update resource visibility' });
   }
 });
 

@@ -1,15 +1,17 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { get as apiGet, post as apiPost, put as apiPut, del as apiDelete } from '@/utils/api';
 import { Resource, Marker, Section as SectionType } from '../../types';
 import { Button } from '@/components/ui/button';
 import Section from './Section';
 import { useResource, useResourceOperations } from '@/contexts/ResourceContext';
+import { VisibilityToggle } from '../social/VisibilityToggle';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ResourceViewer() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { state } = useResource();
+  const { user } = useAuth();
   const { setResource, setLoading, setError, deleteMarker, updateMarker } = useResourceOperations();
   
   // Resource state
@@ -339,76 +341,52 @@ export default function ResourceViewer() {
     }
   };
 
+  const handleVisibilityChange = (isPublic: boolean) => {
+    if (activeResource) {
+      setActiveResource({
+        ...activeResource,
+        isPublic
+      });
+    }
+  };
+
   if (state.isLoading) {
+    return <div className="flex items-center justify-center h-96">Loading resource...</div>;
+  }
+
+  if (state.error) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="p-4 bg-red-50 text-red-700 rounded-md">
+        Error: {state.error}
       </div>
     );
   }
 
   if (!activeResource) {
-    return (
-      <div className="container mx-auto py-8">
-        <div className="text-center">
-          <p className="text-red-500">{state.error || 'Resource item not found'}</p>
-          <Button onClick={() => navigate('/library')} className="mt-4">
-            Return to Library
-          </Button>
-        </div>
-      </div>
-    );
+    return <div className="p-4">Resource not found</div>;
   }
 
+  const isOwner = user?.id === activeResource.userId;
+
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <div className="flex items-center gap-4 mb-2">
-          <h1 className="text-3xl font-bold">{activeResource.name}</h1>
-          <span className="px-2 py-1 text-xs font-medium rounded-md bg-gray-100 text-gray-800 capitalize">
-            {activeResource.type}
-          </span>
-          {activeResource.sourceUrl && (
-            <a
-              href={activeResource.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                <polyline points="15 3 21 3 21 9" />
-                <line x1="10" y1="14" x2="21" y2="3" />
-              </svg>
-              {activeResource.type === 'book' ? 'Open Book Link' : 'Listen to Podcast'}
-            </a>
+    <div className="py-4">
+      <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">{activeResource.name}</h1>
+          {activeResource.author && (
+            <p className="text-gray-600">by {activeResource.author}</p>
           )}
-          <div className="ml-auto">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/library')}
-              className="border-blue-400 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <path d="m15 18-6-6 6-6" />
-              </svg>
-              Back to Library
-            </Button>
-          </div>
         </div>
-        {activeResource.author && (
-          <p className="text-xl text-gray-600">{activeResource.author}</p>
-        )}
+        <div className="flex items-center gap-2">
+          {isOwner && (
+            <VisibilityToggle 
+              resourceId={activeResource.id} 
+              initialIsPublic={!!activeResource.isPublic}
+              onVisibilityChange={handleVisibilityChange}
+            />
+          )}
+          <Button onClick={handleAddSection}>Add Section</Button>
+        </div>
       </div>
 
       <div className="space-y-6">

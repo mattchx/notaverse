@@ -1,9 +1,90 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "87faf330-15e6-4928-b4e6-5d2a72f69a10",
-  "prevId": "e1d7770a-3670-4fbc-8272-3a478d907419",
+  "id": "be7d8d6c-13df-4628-ada9-001ef963b250",
+  "prevId": "87faf330-15e6-4928-b4e6-5d2a72f69a10",
   "tables": {
+    "comments": {
+      "name": "comments",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "marker_id": {
+          "name": "marker_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "comments_marker_id_markers_id_fk": {
+          "name": "comments_marker_id_markers_id_fk",
+          "tableFrom": "comments",
+          "tableTo": "markers",
+          "columnsFrom": [
+            "marker_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "comments_user_id_users_id_fk": {
+          "name": "comments_user_id_users_id_fk",
+          "tableFrom": "comments",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "__drizzle_migrations": {
       "name": "__drizzle_migrations",
       "columns": {
@@ -196,6 +277,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "is_public": {
+          "name": "is_public",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -415,12 +504,8 @@
   "enums": {},
   "_meta": {
     "schemas": {},
-    "tables": {
-      "\"media_items\"": "\"resources\""
-    },
-    "columns": {
-      "\"sections\".\"media_id\"": "\"sections\".\"resource_id\""
-    }
+    "tables": {},
+    "columns": {}
   },
   "internal": {
     "indexes": {}

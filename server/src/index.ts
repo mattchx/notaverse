@@ -4,6 +4,7 @@ import { sessionConfig } from './config/session.js';
 import { authRouter } from './routes/auth.js';
 import resourceRouter from './routes/resources.js';
 import { markerRouter } from './routes/markers.js';
+import { commentRouter } from './routes/comments.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { env } from './config/env.js';
 
@@ -18,6 +19,7 @@ app.use(sessionConfig);
 app.use('/api/auth', authRouter);
 app.use('/api/resources', resourceRouter);
 app.use('/api/markers', markerRouter);
+app.use('/api/comments', commentRouter);
 
 // Error handling
 app.use(errorHandler);

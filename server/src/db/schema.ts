@@ -21,6 +21,7 @@ export const resources = sqliteTable('resources', {
   author: text('author'),
   sourceUrl: text('source_url'),
   description: text('description'),
+  isPublic: integer('is_public', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
 });
@@ -49,6 +50,16 @@ export const markers = sqliteTable('markers', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+// Comments table for markers
+export const comments = sqliteTable('comments', {
+  id: text('id').primaryKey(),
+  markerId: text('marker_id').notNull().references(() => markers.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id),
+  content: text('content').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 // Sessions table for authentication
 export const sessions = sqliteTable('sessions', {
   id: text('id').primaryKey(),
@@ -60,7 +71,8 @@ export const sessions = sqliteTable('sessions', {
 // Define relationships
 export const usersRelations = relations(users, ({ many }) => ({
   resources: many(resources),
-  markers: many(markers)
+  markers: many(markers),
+  comments: many(comments)
 }));
 
 export const resourcesRelations = relations(resources, ({ one, many }) => ({
@@ -79,13 +91,25 @@ export const sectionsRelations = relations(sections, ({ one, many }) => ({
   markers: many(markers),
 }));
 
-export const markersRelations = relations(markers, ({ one }) => ({
+export const markersRelations = relations(markers, ({ one, many }) => ({
   section: one(sections, {
     fields: [markers.sectionId],
     references: [sections.id],
   }),
   user: one(users, {
     fields: [markers.userId],
+    references: [users.id],
+  }),
+  comments: many(comments),
+}));
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  marker: one(markers, {
+    fields: [comments.markerId],
+    references: [markers.id],
+  }),
+  user: one(users, {
+    fields: [comments.userId],
     references: [users.id],
   }),
 }));
@@ -102,10 +126,12 @@ export const schema = {
   resources,
   sections,
   markers,
+  comments,
   sessions,
   drizzleMigrations,
   usersRelations,
   resourcesRelations,
   sectionsRelations,
   markersRelations,
+  commentsRelations,
 };

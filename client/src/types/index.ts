@@ -8,6 +8,8 @@ export interface Resource {
   type: ResourceType;
   author?: string;
   sourceUrl?: string;
+  userId: string;
+  isPublic?: boolean;
   sections: Section[];
   createdAt: string;
   updatedAt: string;

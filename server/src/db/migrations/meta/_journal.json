@@ -15,6 +15,13 @@
       "when": 1742768340573,
       "tag": "0001_gorgeous_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1743768480487,
+      "tag": "0002_medical_bullseye",
+      "breakpoints": true
     }
   ]
 }

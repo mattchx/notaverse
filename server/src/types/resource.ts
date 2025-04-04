@@ -6,6 +6,7 @@ export interface Resource {
   author?: string;
   sourceUrl?: string;
   description?: string;
+  isPublic?: boolean;
   sections: Section[];
   createdAt: Date;
   updatedAt: Date;
@@ -47,6 +48,20 @@ export interface Note {
   updatedAt: Date;
 }
 
+export interface Comment {
+  id: string;
+  markerId: string;
+  userId: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+  user?: {
+    id: string;
+    name?: string;
+    avatarUrl?: string;
+  };
+}
+
 export interface CreateResourceDTO {
   id?: string;
   userId: string;
@@ -55,6 +70,7 @@ export interface CreateResourceDTO {
   author?: string;
   sourceUrl?: string;
   description?: string;
+  isPublic?: boolean;
   sections: CreateSectionDTO[];
 }
 
@@ -83,4 +99,9 @@ export interface CreateNoteDTO {
   userId: string;
   content: string;
   markerId?: string;
+}
+
+export interface CreateCommentDTO {
+  markerId: string;
+  content: string;
 }
