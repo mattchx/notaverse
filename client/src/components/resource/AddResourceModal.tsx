@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "../ui/switch";
 import { useResourceOperations } from "@/contexts/ResourceContext";
 import { Resource, ResourceType } from "@/types";
 import { v4 as uuidv4 } from 'uuid';
@@ -19,6 +20,7 @@ interface FormData {
   author?: string;
   sourceUrl?: string;
   initialSection: string;
+  isPublic: boolean;
 }
 
 export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) {
@@ -29,6 +31,7 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
     author: '',
     sourceUrl: '',
     initialSection: '',
+    isPublic: false,
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -37,6 +40,10 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData((prev) => ({ ...prev, isPublic: checked }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,6 +72,7 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
         type: formData.type,
         author: formData.author || undefined,
         sourceUrl: processedUrl,
+        isPublic: Boolean(formData.isPublic),
         sections: [
           {
             id: uuidv4(),
@@ -91,6 +99,7 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
         author: '',
         sourceUrl: '',
         initialSection: '',
+        isPublic: false,
       });
     } catch (error) {
       console.error('Error creating resource:', error);
@@ -194,6 +203,20 @@ export function AddResourceModal({ open, onOpenChange }: AddResourceModalProps) 
               maxLength={100}
             />
           </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isPublic"
+              checked={formData.isPublic}
+              onCheckedChange={handleSwitchChange}
+            />
+            <Label htmlFor="isPublic" className="cursor-pointer">
+              Show in Discover (Public)
+            </Label>
+          </div>
+          <p className="text-xs text-gray-500 ml-10">
+            When enabled, this resource will be visible to all users in the Discover section
+          </p>
 
           <DialogFooter>
             <Button

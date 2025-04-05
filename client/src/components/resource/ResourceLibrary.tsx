@@ -3,11 +3,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useResource, useResourceOperations } from '../../contexts/ResourceContext';
 import { Resource } from '../../types';
-import { get as apiGet, del as apiDelete } from '../../utils/api';
+import { get as apiGet, del as apiDelete, patch as apiPatch } from '../../utils/api';
 import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { EditResourceModal } from './EditResourceModal';
 import { AddResourceModal } from './AddResourceModal';
+import { Eye, EyeOff } from 'lucide-react';
+import { Switch } from '../ui/switch';
 
 import { 
   Dialog, 
@@ -56,6 +58,7 @@ export default function ResourceLibrary() {
   const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
   const [resourceToEdit, setResourceToEdit] = useState<Resource | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
+  const [isToggling, setIsToggling] = useState<Record<string, boolean>>({});
 
   // Fetch resources when component mounts
   useEffect(() => {
@@ -121,6 +124,34 @@ export default function ResourceLibrary() {
     navigate(`/resources/${resource.id}`);
   };
 
+  /** Toggle resource public/private status */
+  const handleToggleVisibility = async (e: React.MouseEvent, resource: Resource) => {
+    e.stopPropagation();
+    
+    // Prevent double-clicks
+    if (isToggling[resource.id]) return;
+    
+    setIsToggling(prev => ({ ...prev, [resource.id]: true }));
+    
+    try {
+      const newStatus = !resource.isPublic;
+      
+      // Call the API to update visibility
+      await apiPatch<{ success: boolean, isPublic: boolean }>(`/resources/${resource.id}/visibility`, {
+        isPublic: newStatus
+      });
+      
+      // Update local state to reflect the change
+      setResourceList(state.resources.map(r => 
+        r.id === resource.id ? { ...r, isPublic: newStatus } : r
+      ));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to update resource visibility');
+    } finally {
+      setIsToggling(prev => ({ ...prev, [resource.id]: false }));
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -142,6 +173,7 @@ export default function ResourceLibrary() {
             </TableHead>
             <TableHead>Sections</TableHead>
             <TableHead>Source</TableHead>
+            <TableHead>Visibility</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -172,7 +204,32 @@ export default function ResourceLibrary() {
                 )}
               </TableCell>
               <TableCell>
+                <div className="flex items-center">
+                  {resource.isPublic ? (
+                    <>
+                      <Eye className="h-4 w-4 mr-1 text-green-500" />
+                      <span className="text-sm text-green-600">Public</span>
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="h-4 w-4 mr-1 text-gray-500" />
+                      <span className="text-sm text-gray-600">Private</span>
+                    </>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
                 <div className="flex space-x-2">
+                  <Switch 
+                    checked={resource.isPublic}
+                    onCheckedChange={() => {
+                      const e = { stopPropagation: () => {} } as React.MouseEvent<HTMLButtonElement>;
+                      handleToggleVisibility(e, resource);
+                    }}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    disabled={isToggling[resource.id]}
+                    className="mr-2"
+                  />
                   <Button
                     variant="ghost"
                     size="sm"
@@ -190,6 +247,18 @@ export default function ResourceLibrary() {
                   >
                     Delete
                   </Button>
+                  {/* Share link functionality commented out as requested
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Share link functionality would be here
+                    }}
+                  >
+                    Share
+                  </Button>
+                  */}
                 </div>
               </TableCell>
             </TableRow>

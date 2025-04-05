@@ -529,6 +529,7 @@ resourceRouter.put('/:id', async (req: Request, res: Response) => {
           type: updates.type,
           author: updates.author ?? null,
           sourceUrl: updates.sourceUrl ?? null,
+          isPublic: updates.isPublic !== undefined ? updates.isPublic : resource.isPublic,
           updatedAt: new Date(now)
         })
         .where(eq(resources.id, id));

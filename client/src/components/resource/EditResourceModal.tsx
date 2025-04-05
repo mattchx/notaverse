@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "../ui/switch";
 import { useResourceOperations } from "@/contexts/ResourceContext";
 import { Resource, ResourceType } from "@/types";
 
@@ -18,6 +19,7 @@ interface FormData {
   type: ResourceType;
   author?: string;
   sourceUrl?: string;
+  isPublic: boolean;
 }
 
 export function EditResourceModal({ open, onOpenChange, resource }: EditResourceModalProps) {
@@ -27,6 +29,7 @@ export function EditResourceModal({ open, onOpenChange, resource }: EditResource
     type: 'book',
     author: '',
     sourceUrl: '',
+    isPublic: false,
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -38,6 +41,7 @@ export function EditResourceModal({ open, onOpenChange, resource }: EditResource
         type: resource.type,
         author: resource.author || '',
         sourceUrl: resource.sourceUrl || '',
+        isPublic: resource.isPublic === true,
       });
     }
   }, [resource]);
@@ -47,6 +51,10 @@ export function EditResourceModal({ open, onOpenChange, resource }: EditResource
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData((prev) => ({ ...prev, isPublic: checked }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,6 +83,7 @@ export function EditResourceModal({ open, onOpenChange, resource }: EditResource
         type: formData.type,
         author: formData.author?.trim(),
         sourceUrl: processedUrl,
+        isPublic: Boolean(formData.isPublic),
       };
 
       // Send request to API
@@ -161,6 +170,20 @@ export function EditResourceModal({ open, onOpenChange, resource }: EditResource
             />
             <p className="text-xs text-gray-500">URL will be automatically formatted with http:// if not specified</p>
           </div>
+
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isPublic"
+              checked={formData.isPublic}
+              onCheckedChange={handleSwitchChange}
+            />
+            <Label htmlFor="isPublic" className="cursor-pointer">
+              Show in Discover (Public)
+            </Label>
+          </div>
+          <p className="text-xs text-gray-500 ml-10">
+            When enabled, this resource will be visible to all users in the Discover section
+          </p>
 
           <DialogFooter>
             <Button

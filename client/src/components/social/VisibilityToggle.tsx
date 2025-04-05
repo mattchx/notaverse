@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
-import { Button } from '../ui/button';
-import { Link, Copy, Check, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { patch } from '../../utils/api';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+import { Switch } from '../ui/switch';
 
 interface VisibilityToggleProps {
   resourceId: string;
@@ -27,7 +21,6 @@ export function VisibilityToggle({
 }: VisibilityToggleProps) {
   const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [isLoading, setIsLoading] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
   const [message, setMessage] = useState('');
 
   const toggleVisibility = async () => {
@@ -45,7 +38,7 @@ export function VisibilityToggle({
       }
       
       setMessage(data.isPublic 
-        ? 'Resource is now public and can be shared'
+        ? 'Resource is now public'
         : 'Resource is now private');
         
     } catch (error) {
@@ -58,89 +51,30 @@ export function VisibilityToggle({
     }
   };
 
-  const getShareableLink = () => {
-    // Create a shareable link based on the current window location
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/resources/${resourceId}`;
-  };
-
-  const copyToClipboard = async () => {
-    const link = getShareableLink();
-    try {
-      await navigator.clipboard.writeText(link);
-      setCopySuccess(true);
-      setMessage('Link copied to clipboard');
-      
-      // Reset copy success after 2 seconds
-      setTimeout(() => {
-        setCopySuccess(false);
-        setMessage('');
-      }, 2000);
-    } catch (error) {
-      console.error('Failed to copy:', error);
-      setMessage('Failed to copy link');
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
-
-  if (!isPublic) {
-    return (
-      <div className="flex flex-col">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={toggleVisibility}
-          disabled={isLoading}
-          className="gap-2"
-        >
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Link className="h-4 w-4" />
-          )}
-          Make Public
-        </Button>
-        {message && (
-          <p className="text-xs mt-1 text-gray-500">{message}</p>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            disabled={isLoading}
-            className="gap-2"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Link className="h-4 w-4" />
-            )}
-            Share Link
-          </Button>
-        </DropdownMenuTrigger>
-        
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={copyToClipboard} className="gap-2 cursor-pointer">
-            {copySuccess ? (
-              <Check className="h-4 w-4 text-green-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-            Copy link to clipboard
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={toggleVisibility} className="gap-2 cursor-pointer text-red-500">
-            <EyeOff className="h-4 w-4" />
-            Make Private
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-2">
+        <Switch
+          checked={isPublic}
+          onCheckedChange={toggleVisibility}
+          disabled={isLoading}
+        />
+        <span className="text-sm flex items-center gap-1">
+          {isLoading ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : isPublic ? (
+            <>
+              <Eye className="h-3 w-3 text-green-500" />
+              <span className="text-green-600">Public</span>
+            </>
+          ) : (
+            <>
+              <EyeOff className="h-3 w-3 text-gray-500" />
+              <span className="text-gray-600">Private</span>
+            </>
+          )}
+        </span>
+      </div>
       
       {message && (
         <p className="text-xs mt-1 text-gray-500">{message}</p>
