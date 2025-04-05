@@ -1,11 +1,16 @@
 import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import 'dotenv/config';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execPromise = promisify(exec);
+
+// Get directory path equivalent to __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Validate API key
 const apiKey = process.env.OPENAI_API_KEY;
@@ -116,15 +121,15 @@ async function transcribeAudio(audioFilePath) {
       text: transcription.text.substring(0, 100) + (transcription.text.length > 100 ? '...' : '') // Show preview
     });
 
-    // Create transcripts directory if it doesn't exist
-    const transcriptsDir = path.join(__dirname, 'transcripts');
-    if (!fs.existsSync(transcriptsDir)) {
-      fs.mkdirSync(transcriptsDir, { recursive: true });
+    // Create transcriptions directory if it doesn't exist
+    const transcriptionsDir = path.join(__dirname, 'transcriptions');
+    if (!fs.existsSync(transcriptionsDir)) {
+      fs.mkdirSync(transcriptionsDir, { recursive: true });
     }
 
-    // Save transcription to file in transcripts directory
+    // Save transcription to file in transcriptions directory
     const outputFileName = path.basename(audioFilePath, path.extname(audioFilePath)) + '.txt';
-    const outputFilePath = path.join(transcriptsDir, outputFileName);
+    const outputFilePath = path.join(transcriptionsDir, outputFileName);
     
     // Write the full transcript to the file
     fs.writeFileSync(outputFilePath, transcription.text);
@@ -132,7 +137,7 @@ async function transcribeAudio(audioFilePath) {
     
     // Also save detailed JSON output if requested
     if (process.argv.includes('--json')) {
-      const jsonOutputPath = path.join(transcriptsDir, path.basename(audioFilePath, path.extname(audioFilePath)) + '.json');
+      const jsonOutputPath = path.join(transcriptionsDir, path.basename(audioFilePath, path.extname(audioFilePath)) + '.json');
       fs.writeFileSync(jsonOutputPath, JSON.stringify(transcription, null, 2));
       console.log(`Detailed JSON data saved to: ${jsonOutputPath}`);
     }
