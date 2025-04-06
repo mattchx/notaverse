@@ -8,8 +8,7 @@ import { Button } from '../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { EditResourceModal } from './EditResourceModal';
 import { AddResourceModal } from './AddResourceModal';
-import { Eye, EyeOff } from 'lucide-react';
-import { Switch } from '../ui/switch';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 import { 
   Dialog, 
@@ -206,30 +205,42 @@ export default function ResourceLibrary() {
               <TableCell>
                 <div className="flex items-center">
                   {resource.isPublic ? (
-                    <>
-                      <Eye className="h-4 w-4 mr-1 text-green-500" />
-                      <span className="text-sm text-green-600">Public</span>
-                    </>
+                    <button 
+                      className="flex items-center text-green-600 hover:text-green-800 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleVisibility(e, resource);
+                      }}
+                      disabled={isToggling[resource.id]}
+                    >
+                      {isToggling[resource.id] ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Eye className="h-4 w-4 mr-1 text-green-500" />
+                      )}
+                      <span className="text-sm">Public</span>
+                    </button>
                   ) : (
-                    <>
-                      <EyeOff className="h-4 w-4 mr-1 text-gray-500" />
-                      <span className="text-sm text-gray-600">Private</span>
-                    </>
+                    <button 
+                      className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleVisibility(e, resource);
+                      }}
+                      disabled={isToggling[resource.id]}
+                    >
+                      {isToggling[resource.id] ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 mr-1 text-gray-500" />
+                      )}
+                      <span className="text-sm">Private</span>
+                    </button>
                   )}
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex space-x-2">
-                  <Switch 
-                    checked={resource.isPublic}
-                    onCheckedChange={() => {
-                      const e = { stopPropagation: () => {} } as React.MouseEvent<HTMLButtonElement>;
-                      handleToggleVisibility(e, resource);
-                    }}
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    disabled={isToggling[resource.id]}
-                    className="mr-2"
-                  />
                   <Button
                     variant="ghost"
                     size="sm"

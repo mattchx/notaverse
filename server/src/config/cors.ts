@@ -14,6 +14,6 @@ console.log('🌐 CORS configuration:', {
 export const corsConfig = cors({
   origin: corsOrigins,
   credentials: true, // Important for cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 });
