@@ -16,12 +16,9 @@ resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
     let resourcesQuery;
     
     if (req.isAuthenticated && req.session.userId) {
-      // If authenticated, get user's own resources + public resources from others
+      // If authenticated, get ONLY user's own resources
       resourcesQuery = await db.query.resources.findMany({
-        where: or(
-          eq(resources.userId, req.session.userId),
-          eq(resources.isPublic, true)
-        ),
+        where: eq(resources.userId, req.session.userId),
         orderBy: (resources, { desc }) => [desc(resources.createdAt)],
         with: {
           sections: {
