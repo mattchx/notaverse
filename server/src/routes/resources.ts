@@ -16,9 +16,12 @@ resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
     let resourcesQuery;
     
     if (req.isAuthenticated && req.session.userId) {
-      // If authenticated, get ALL resources as a temporary fix
-      // Original: public resources + user's own resources
+      // If authenticated, get user's own resources + public resources from others
       resourcesQuery = await db.query.resources.findMany({
+        where: or(
+          eq(resources.userId, req.session.userId),
+          eq(resources.isPublic, true)
+        ),
         orderBy: (resources, { desc }) => [desc(resources.createdAt)],
         with: {
           sections: {
@@ -32,9 +35,9 @@ resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
         }
       });
     } else {
-      // If not authenticated, show all resources temporarily
-      // Original: only get public resources
+      // If not authenticated, only get public resources
       resourcesQuery = await db.query.resources.findMany({
+        where: eq(resources.isPublic, true),
         orderBy: (resources, { desc }) => [desc(resources.createdAt)],
         with: {
           sections: {
@@ -51,10 +54,8 @@ resourceRouter.get('/', optionalAuth, async (req: Request, res: Response) => {
 
     console.log(`📚 Found ${resourcesQuery.length} resources`);
     
-    // Add isPublic=true to all resources temporarily
     const responseData = resourcesQuery.map(resource => ({
       ...resource,
-      isPublic: resource.isPublic === null ? true : resource.isPublic, // Handle null values
       sections: resource.sections.map(section => ({
         ...section,
         markers: [] // We don't need markers for the list view
